@@ -7,17 +7,17 @@ from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from animation import Clip, PressHoldAnimator, PetAnimationDirector, load_numbered_pngs
+from animation import Clip, Mode, PressHoldAnimator, PetAnimationDirector, load_numbered_pngs
 from pet_window import PetWindow
 
 # 定义路径
 ROOT = Path(__file__).resolve().parent
 ASSETS = ROOT / "assets"
-SETTINGS = ROOT / "pet_settings.json"
+ACTION_SETTINGS = ROOT / "action_settings.json"
 
 
 def _load_settings() -> dict:
-    return json.loads(SETTINGS.read_text(encoding="utf-8"))
+    return json.loads(ACTION_SETTINGS.read_text(encoding="utf-8"))
 
 
 def _clip_from_dir(folder: str, interval_ms: int) -> Clip:
@@ -27,29 +27,46 @@ def _clip_from_dir(folder: str, interval_ms: int) -> Clip:
     return Clip(frames=frames, interval_ms=interval_ms)
 
 
-def _load_states(settings: dict) -> tuple[dict[str, Clip], dict[str, str], str]:
-    states: dict[str, Clip] = {}
-    state_titles: dict[str, str] = {}
-    for item in settings.get("states", []):
-        state_id = str(item["id"])
-        state_titles[state_id] = str(item["title"])
-        states[state_id] = _clip_from_dir(
-            str(item["folder"]),
-            interval_ms=int(item["interval_ms"]),
+def _load_modes(settings: dict) -> tuple[dict[str, Mode], dict[str, str], str, str]:
+    modes: dict[str, Mode] = {}
+    mode_titles: dict[str, str] = {}
+    for item in settings["modes"]:
+        mode_id = str(item["id"])
+        mode_type = str(item["type"])
+        mode_titles[mode_id] = str(item["title"])
+        loop = item["loop"]
+        loop_clip = _clip_from_dir(
+            str(loop["folder"]),
+            interval_ms=int(loop["interval_ms"]),
+        )
+        if mode_type == "loop":
+            modes[mode_id] = Mode(loop=loop_clip)
+            continue
+        if mode_type != "phased":
+            raise RuntimeError(f"未知模式类型: {mode_type}")
+        start = item["start"]
+        end = item["end"]
+        modes[mode_id] = Mode(
+            loop=loop_clip,
+            start=_clip_from_dir(
+                str(start["folder"]),
+                interval_ms=int(start["interval_ms"]),
+            ),
+            end=_clip_from_dir(
+                str(end["folder"]),
+                interval_ms=int(end["interval_ms"]),
+            ),
         )
 
-    default_state = str(settings["default_state"])
-    if default_state not in states:
-        raise RuntimeError(f"default_state 未在 states 中定义: {default_state}")
-    return states, state_titles, default_state
-
-
-def _load_press_clip(settings: dict, phase: str) -> Clip:
-    press = settings["interactions"]["press"][phase]
-    return _clip_from_dir(
-        str(press["folder"]),
-        interval_ms=int(press["interval_ms"]),
-    )
+    default_mode = str(settings["default_mode"])
+    press_mode = str(settings["press_mode"])
+    if default_mode not in modes:
+        raise RuntimeError(f"default_mode 未在 modes 中定义: {default_mode}")
+    if press_mode not in modes:
+        raise RuntimeError(f"press_mode 未在 modes 中定义: {press_mode}")
+    if not modes[press_mode].is_phased:
+        raise RuntimeError("press_mode 必须是 phased 模式")
+    return modes, mode_titles, default_mode, press_mode
 
 
 def main() -> int:
@@ -57,24 +74,25 @@ def main() -> int:
 
     try:
         settings = _load_settings()
-        states, state_titles, default_state = _load_states(settings)
-        start_c = _load_press_clip(settings, "start")
-        loop_c = _load_press_clip(settings, "loop")
-        end_c = _load_press_clip(settings, "end")
+        modes, mode_titles, default_mode, press_mode = _load_modes(settings)
+        press_source = modes[press_mode]
+        if press_source.start is None or press_source.end is None:
+            raise RuntimeError("press_mode 缺少 start 或 end")
 
-        press = PressHoldAnimator(start_c, loop_c, end_c)
+        press = PressHoldAnimator(press_source.start, press_source.loop, press_source.end)
         director = PetAnimationDirector(
-            states=states,
-            default_state=default_state,
+            modes=modes,
+            default_mode=default_mode,
             press=press,
         )
-        director.start_default_state()
+        director.start_default_mode()
 
-        initial_clip = states[default_state]
+        initial_mode = modes[default_mode]
+        initial_clip = initial_mode.start if initial_mode.is_phased else initial_mode.loop
         win = PetWindow(
             director,
             initial_clip.frames[0],
-            state_titles=state_titles,
+            mode_titles=mode_titles,
         )
         win.show()
 
@@ -83,7 +101,7 @@ def main() -> int:
         box = QMessageBox()
         box.setWindowTitle("配置错误")
         box.setIcon(QMessageBox.Icon.Critical)
-        box.setText("pet_settings.json 内容有问题，请检查 JSON 格式和字段。")
+        box.setText("action_settings.json 内容有问题，请检查 JSON 格式和字段。")
         box.setDetailedText(str(exc))
         box.exec()
         return 1

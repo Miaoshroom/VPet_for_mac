@@ -13,13 +13,13 @@ from animation import PetAnimationDirector
 from pet_menu import show_pet_menu
 
 RESIZE_GRIP = 22
-_SETTINGS = Path(__file__).resolve().parent / "pet_settings.json"
+_WINDOW_SETTINGS = Path(__file__).resolve().parent / "window_settings.json"
 ZOOM_STEP = 30
 
 
 def _load_settings() -> dict:
     # json不对就该直接崩（
-    return json.loads(_SETTINGS.read_text(encoding="utf-8"))
+    return json.loads(_WINDOW_SETTINGS.read_text(encoding="utf-8"))
 
 
 def _max_side_from_json() -> int:
@@ -31,7 +31,10 @@ def _save_display_size_to_json(size: int) -> None:
     try:
         payload = _load_settings()
         payload["display_size"] = max(0, int(size))
-        _SETTINGS.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        _WINDOW_SETTINGS.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
     except OSError:
         pass
 
@@ -41,13 +44,13 @@ class PetWindow(QMainWindow):
         self,
         director: PetAnimationDirector,
         initial_pixmap: QPixmap,
-        state_titles: dict[str, str] | None = None,
+        mode_titles: dict[str, str] | None = None,
         *,
         max_side: int | None = None,
     ) -> None:
         super().__init__()
         self._director = director
-        self._state_titles = state_titles or {}
+        self._mode_titles = mode_titles or {}
         self._drag_anchor: QPoint | None = None
         if max_side is None:
             max_side = _max_side_from_json()
@@ -107,10 +110,10 @@ class PetWindow(QMainWindow):
         self._refresh_current_pixmap()
         _save_display_size_to_json(self._max_side)
 
-    def _switch_state(self, state_name: str) -> None:
-        if state_name not in self._state_titles:
+    def _switch_mode(self, mode_name: str) -> None:
+        if mode_name not in self._mode_titles:
             return
-        self._director.switch_state(state_name)
+        self._director.switch_mode(mode_name)
 
     def _save_start_position(self) -> None:
         try:
@@ -118,7 +121,7 @@ class PetWindow(QMainWindow):
             payload["display_x"] = int(self.x())
             payload["display_y"] = int(self.y())
             payload["display_size"] = max(0, int(self._max_side))
-            _SETTINGS.write_text(
+            _WINDOW_SETTINGS.write_text(
                 json.dumps(payload, ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )
@@ -166,17 +169,17 @@ class PetWindow(QMainWindow):
         super().mouseReleaseEvent(e)
 
     def contextMenuEvent(self, e) -> None:
-        state_handlers = {
-            title: (lambda name=state_name: self._switch_state(name))
-            for state_name, title in self._state_titles.items()
+        mode_handlers = {
+            title: (lambda name=mode_name: self._switch_mode(name))
+            for mode_name, title in self._mode_titles.items()
         }
         show_pet_menu(
             self,
             e.globalPos(),
             on_zoom_in=lambda: self._zoom(ZOOM_STEP),
             on_zoom_out=lambda: self._zoom(-ZOOM_STEP),
-            state_handlers=state_handlers,
-            current_state_title=self._state_titles.get(self._director.current_state_name()),
+            mode_handlers=mode_handlers,
+            current_mode_title=self._mode_titles.get(self._director.current_mode_name()),
             on_set_start_pos=self._save_start_position,
             on_quit=QApplication.quit,
         )
