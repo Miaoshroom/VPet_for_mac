@@ -9,7 +9,7 @@ from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtGui import QMouseEvent, QPixmap
 from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow
 
-from animation import Clip, PetAnimationDirector
+from animation import PetAnimationDirector
 from pet_menu import show_pet_menu
 
 RESIZE_GRIP = 22
@@ -41,13 +41,13 @@ class PetWindow(QMainWindow):
         self,
         director: PetAnimationDirector,
         initial_pixmap: QPixmap,
-        single_actions: dict[str, Clip] | None = None,
+        state_titles: dict[str, str] | None = None,
         *,
         max_side: int | None = None,
     ) -> None:
         super().__init__()
         self._director = director
-        self._single_actions = single_actions or {}
+        self._state_titles = state_titles or {}
         self._drag_anchor: QPoint | None = None
         if max_side is None:
             max_side = _max_side_from_json()
@@ -107,11 +107,10 @@ class PetWindow(QMainWindow):
         self._refresh_current_pixmap()
         _save_display_size_to_json(self._max_side)
 
-    def _play_single_action(self, action_name: str) -> None:
-        clip = self._single_actions.get(action_name)
-        if clip is None:
+    def _switch_state(self, state_name: str) -> None:
+        if state_name not in self._state_titles:
             return
-        self._director.play_single(clip)
+        self._director.switch_state(state_name)
 
     def _save_start_position(self) -> None:
         try:
@@ -167,16 +166,17 @@ class PetWindow(QMainWindow):
         super().mouseReleaseEvent(e)
 
     def contextMenuEvent(self, e) -> None:
-        action_handlers = {
-            title: (lambda name=title: self._play_single_action(name))
-            for title in self._single_actions
+        state_handlers = {
+            title: (lambda name=state_name: self._switch_state(name))
+            for state_name, title in self._state_titles.items()
         }
         show_pet_menu(
             self,
             e.globalPos(),
             on_zoom_in=lambda: self._zoom(ZOOM_STEP),
             on_zoom_out=lambda: self._zoom(-ZOOM_STEP),
-            action_handlers=action_handlers,
+            state_handlers=state_handlers,
+            current_state_title=self._state_titles.get(self._director.current_state_name()),
             on_set_start_pos=self._save_start_position,
             on_quit=QApplication.quit,
         )

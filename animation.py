@@ -1,4 +1,4 @@
-"""单循环动画+sle动画"""
+"""动画加载与调度"""
 
 from __future__ import annotations
 
@@ -104,35 +104,6 @@ class FlipbookPlayer(QObject):
         self._timer.start(clip.interval_ms)
 
 
-class SingleAnimator(QObject):
-    """单次动画播放器，播完回idle"""
-
-    frame_changed = pyqtSignal(object)
-
-    def __init__(self, parent: QObject | None = None) -> None:
-        super().__init__(parent)
-        self._player = FlipbookPlayer(self)
-        self._player.frame_changed.connect(self.frame_changed)
-        self._on_complete: Callable[[], None] | None = None
-
-    def play(self, clip: Clip, on_complete: Callable[[], None] | None = None) -> None:
-        self._player.stop()
-        self._on_complete = on_complete
-        self._player.disconnect_finished()
-        self._player.finished.connect(self._handle_finished)
-        self._player.play(clip, loop=False)
-
-    def stop(self) -> None:
-        self._player.stop()
-        self._on_complete = None
-
-    def _handle_finished(self) -> None:
-        cb = self._on_complete
-        self._on_complete = None
-        if cb:
-            cb()
-
-
 class PressHoldAnimator(QObject):
     """按住动画"""
 
@@ -145,14 +116,14 @@ class PressHoldAnimator(QObject):
         self._end_c = end
         self._player = FlipbookPlayer(self)
         self._player.frame_changed.connect(self.frame_changed)
-        self._on_idle: Callable[[], None] | None = None
+        self._on_resume: Callable[[], None] | None = None
         self._wants_end = False
         self._phase = "idle"
 
-    def start(self, on_idle: Callable[[], None] | None = None) -> None:
+    def start(self, on_resume: Callable[[], None] | None = None) -> None:
         self._player.stop()
         self._player.disconnect_finished()
-        self._on_idle = on_idle
+        self._on_resume = on_resume
         self._wants_end = False
         self._phase = "start"
         self._player.finished.connect(self._after_start)
@@ -168,7 +139,7 @@ class PressHoldAnimator(QObject):
     def stop(self) -> None:
         self._player.stop()
         self._player.disconnect_finished()
-        self._on_idle = None
+        self._on_resume = None
         self._wants_end = False
         self._phase = "idle"
 
@@ -191,8 +162,8 @@ class PressHoldAnimator(QObject):
         self._player.disconnect_finished()
         self._phase = "idle"
         self._wants_end = False
-        cb = self._on_idle
-        self._on_idle = None
+        cb = self._on_resume
+        self._on_resume = None
         if cb:
             cb()
 
@@ -204,36 +175,48 @@ class PetAnimationDirector(QObject):
 
     def __init__(
         self,
-        idle: Clip,
+        states: dict[str, Clip],
+        default_state: str,
         press: PressHoldAnimator,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
-        self._idle_clip = idle
+        if not states:
+            raise ValueError("必须至少提供一个常驻状态")
+        if default_state not in states:
+            raise ValueError(f"默认状态不存在: {default_state}")
+        self._states = states
+        self._default_state = default_state
+        self._current_state = default_state
         self._press = press
-        self._idle_player = FlipbookPlayer(self)
-        self._idle_player.frame_changed.connect(self.frame_changed)
-        self._single = SingleAnimator(self)
-        self._single.frame_changed.connect(self.frame_changed)
-
+        self._state_player = FlipbookPlayer(self)
+        self._state_player.frame_changed.connect(self.frame_changed)
         self._press.frame_changed.connect(self.frame_changed)
 
-    def start_idle(self) -> None:  # 播放idle
+    def current_state_name(self) -> str:
+        return self._current_state
+
+    def current_state_clip(self) -> Clip:
+        return self._states[self._current_state]
+
+    def start_current_state(self) -> None:
         self._press.stop()
-        self._single.stop()
-        self._idle_player.stop()
-        self._idle_player.play(self._idle_clip, loop=True)
+        self._state_player.stop()
+        self._state_player.play(self.current_state_clip(), loop=True)
+
+    def start_default_state(self) -> None:
+        self._current_state = self._default_state
+        self.start_current_state()
+
+    def switch_state(self, state_name: str) -> None:
+        if state_name not in self._states:
+            raise KeyError(f"未知状态: {state_name}")
+        self._current_state = state_name
+        self.start_current_state()
 
     def on_mouse_press(self) -> None:
-        self._idle_player.stop()
-        self._single.stop()
-        self._press.start(on_idle=self.start_idle)
+        self._state_player.stop()
+        self._press.start(on_resume=self.start_current_state)
 
     def on_mouse_release(self) -> None:
         self._press.end()
-
-    def play_single(self, clip: Clip) -> None:  # 播放单个动画
-        self._idle_player.stop()
-        self._press.stop()
-        self._single.stop()
-        self._single.play(clip, on_complete=self.start_idle)

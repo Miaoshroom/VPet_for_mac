@@ -1,11 +1,10 @@
 """桌宠主入口：初始化动画、窗口，元神启动"""
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QImage, QPainter
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from animation import Clip, PressHoldAnimator, PetAnimationDirector, load_numbered_pngs
@@ -14,46 +13,69 @@ from pet_window import PetWindow
 # 定义路径
 ROOT = Path(__file__).resolve().parent
 ASSETS = ROOT / "assets"
+SETTINGS = ROOT / "pet_settings.json"
 
 
-def _clip_from_dir(name: str, interval_ms: int) -> Clip:
-    frames = load_numbered_pngs(ASSETS / name)
+def _load_settings() -> dict:
+    return json.loads(SETTINGS.read_text(encoding="utf-8"))
+
+
+def _clip_from_dir(folder: str, interval_ms: int) -> Clip:
+    frames = load_numbered_pngs(ASSETS / folder)
     if not frames:
-        raise RuntimeError(f"Missing frames in {ASSETS / name}")
+        raise RuntimeError(f"Missing frames in {ASSETS / folder}")
     return Clip(frames=frames, interval_ms=interval_ms)
 
 
-def _load_single_actions() -> dict[str, Clip]:
-    # 从json读单次动画
-    import json  # 局部导入
+def _load_states(settings: dict) -> tuple[dict[str, Clip], dict[str, str], str]:
+    states: dict[str, Clip] = {}
+    state_titles: dict[str, str] = {}
+    for item in settings.get("states", []):
+        state_id = str(item["id"])
+        state_titles[state_id] = str(item["title"])
+        states[state_id] = _clip_from_dir(
+            str(item["folder"]),
+            interval_ms=int(item["interval_ms"]),
+        )
 
-    settings_path = ROOT / "pet_settings.json"
-    data = json.loads(settings_path.read_text(encoding="utf-8"))
-    actions: dict[str, Clip] = {}
-    for item in data.get("single_actions", []):
-        title = str(item["title"])
-        folder = str(item["folder"])
-        interval = int(item["interval_ms"])
-        actions[title] = _clip_from_dir(folder, interval_ms=interval)
-    return actions
+    default_state = str(settings["default_state"])
+    if default_state not in states:
+        raise RuntimeError(f"default_state 未在 states 中定义: {default_state}")
+    return states, state_titles, default_state
+
+
+def _load_press_clip(settings: dict, phase: str) -> Clip:
+    press = settings["interactions"]["press"][phase]
+    return _clip_from_dir(
+        str(press["folder"]),
+        interval_ms=int(press["interval_ms"]),
+    )
 
 
 def main() -> int:
     app = QApplication(sys.argv)
 
     try:
-
-        idle = _clip_from_dir("idle", interval_ms=120)
-        start_c = _clip_from_dir("press_start", interval_ms=90)
-        loop_c = _clip_from_dir("press_loop", interval_ms=100)
-        end_c = _clip_from_dir("press_end", interval_ms=90)
-        single_actions = _load_single_actions()
+        settings = _load_settings()
+        states, state_titles, default_state = _load_states(settings)
+        start_c = _load_press_clip(settings, "start")
+        loop_c = _load_press_clip(settings, "loop")
+        end_c = _load_press_clip(settings, "end")
 
         press = PressHoldAnimator(start_c, loop_c, end_c)
-        director = PetAnimationDirector(idle=idle, press=press)
-        director.start_idle()
+        director = PetAnimationDirector(
+            states=states,
+            default_state=default_state,
+            press=press,
+        )
+        director.start_default_state()
 
-        win = PetWindow(director, idle.frames[0], single_actions=single_actions)
+        initial_clip = states[default_state]
+        win = PetWindow(
+            director,
+            initial_clip.frames[0],
+            state_titles=state_titles,
+        )
         win.show()
 
         return app.exec()
