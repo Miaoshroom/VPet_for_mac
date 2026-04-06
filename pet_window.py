@@ -52,15 +52,17 @@ class PetWindow(QMainWindow):
         self._director = director
         self._mode_titles = mode_titles or {}
         self._drag_anchor: QPoint | None = None
+        self._click_through_enabled = False
         if max_side is None:
             max_side = _max_side_from_json()
         self._max_side = max(0, max_side)
 
-        self.setWindowFlags(
+        self._base_window_flags = (
             Qt.WindowType.Window
             | Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
         )
+        self._apply_window_flags()
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
 
         self._label = QLabel()
@@ -81,6 +83,29 @@ class PetWindow(QMainWindow):
         self.move(int(settings["display_x"]), int(settings["display_y"]))
 
         director.frame_changed.connect(self._on_frame)
+
+    def click_through_enabled(self) -> bool:
+        return self._click_through_enabled
+
+    def set_click_through_enabled(self, enabled: bool) -> None:
+        enabled = bool(enabled)
+        if self._click_through_enabled == enabled:
+            return
+        self._click_through_enabled = enabled
+        self._apply_window_flags()
+
+    def _apply_window_flags(self) -> None:
+        flags = self._base_window_flags
+        if self._click_through_enabled:
+            flags |= Qt.WindowType.WindowTransparentForInput
+        geometry = self.geometry()
+        was_visible = self.isVisible()
+        self.setWindowFlags(flags)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        if was_visible:
+            self.show()
+            self.setGeometry(geometry)
+            self.raise_()
 
     def _fit_pixmap(self, pix: QPixmap) -> QPixmap:
         if self._max_side <= 0:

@@ -5,9 +5,11 @@ import json
 import sys
 from pathlib import Path
 
+from PyQt6.QtCore import QPoint
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from animation import Clip, Mode, PressHoldAnimator, PetAnimationDirector, load_numbered_pngs
+from click_through import ClickThroughBadge
 from pet_window import PetWindow
 
 # 定义路径
@@ -95,6 +97,13 @@ def main() -> int:
             mode_titles=mode_titles,
         )
         win.show()
+        badge = ClickThroughBadge(
+            target_window=win,
+            is_enabled=win.click_through_enabled,
+            set_enabled=win.set_click_through_enabled,
+            initial_pos=win.pos() + QPoint(win.width() + 12, 12),
+        )
+        badge.show()
 
         return app.exec()
     except Exception as exc:  # json配置错误
