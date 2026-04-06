@@ -43,6 +43,25 @@ class Clip:
             raise ValueError("必须至少有一帧")
 
 
+@dataclass(frozen=True)
+class Mode:
+    """一个可切换模式，支持普通循环或 start-loop-end 分段"""
+
+    loop: Clip
+    start: Clip | None = None
+    end: Clip | None = None
+
+    def __post_init__(self) -> None:
+        has_start = self.start is not None
+        has_end = self.end is not None
+        if has_start != has_end:
+            raise ValueError("分段模式必须同时提供 start 和 end")
+
+    @property
+    def is_phased(self) -> bool:
+        return self.start is not None
+
+
 class FlipbookPlayer(QObject):
     """
     逐帧动画播放器
@@ -143,6 +162,9 @@ class PressHoldAnimator(QObject):
         self._wants_end = False
         self._phase = "idle"
 
+    def is_active(self) -> bool:
+        return self._phase != "idle"
+
     def _after_start(self) -> None:
         self._player.disconnect_finished()
         if self._wants_end:
@@ -175,48 +197,109 @@ class PetAnimationDirector(QObject):
 
     def __init__(
         self,
-        states: dict[str, Clip],
-        default_state: str,
+        modes: dict[str, Mode],
+        default_mode: str,
         press: PressHoldAnimator,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
-        if not states:
-            raise ValueError("必须至少提供一个常驻状态")
-        if default_state not in states:
-            raise ValueError(f"默认状态不存在: {default_state}")
-        self._states = states
-        self._default_state = default_state
-        self._current_state = default_state
+        if not modes:
+            raise ValueError("必须至少提供一个可切换模式")
+        if default_mode not in modes:
+            raise ValueError(f"默认模式不存在: {default_mode}")
+        self._modes = modes
+        self._default_mode = default_mode
+        self._current_mode = default_mode
+        self._pending_mode: str | None = None
+        self._phase = "idle"
         self._press = press
-        self._state_player = FlipbookPlayer(self)
-        self._state_player.frame_changed.connect(self.frame_changed)
+        self._mode_player = FlipbookPlayer(self)
+        self._mode_player.frame_changed.connect(self.frame_changed)
         self._press.frame_changed.connect(self.frame_changed)
 
-    def current_state_name(self) -> str:
-        return self._current_state
+    def current_mode_name(self) -> str:
+        return self._pending_mode or self._current_mode
 
-    def current_state_clip(self) -> Clip:
-        return self._states[self._current_state]
+    def current_mode(self) -> Mode:
+        return self._modes[self._current_mode]
 
-    def start_current_state(self) -> None:
-        self._press.stop()
-        self._state_player.stop()
-        self._state_player.play(self.current_state_clip(), loop=True)
+    def start_default_mode(self) -> None:
+        self._start_mode(self._default_mode)
 
-    def start_default_state(self) -> None:
-        self._current_state = self._default_state
-        self.start_current_state()
+    def switch_mode(self, mode_name: str) -> None:
+        if mode_name not in self._modes:
+            raise KeyError(f"未知模式: {mode_name}")
+        if mode_name == self.current_mode_name():
+            return
+        if self._press.is_active():
+            self._current_mode = mode_name
+            self._pending_mode = None
+            return
 
-    def switch_state(self, state_name: str) -> None:
-        if state_name not in self._states:
-            raise KeyError(f"未知状态: {state_name}")
-        self._current_state = state_name
-        self.start_current_state()
+        mode = self.current_mode()
+        if mode.is_phased:
+            self._pending_mode = mode_name
+            if self._phase == "loop":
+                self._play_current_end()
+            return
+        self._start_mode(mode_name)
 
     def on_mouse_press(self) -> None:
-        self._state_player.stop()
-        self._press.start(on_resume=self.start_current_state)
+        self._stop_mode_player()
+        self._pending_mode = None
+        self._press.start(on_resume=self._resume_current_mode)
 
     def on_mouse_release(self) -> None:
         self._press.end()
+
+    def _stop_mode_player(self) -> None:
+        self._mode_player.stop()
+        self._mode_player.disconnect_finished()
+
+    def _start_mode(self, mode_name: str) -> None:
+        self._stop_mode_player()
+        self._current_mode = mode_name
+        self._pending_mode = None
+        mode = self.current_mode()
+        if mode.is_phased:
+            self._phase = "start"
+            self._mode_player.finished.connect(self._after_mode_start)
+            self._mode_player.play(mode.start, loop=False)
+            return
+        self._phase = "loop"
+        self._mode_player.play(mode.loop, loop=True)
+
+    def _resume_current_mode(self) -> None:
+        self._stop_mode_player()
+        self._pending_mode = None
+        self._phase = "loop"
+        self._mode_player.play(self.current_mode().loop, loop=True)
+
+    def _after_mode_start(self) -> None:
+        self._mode_player.disconnect_finished()
+        if self._pending_mode is not None:
+            self._play_current_end()
+            return
+        self._phase = "loop"
+        self._mode_player.play(self.current_mode().loop, loop=True)
+
+    def _play_current_end(self) -> None:
+        mode = self.current_mode()
+        if not mode.is_phased:
+            next_mode = self._pending_mode
+            self._pending_mode = None
+            if next_mode is not None:
+                self._start_mode(next_mode)
+            return
+        self._stop_mode_player()
+        self._phase = "end"
+        self._mode_player.finished.connect(self._after_mode_end)
+        self._mode_player.play(mode.end, loop=False)
+
+    def _after_mode_end(self) -> None:
+        self._mode_player.disconnect_finished()
+        next_mode = self._pending_mode
+        if next_mode is None:
+            self._resume_current_mode()
+            return
+        self._start_mode(next_mode)
