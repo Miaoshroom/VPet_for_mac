@@ -5,7 +5,6 @@ import json
 import sys
 from pathlib import Path
 
-from PyQt6.QtCore import QPoint
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from animation import Clip, Mode, PressHoldAnimator, PetAnimationDirector, load_numbered_pngs
@@ -101,7 +100,6 @@ def main() -> int:
             target_window=win,
             is_enabled=win.click_through_enabled,
             set_enabled=win.set_click_through_enabled,
-            initial_pos=win.pos() + QPoint(win.width() + 12, 12),
         )
         badge.show()
 

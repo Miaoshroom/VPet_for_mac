@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import QWidget
 
 BADGE_SIZE = 26
 DRAG_THRESHOLD = 4
+BADGE_MARGIN = 15
 
 
 class ClickThroughBadge(QWidget):
@@ -44,7 +45,10 @@ class ClickThroughBadge(QWidget):
 
     def _default_pos(self) -> QPoint:
         geometry = self._target_window.geometry()
-        return QPoint(geometry.x() + geometry.width() + 12, geometry.y() + 12)
+        return QPoint(
+            geometry.x() + geometry.width() - BADGE_SIZE - BADGE_MARGIN,
+            geometry.y() + geometry.height() - BADGE_SIZE - BADGE_MARGIN,
+        )
 
     def _toggle(self) -> None:
         self._set_enabled(not self._is_enabled())
