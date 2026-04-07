@@ -10,10 +10,11 @@ from PyQt6.QtGui import QMouseEvent, QPixmap
 from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow
 
 from core.animation import PetAnimationDirector
+from core.interaction_map import InteractionBehavior, InteractionMap
 from ui.pet_menu import show_pet_menu
 
 RESIZE_GRIP = 22
-_WINDOW_SETTINGS = Path(__file__).resolve().parent.parent / "window_settings.json"
+_WINDOW_SETTINGS = Path(__file__).resolve().parent.parent / "config" / "window_settings.json"
 ZOOM_STEP = 30
 
 
@@ -49,14 +50,20 @@ class PetWindow(QMainWindow):
         self,
         director: PetAnimationDirector,
         initial_pixmap: QPixmap,
+        interaction_map: InteractionMap,
         mode_titles: dict[str, str] | None = None,
         *,
         max_side: int | None = None,
     ) -> None:
         super().__init__()
         self._director = director
+        self._interaction_map = interaction_map
         self._mode_titles = mode_titles or {}
         self._drag_anchor: QPoint | None = None
+        self._press_global: QPoint | None = None
+        self._press_is_drag = False
+        self._pressed_click_behavior = InteractionBehavior(type="none")
+        self._pressed_drag_behavior = InteractionBehavior(type="none")
         self._click_through_enabled = False
         self._dev_mode = _dev_mode_from_json()
         if max_side is None:
@@ -175,6 +182,17 @@ class PetWindow(QMainWindow):
             and local_pos.y() >= r.height() - RESIZE_GRIP
         )
 
+    def _handle_behavior(self, behavior: InteractionBehavior) -> None:
+        if behavior.type == "switch_mode" and behavior.mode is not None:
+            self._switch_mode(behavior.mode)
+
+    def _reset_pointer_state(self) -> None:
+        self._drag_anchor = None
+        self._press_global = None
+        self._press_is_drag = False
+        self._pressed_click_behavior = InteractionBehavior(type="none")
+        self._pressed_drag_behavior = InteractionBehavior(type="none")
+
     def mousePressEvent(self, e: QMouseEvent) -> None:
         if e.button() == Qt.MouseButton.LeftButton:
             lp = e.position().toPoint()
@@ -184,8 +202,20 @@ class PetWindow(QMainWindow):
                 )
                 e.accept()
                 return
-            self._drag_anchor = e.globalPosition().toPoint() - self.pos()
-            self._director.on_mouse_press()
+            self._press_global = e.globalPosition().toPoint()
+            self._press_is_drag = False
+            self._pressed_click_behavior = self._interaction_map.resolve(
+                "click",
+                lp,
+                self.rect().size(),
+            )
+            self._pressed_drag_behavior = self._interaction_map.resolve(
+                "drag",
+                lp,
+                self.rect().size(),
+            )
+            if self._pressed_drag_behavior.type == "move_window":
+                self._drag_anchor = self._press_global - self.pos()
             e.accept()
             return
         super().mousePressEvent(e)
@@ -193,17 +223,25 @@ class PetWindow(QMainWindow):
     def mouseMoveEvent(self, e: QMouseEvent) -> None:
         if (
             e.buttons() & Qt.MouseButton.LeftButton
-            and self._drag_anchor is not None
+            and self._press_global is not None
         ):
-            self.move(e.globalPosition().toPoint() - self._drag_anchor)
+            current_global = e.globalPosition().toPoint()
+            if not self._press_is_drag:
+                distance = (current_global - self._press_global).manhattanLength()
+                if distance >= QApplication.startDragDistance():
+                    self._press_is_drag = True
+            if self._press_is_drag and self._pressed_drag_behavior.type == "move_window":
+                if self._drag_anchor is not None:
+                    self.move(current_global - self._drag_anchor)
             e.accept()
             return
         super().mouseMoveEvent(e)
 
     def mouseReleaseEvent(self, e: QMouseEvent) -> None:
         if e.button() == Qt.MouseButton.LeftButton:
-            self._director.on_mouse_release()
-            self._drag_anchor = None
+            if not self._press_is_drag:
+                self._handle_behavior(self._pressed_click_behavior)
+            self._reset_pointer_state()
             e.accept()
             return
         super().mouseReleaseEvent(e)

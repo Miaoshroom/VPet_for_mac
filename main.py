@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.animation import PressHoldAnimator, PetAnimationDirector
 from core.idle_autoswitch import start_auto_idle_timer
+from core.interaction_map import load_interaction_map
 from core.loader import load_action_config
 from ui.click_through import ClickThroughBadge
 from ui.pet_window import PetWindow
@@ -18,6 +19,7 @@ def main() -> int:
 
     try:
         config = load_action_config()
+        interaction_map = load_interaction_map(set(config.modes))
         press_source = config.modes[config.press_mode]
         if press_source.start is None or press_source.end is None:
             raise RuntimeError("press_mode 缺少 start 或 end")
@@ -35,6 +37,7 @@ def main() -> int:
         win = PetWindow(
             director,
             initial_clip.frames[0],
+            interaction_map=interaction_map,
             mode_titles=config.mode_titles,
         )
         win.show()
@@ -57,7 +60,7 @@ def main() -> int:
         box = QMessageBox()
         box.setWindowTitle("配置错误")
         box.setIcon(QMessageBox.Icon.Critical)
-        box.setText("action_settings.json 内容有问题，请检查 JSON 格式和字段。")
+        box.setText("config 下的配置文件内容有问题，请检查 JSON 格式和字段。")
         box.setDetailedText(str(exc))
         box.exec()
         return 1
