@@ -8,9 +8,16 @@
     "meow",
     "amusement",
     "dance",
+    "think",
     "aside",
     "sleepy",
-    "yawning"
+    "bubbles",
+    "happy_turn_1",
+    "happy_turn_2",
+    "meowlook",
+    "sit_down",
+    "sleep",
+    "squat"
   ],
   "modes": [
     {
@@ -242,15 +249,15 @@
       "type": "phased",
       "start": {
         "folder": "interactions/sit_down/start",
-        "interval_ms": 125
+        "interval_ms": 250
       },
       "loop": {
         "folder": "interactions/sit_down/loop",
-        "interval_ms": 125
+        "interval_ms": 250
       },
       "end": {
         "folder": "interactions/sit_down/end",
-        "interval_ms": 125
+        "interval_ms": 250
       }
     },
     {
@@ -259,15 +266,15 @@
       "type": "phased",
       "start": {
         "folder": "interactions/sleep/start",
-        "interval_ms": 125
+        "interval_ms": 250
       },
       "loop": {
         "folder": "interactions/sleep/loop",
-        "interval_ms": 125
+        "interval_ms": 250
       },
       "end": {
         "folder": "interactions/sleep/end",
-        "interval_ms": 125
+        "interval_ms": 250
       }
     },
     {
@@ -276,15 +283,15 @@
       "type": "phased",
       "start": {
         "folder": "interactions/squat/start",
-        "interval_ms": 125
+        "interval_ms": 250
       },
       "loop": {
         "folder": "interactions/squat/loop",
-        "interval_ms": 125
+        "interval_ms": 250
       },
       "end": {
         "folder": "interactions/squat/end",
-        "interval_ms": 125
+        "interval_ms": 250
       }
     },
     {
