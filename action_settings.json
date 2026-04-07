@@ -1,6 +1,13 @@
 {
   "default_mode": "default",
   "press_mode": "press",
+  "idle_autoswitch_interval_min_ms": 8000,
+  "idle_autoswitch_interval_max_ms": 12000,
+  "auto_idle_modes": [
+    "default",
+    "meow",
+    "amusement"
+  ],
   "modes": [
     {
       "id": "default",
