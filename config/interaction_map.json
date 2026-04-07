@@ -1,7 +1,7 @@
 {
   "grid": {
-    "rows": 5,
-    "cols": 5
+    "rows": 6,
+    "cols": 6
   },
   "default_behaviors": {
     "press": {
@@ -20,18 +20,29 @@
       "row_start": 0,
       "row_end": 0,
       "col_start": 2,
-      "col_end": 2,
+      "col_end": 3,
       "press": {
         "type": "press_mode",
         "mode": "touch_head"
       }
     },
     {
-      "name": "lift_handle",
+      "name": "pinch_face_handle",
       "row_start": 1,
-      "row_end": 1,
+      "row_end": 2,
       "col_start": 2,
       "col_end": 2,
+      "press": {
+        "type": "press_mode",
+        "mode": "pinch_face"
+      }
+    },
+    {
+      "name": "lift_handle",
+      "row_start": 2,
+      "row_end": 2,
+      "col_start": 3,
+      "col_end": 3,
       "press": {
         "type": "press_mode",
         "mode": "lift"
