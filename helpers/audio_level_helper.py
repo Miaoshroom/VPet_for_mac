@@ -1,16 +1,19 @@
-"""每秒输出一次 macOS 当前系统输出音量，范围 0.0 ~ 1.0。"""
+"""统一音频电平 helper：播放状态 + 系统音量条。"""
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
-import time
+from pathlib import Path
 
-INTERVAL_SECONDS = 1.0
+ROOT = Path(__file__).resolve().parent.parent
+SWIFT_HELPER = ROOT / "helpers" / "audio_level_helper.swift"
+SWIFT_MODULE_CACHE = ROOT / ".swift-module-cache"
 APPLE_SCRIPT = "output volume of (get volume settings)"
 
 
-def read_level() -> float:
+def _read_system_volume() -> float:
     try:
         result = subprocess.run(
             ["osascript", "-e", APPLE_SCRIPT],
@@ -26,17 +29,42 @@ def read_level() -> float:
         value = int(result.stdout.strip() or "0")
     except ValueError:
         return 0.0
-    value = max(0, min(100, value))
-    return value / 100.0
+    return max(0.0, min(1.0, value / 100.0))
+
+
+def _start_playback_state_helper() -> subprocess.Popen[str]:
+    SWIFT_MODULE_CACHE.mkdir(exist_ok=True)
+    env = os.environ.copy()
+    env["CLANG_MODULE_CACHE_PATH"] = str(SWIFT_MODULE_CACHE)
+    return subprocess.Popen(
+        ["swift", str(SWIFT_HELPER)],
+        stdout=subprocess.PIPE,
+        stderr=sys.stderr,
+        text=True,
+        bufsize=1,
+        env=env,
+    )
 
 
 def main() -> int:
+    proc = _start_playback_state_helper()
     try:
         while True:
-            print(f"{read_level():.2f}", flush=True)
-            time.sleep(INTERVAL_SECONDS)
+            if proc.stdout is not None:
+                line = proc.stdout.readline()
+            else:
+                line = ""
+            if proc.poll() is not None and not line:
+                return proc.returncode or 0
+            latest_playing = line.strip() == "1"
+            level = _read_system_volume() if latest_playing else 0.0
+            print(f"{level:.2f}", flush=True)
     except BrokenPipeError:
         return 0
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait(timeout=1.0)
 
 
 if __name__ == "__main__":

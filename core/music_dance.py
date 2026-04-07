@@ -90,8 +90,13 @@ class MusicDanceController(QObject):
         self._process.waitForFinished(1000)
 
     def _on_process_finished(self) -> None:
-        if self._enabled:
-            self._start_helper()
+        if not self._enabled:
+            return
+        self._enabled = False
+        self._leave_dance_if_needed()
+        if self._auto_idle_timer is not None:
+            self._auto_idle_timer.start()
+        self.enabled_changed.emit(False)
 
     def _on_output_ready(self) -> None:
         raw = bytes(self._process.readAllStandardOutput()).decode("utf-8", errors="ignore")
