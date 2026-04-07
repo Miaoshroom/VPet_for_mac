@@ -27,6 +27,11 @@ def _max_side_from_json() -> int:
     return max(0, int(data["display_size"]))
 
 
+def _dev_mode_from_json() -> bool:
+    data = _load_settings()
+    return bool(data.get("dev_mode", False))
+
+
 def _save_display_size_to_json(size: int) -> None:
     try:
         payload = _load_settings()
@@ -53,21 +58,31 @@ class PetWindow(QMainWindow):
         self._mode_titles = mode_titles or {}
         self._drag_anchor: QPoint | None = None
         self._click_through_enabled = False
+        self._dev_mode = _dev_mode_from_json()
         if max_side is None:
             max_side = _max_side_from_json()
         self._max_side = max(0, max_side)
 
-        self._base_window_flags = (
-            Qt.WindowType.Window
-            | Qt.WindowType.FramelessWindowHint
-            | Qt.WindowType.WindowStaysOnTopHint
-        )
+        if self._dev_mode:
+            self._base_window_flags = (
+                Qt.WindowType.Window
+                | Qt.WindowType.WindowStaysOnTopHint
+            )
+        else:
+            self._base_window_flags = (
+                Qt.WindowType.Window
+                | Qt.WindowType.FramelessWindowHint
+                | Qt.WindowType.WindowStaysOnTopHint
+            )
         self._apply_window_flags()
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, not self._dev_mode)
 
         self._label = QLabel()
         self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._label.setStyleSheet("background: transparent;")
+        if self._dev_mode:
+            self._label.setStyleSheet("background: rgba(173, 216, 230, 0.18);")
+        else:
+            self._label.setStyleSheet("background: transparent;")
         self._label.setScaledContents(False)
         self._source_pixmap = initial_pixmap
 
@@ -101,7 +116,7 @@ class PetWindow(QMainWindow):
         geometry = self.geometry()
         was_visible = self.isVisible()
         self.setWindowFlags(flags)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, not self._dev_mode)
         if was_visible:
             self.show()
             self.setGeometry(geometry)
