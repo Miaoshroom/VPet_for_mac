@@ -9,11 +9,11 @@ from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtGui import QMouseEvent, QPixmap
 from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow
 
-from animation import PetAnimationDirector
-from pet_menu import show_pet_menu
+from core.animation import PetAnimationDirector
+from ui.pet_menu import show_pet_menu
 
 RESIZE_GRIP = 22
-_WINDOW_SETTINGS = Path(__file__).resolve().parent / "window_settings.json"
+_WINDOW_SETTINGS = Path(__file__).resolve().parent.parent / "window_settings.json"
 ZOOM_STEP = 30
 
 

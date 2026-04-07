@@ -70,6 +70,7 @@ class FlipbookPlayer(QObject):
     - 支持循环或单次播放
     - 通过信号输出当前帧
     """
+
     frame_changed = pyqtSignal(object)  # QPixmap
     finished = pyqtSignal()
 
