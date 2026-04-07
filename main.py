@@ -20,15 +20,18 @@ def main() -> int:
     try:
         config = load_action_config()
         interaction_map = load_interaction_map(set(config.modes))
-        press_source = config.modes[config.press_mode]
-        if press_source.start is None or press_source.end is None:
-            raise RuntimeError("press_mode 缺少 start 或 end")
-
-        press = PressHoldAnimator(press_source.start, press_source.loop, press_source.end)
+        interactions: dict[str, PressHoldAnimator] = {}
+        for mode_name, mode in config.modes.items():
+            if not mode.is_phased:
+                continue
+            if mode.start is None or mode.end is None:
+                raise RuntimeError(f"{mode_name} 缺少 start 或 end")
+            interactions[mode_name] = PressHoldAnimator(mode.start, mode.loop, mode.end)
         director = PetAnimationDirector(
             modes=config.modes,
             default_mode=config.default_mode,
-            press=press,
+            interactions=interactions,
+            default_interaction=config.press_mode,
         )
         director.start_default_mode()
 

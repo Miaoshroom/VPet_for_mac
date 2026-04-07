@@ -9,8 +9,8 @@ from typing import Literal
 
 from PyQt6.QtCore import QPoint, QSize
 
-Gesture = Literal["click", "drag"]
-BehaviorType = Literal["none", "move_window", "switch_mode"]
+Gesture = Literal["press", "click", "drag"]
+BehaviorType = Literal["none", "move_window", "switch_mode", "press_mode"]
 
 ROOT = Path(__file__).resolve().parent.parent
 INTERACTION_MAP = ROOT / "config" / "interaction_map.json"
@@ -29,6 +29,7 @@ class InteractionRegion:
     row_end: int
     col_start: int
     col_end: int
+    press: InteractionBehavior | None = None
     click: InteractionBehavior | None = None
     drag: InteractionBehavior | None = None
 
@@ -39,6 +40,8 @@ class InteractionRegion:
         )
 
     def behavior_for(self, gesture: Gesture) -> InteractionBehavior | None:
+        if gesture == "press":
+            return self.press
         if gesture == "click":
             return self.click
         return self.drag
@@ -48,6 +51,7 @@ class InteractionRegion:
 class InteractionMap:
     rows: int
     cols: int
+    default_press: InteractionBehavior
     default_click: InteractionBehavior
     default_drag: InteractionBehavior
     regions: tuple[InteractionRegion, ...]
@@ -59,6 +63,8 @@ class InteractionMap:
                 behavior = region.behavior_for(gesture)
                 if behavior is not None:
                     return behavior
+        if gesture == "press":
+            return self.default_press
         if gesture == "click":
             return self.default_click
         return self.default_drag
@@ -80,6 +86,10 @@ def load_interaction_map(mode_ids: set[str]) -> InteractionMap:
     if rows < 1 or cols < 1:
         raise RuntimeError("interaction_map 的 grid.rows 和 grid.cols 必须大于 0")
 
+    default_press = _load_behavior(
+        data["default_behaviors"].get("press", {"type": "none"}),
+        mode_ids,
+    )
     default_click = _load_behavior(data["default_behaviors"]["click"], mode_ids)
     default_drag = _load_behavior(data["default_behaviors"]["drag"], mode_ids)
     regions: list[InteractionRegion] = []
@@ -102,6 +112,7 @@ def load_interaction_map(mode_ids: set[str]) -> InteractionMap:
                 row_end=row_end,
                 col_start=col_start,
                 col_end=col_end,
+                press=_load_optional_behavior(item.get("press"), mode_ids),
                 click=_load_optional_behavior(item.get("click"), mode_ids),
                 drag=_load_optional_behavior(item.get("drag"), mode_ids),
             )
@@ -110,6 +121,7 @@ def load_interaction_map(mode_ids: set[str]) -> InteractionMap:
     return InteractionMap(
         rows=rows,
         cols=cols,
+        default_press=default_press,
         default_click=default_click,
         default_drag=default_drag,
         regions=tuple(regions),
@@ -130,6 +142,11 @@ def _load_behavior(data: object, mode_ids: set[str]) -> InteractionBehavior:
         return InteractionBehavior(type="none")
     if behavior_type == "move_window":
         return InteractionBehavior(type="move_window")
+    if behavior_type == "press_mode":
+        mode = str(data["mode"])
+        if mode not in mode_ids:
+            raise RuntimeError(f"interaction_map 引用了未知模式: {mode}")
+        return InteractionBehavior(type="press_mode", mode=mode)
     if behavior_type == "switch_mode":
         mode = str(data["mode"])
         if mode not in mode_ids:

@@ -4,6 +4,9 @@
     "cols": 5
   },
   "default_behaviors": {
+    "press": {
+      "type": "none"
+    },
     "click": {
       "type": "none"
     },
@@ -13,33 +16,26 @@
   },
   "regions": [
     {
-      "name": "head",
+      "name": "touch_head_handle",
       "row_start": 0,
+      "row_end": 0,
+      "col_start": 2,
+      "col_end": 2,
+      "press": {
+        "type": "press_mode",
+        "mode": "touch_head"
+      }
+    },
+    {
+      "name": "lift_handle",
+      "row_start": 1,
       "row_end": 1,
-      "col_start": 1,
-      "col_end": 3,
-      "click": {
-        "type": "switch_mode",
-        "mode": "think"
-      }
-    },
-    {
-      "name": "body",
-      "row_start": 2,
-      "row_end": 3,
-      "col_start": 1,
-      "col_end": 3,
-      "click": {
-        "type": "switch_mode",
-        "mode": "meow"
-      }
-    },
-    {
-      "name": "drag_handle",
-      "row_start": 4,
-      "row_end": 4,
-      "col_start": 0,
-      "col_end": 4,
+      "col_start": 2,
+      "col_end": 2,
+      "press": {
+        "type": "press_mode",
+        "mode": "lift"
+      },
       "drag": {
         "type": "move_window"
       }

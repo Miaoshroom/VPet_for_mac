@@ -62,6 +62,7 @@ class PetWindow(QMainWindow):
         self._drag_anchor: QPoint | None = None
         self._press_global: QPoint | None = None
         self._press_is_drag = False
+        self._pressed_press_behavior = InteractionBehavior(type="none")
         self._pressed_click_behavior = InteractionBehavior(type="none")
         self._pressed_drag_behavior = InteractionBehavior(type="none")
         self._click_through_enabled = False
@@ -183,6 +184,12 @@ class PetWindow(QMainWindow):
         )
 
     def _handle_behavior(self, behavior: InteractionBehavior) -> None:
+        if behavior.type == "press_mode" and behavior.mode is not None:
+            self._director.start_interaction(behavior.mode)
+            return
+        if behavior.type == "press_mode":
+            self._director.on_mouse_press()
+            return
         if behavior.type == "switch_mode" and behavior.mode is not None:
             self._switch_mode(behavior.mode)
 
@@ -190,6 +197,7 @@ class PetWindow(QMainWindow):
         self._drag_anchor = None
         self._press_global = None
         self._press_is_drag = False
+        self._pressed_press_behavior = InteractionBehavior(type="none")
         self._pressed_click_behavior = InteractionBehavior(type="none")
         self._pressed_drag_behavior = InteractionBehavior(type="none")
 
@@ -204,6 +212,11 @@ class PetWindow(QMainWindow):
                 return
             self._press_global = e.globalPosition().toPoint()
             self._press_is_drag = False
+            self._pressed_press_behavior = self._interaction_map.resolve(
+                "press",
+                lp,
+                self.rect().size(),
+            )
             self._pressed_click_behavior = self._interaction_map.resolve(
                 "click",
                 lp,
@@ -214,6 +227,7 @@ class PetWindow(QMainWindow):
                 lp,
                 self.rect().size(),
             )
+            self._handle_behavior(self._pressed_press_behavior)
             if self._pressed_drag_behavior.type == "move_window":
                 self._drag_anchor = self._press_global - self.pos()
             e.accept()
@@ -241,6 +255,8 @@ class PetWindow(QMainWindow):
         if e.button() == Qt.MouseButton.LeftButton:
             if not self._press_is_drag:
                 self._handle_behavior(self._pressed_click_behavior)
+            if self._pressed_press_behavior.type == "press_mode":
+                self._director.end_interaction()
             self._reset_pointer_state()
             e.accept()
             return

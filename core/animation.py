@@ -200,7 +200,8 @@ class PetAnimationDirector(QObject):
         self,
         modes: dict[str, Mode],
         default_mode: str,
-        press: PressHoldAnimator,
+        interactions: dict[str, PressHoldAnimator],
+        default_interaction: str,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
@@ -208,15 +209,20 @@ class PetAnimationDirector(QObject):
             raise ValueError("必须至少提供一个可切换模式")
         if default_mode not in modes:
             raise ValueError(f"默认模式不存在: {default_mode}")
+        if default_interaction not in interactions:
+            raise ValueError(f"默认互动不存在: {default_interaction}")
         self._modes = modes
         self._default_mode = default_mode
         self._current_mode = default_mode
         self._pending_mode: str | None = None
         self._phase = "idle"
-        self._press = press
+        self._interactions = interactions
+        self._default_interaction = default_interaction
+        self._active_interaction_name: str | None = None
         self._mode_player = FlipbookPlayer(self)
         self._mode_player.frame_changed.connect(self.frame_changed)
-        self._press.frame_changed.connect(self.frame_changed)
+        for interaction in self._interactions.values():
+            interaction.frame_changed.connect(self.frame_changed)
 
     def current_mode_name(self) -> str:
         return self._pending_mode or self._current_mode
@@ -225,7 +231,10 @@ class PetAnimationDirector(QObject):
         return self._modes[self._current_mode]
 
     def is_press_active(self) -> bool:
-        return self._press.is_active()
+        return self.is_interaction_active()
+
+    def is_interaction_active(self) -> bool:
+        return self._active_interaction_name is not None
 
     def start_default_mode(self) -> None:
         self._start_mode(self._default_mode)
@@ -235,7 +244,7 @@ class PetAnimationDirector(QObject):
             raise KeyError(f"未知模式: {mode_name}")
         if mode_name == self.current_mode_name():
             return
-        if self._press.is_active():
+        if self.is_interaction_active():
             self._current_mode = mode_name
             self._pending_mode = None
             return
@@ -249,12 +258,25 @@ class PetAnimationDirector(QObject):
         self._start_mode(mode_name)
 
     def on_mouse_press(self) -> None:
-        self._stop_mode_player()
-        self._pending_mode = None
-        self._press.start(on_resume=self._resume_current_mode)
+        self.start_interaction(self._default_interaction)
 
     def on_mouse_release(self) -> None:
-        self._press.end()
+        self.end_interaction()
+
+    def start_interaction(self, interaction_name: str) -> None:
+        if interaction_name not in self._interactions:
+            raise KeyError(f"未知互动: {interaction_name}")
+        if self.is_interaction_active():
+            return
+        self._stop_mode_player()
+        self._pending_mode = None
+        self._active_interaction_name = interaction_name
+        self._interactions[interaction_name].start(on_resume=self._resume_current_mode)
+
+    def end_interaction(self) -> None:
+        if self._active_interaction_name is None:
+            return
+        self._interactions[self._active_interaction_name].end()
 
     def _stop_mode_player(self) -> None:
         self._mode_player.stop()
@@ -275,6 +297,7 @@ class PetAnimationDirector(QObject):
 
     def _resume_current_mode(self) -> None:
         self._stop_mode_player()
+        self._active_interaction_name = None
         self._pending_mode = None
         self._phase = "loop"
         self._mode_player.play(self.current_mode().loop, loop=True)
