@@ -47,7 +47,8 @@ def main() -> int:
         auto_idle_timer = start_auto_idle_timer(
             app,
             director,
-            config.auto_idle_interval_ms,
+            config.idle_autoswitch_interval_min_ms,
+            config.idle_autoswitch_interval_max_ms,
             config.auto_idle_modes,
         )
 
