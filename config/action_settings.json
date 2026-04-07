@@ -1,6 +1,6 @@
 {
   "default_mode": "default",
-  "press_mode": "press",
+  "press_mode": "lift",
   "idle_autoswitch_interval_min_ms": 8000,
   "idle_autoswitch_interval_max_ms": 12000,
   "auto_idle_modes": [
@@ -37,19 +37,19 @@
       }
     },
     {
-      "id": "press",
+      "id": "lift",
       "title": "提起",
       "type": "phased",
       "start": {
-        "folder": "interactions/press/start",
+        "folder": "interactions/lift/start",
         "interval_ms": 125
       },
       "loop": {
-        "folder": "interactions/press/loop",
+        "folder": "interactions/lift/loop",
         "interval_ms": 125
       },
       "end": {
-        "folder": "interactions/press/end",
+        "folder": "interactions/lift/end",
         "interval_ms": 125
       }
     },
@@ -67,6 +67,23 @@
       },
       "end": {
         "folder": "interactions/think/end",
+        "interval_ms": 125
+      }
+    },
+    {
+      "id": "touch_head",
+      "title": "摸头",
+      "type": "phased",
+      "start": {
+        "folder": "interactions/touch_head/start",
+        "interval_ms": 125
+      },
+      "loop": {
+        "folder": "interactions/touch_head/loop",
+        "interval_ms": 125
+      },
+      "end": {
+        "folder": "interactions/touch_head/end",
         "interval_ms": 125
       }
     }

@@ -1,0 +1,44 @@
+{
+  "grid": {
+    "rows": 5,
+    "cols": 5
+  },
+  "default_behaviors": {
+    "press": {
+      "type": "none"
+    },
+    "click": {
+      "type": "none"
+    },
+    "drag": {
+      "type": "none"
+    }
+  },
+  "regions": [
+    {
+      "name": "touch_head_handle",
+      "row_start": 0,
+      "row_end": 0,
+      "col_start": 2,
+      "col_end": 2,
+      "press": {
+        "type": "press_mode",
+        "mode": "touch_head"
+      }
+    },
+    {
+      "name": "lift_handle",
+      "row_start": 1,
+      "row_end": 1,
+      "col_start": 2,
+      "col_end": 2,
+      "press": {
+        "type": "press_mode",
+        "mode": "lift"
+      },
+      "drag": {
+        "type": "move_window"
+      }
+    }
+  ]
+}

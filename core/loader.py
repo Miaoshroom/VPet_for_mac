@@ -10,7 +10,7 @@ from core.animation import Clip, Mode, load_numbered_pngs
 
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "assets"
-ACTION_SETTINGS = ROOT / "action_settings.json"
+ACTION_SETTINGS = ROOT / "config" / "action_settings.json"
 
 
 @dataclass(frozen=True)
