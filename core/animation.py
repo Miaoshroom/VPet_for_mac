@@ -224,6 +224,9 @@ class PetAnimationDirector(QObject):
     def current_mode(self) -> Mode:
         return self._modes[self._current_mode]
 
+    def is_press_active(self) -> bool:
+        return self._press.is_active()
+
     def start_default_mode(self) -> None:
         self._start_mode(self._default_mode)
 

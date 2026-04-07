@@ -7,6 +7,7 @@ sys.dont_write_bytecode = True
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.animation import PressHoldAnimator, PetAnimationDirector
+from core.idle_autoswitch import start_auto_idle_timer
 from core.loader import load_action_config
 from ui.click_through import ClickThroughBadge
 from ui.pet_window import PetWindow
@@ -43,6 +44,12 @@ def main() -> int:
             set_enabled=win.set_click_through_enabled,
         )
         badge.show()
+        auto_idle_timer = start_auto_idle_timer(
+            app,
+            director,
+            config.auto_idle_interval_ms,
+            config.auto_idle_modes,
+        )
 
         return app.exec()
     except Exception as exc:  # json配置错误

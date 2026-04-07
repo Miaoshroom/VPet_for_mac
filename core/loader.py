@@ -19,6 +19,8 @@ class LoadedActions:
     mode_titles: dict[str, str]
     default_mode: str
     press_mode: str
+    auto_idle_interval_ms: int
+    auto_idle_modes: tuple[str, ...]
 
 
 def load_action_config() -> LoadedActions:
@@ -56,18 +58,27 @@ def load_action_config() -> LoadedActions:
 
     default_mode = str(data["default_mode"])
     press_mode = str(data["press_mode"])
+    auto_idle_interval_ms = int(data.get("auto_idle_interval_ms", 0))
+    auto_idle_modes = tuple(str(mode_id) for mode_id in data.get("auto_idle_modes", []))
     if default_mode not in modes:
         raise RuntimeError(f"default_mode 未在 modes 中定义: {default_mode}")
     if press_mode not in modes:
         raise RuntimeError(f"press_mode 未在 modes 中定义: {press_mode}")
     if not modes[press_mode].is_phased:
         raise RuntimeError("press_mode 必须是 phased 模式")
+    if auto_idle_interval_ms < 0:
+        raise RuntimeError("auto_idle_interval_ms 不能小于 0")
+    for mode_id in auto_idle_modes:
+        if mode_id not in modes:
+            raise RuntimeError(f"auto_idle_modes 未在 modes 中定义: {mode_id}")
 
     return LoadedActions(
         modes=modes,
         mode_titles=mode_titles,
         default_mode=default_mode,
         press_mode=press_mode,
+        auto_idle_interval_ms=auto_idle_interval_ms,
+        auto_idle_modes=auto_idle_modes,
     )
 
 
