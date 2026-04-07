@@ -1,7 +1,7 @@
 {
   "grid": {
-    "rows": 6,
-    "cols": 6
+    "rows": 7,
+    "cols": 7
   },
   "default_behaviors": {
     "press": {
@@ -18,9 +18,9 @@
     {
       "name": "touch_head_handle",
       "row_start": 0,
-      "row_end": 0,
+      "row_end": 1,
       "col_start": 2,
-      "col_end": 3,
+      "col_end": 4,
       "press": {
         "type": "press_mode",
         "mode": "touch_head"
@@ -28,7 +28,7 @@
     },
     {
       "name": "pinch_face_handle",
-      "row_start": 1,
+      "row_start": 2,
       "row_end": 2,
       "col_start": 2,
       "col_end": 2,
@@ -42,13 +42,57 @@
       "row_start": 2,
       "row_end": 2,
       "col_start": 3,
-      "col_end": 3,
+      "col_end": 4,
       "press": {
         "type": "press_mode",
         "mode": "lift"
       },
       "drag": {
         "type": "move_window"
+      }
+    },
+    {
+      "name": "touch_body_happy_left",
+      "row_start": 3,
+      "row_end": 4,
+      "col_start": 2,
+      "col_end": 2,
+      "press": {
+        "type": "press_mode",
+        "mode": "touch_body_happy"
+      }
+    },
+    {
+      "name": "touch_body_happy_right",
+      "row_start": 3,
+      "row_end": 4,
+      "col_start": 4,
+      "col_end": 4,
+      "press": {
+        "type": "press_mode",
+        "mode": "touch_body_happy"
+      }
+    },
+    {
+      "name": "touch_body_happy_bottom",
+      "row_start": 5,
+      "row_end": 6,
+      "col_start": 2,
+      "col_end": 4,
+      "press": {
+        "type": "press_mode",
+        "mode": "touch_body_happy"
+      }
+    },
+    {
+      "name": "touch_body_shy_center",
+      "row_start": 3,
+      "row_end": 4,
+      "col_start": 3,
+      "col_end": 3,
+      "press": {
+        "type": "press_mode",
+        "mode": "touch_body_shy"
       }
     }
   ]
