@@ -1,0 +1,7 @@
+{
+  "dance_modes": [
+    "dance"
+  ],
+  "start_threshold": 0.35,
+  "stop_threshold": 0.2
+}

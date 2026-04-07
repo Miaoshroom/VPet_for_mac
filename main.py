@@ -10,8 +10,9 @@ from core.animation import PressHoldAnimator, PetAnimationDirector
 from core.idle_autoswitch import start_auto_idle_timer
 from core.interaction_map import load_interaction_map
 from core.loader import load_action_config
+from core.music_dance import MusicDanceController
 from ui.click_through import ClickThroughBadge
-from ui.dev_window import PetWindow
+from ui.pet_window import PetWindow
 
 
 def main() -> int:
@@ -37,11 +38,28 @@ def main() -> int:
 
         initial_mode = config.modes[config.default_mode]
         initial_clip = initial_mode.start if initial_mode.is_phased else initial_mode.loop
+        auto_idle_timer = start_auto_idle_timer(
+            app,
+            director,
+            config.idle_autoswitch_interval_min_ms,
+            config.idle_autoswitch_interval_max_ms,
+            config.auto_idle_modes,
+        )
+        music_dance = MusicDanceController(
+            director=director,
+            default_mode=config.default_mode,
+            available_mode_ids=set(config.modes),
+            auto_idle_timer=auto_idle_timer,
+            parent=app,
+        )
+        app.aboutToQuit.connect(music_dance.shutdown)
         win = PetWindow(
             director,
             initial_clip.frames[0],
             interaction_map=interaction_map,
             mode_titles=config.mode_titles,
+            music_dance_enabled=music_dance.is_enabled,
+            on_toggle_music_dance=music_dance.set_enabled,
         )
         win.show()
         badge = ClickThroughBadge(
@@ -50,13 +68,6 @@ def main() -> int:
             set_enabled=win.set_click_through_enabled,
         )
         badge.show()
-        auto_idle_timer = start_auto_idle_timer(
-            app,
-            director,
-            config.idle_autoswitch_interval_min_ms,
-            config.idle_autoswitch_interval_max_ms,
-            config.auto_idle_modes,
-        )
 
         return app.exec()
     except Exception as exc:  # json配置错误

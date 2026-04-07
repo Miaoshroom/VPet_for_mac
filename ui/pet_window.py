@@ -53,6 +53,8 @@ class PetWindow(QMainWindow):
         initial_pixmap: QPixmap,
         interaction_map: InteractionMap,
         mode_titles: dict[str, str] | None = None,
+        music_dance_enabled: Callable[[], bool] | None = None,
+        on_toggle_music_dance: Callable[[bool], None] | None = None,
         *,
         max_side: int | None = None,
     ) -> None:
@@ -67,6 +69,8 @@ class PetWindow(QMainWindow):
         self._pressed_click_behavior = InteractionBehavior(type="none")
         self._pressed_drag_behavior = InteractionBehavior(type="none")
         self._click_through_enabled = False
+        self._music_dance_enabled = music_dance_enabled or (lambda: False)
+        self._on_toggle_music_dance = on_toggle_music_dance or (lambda enabled: None)
         self._dev_mode = _dev_mode_from_json()
         if max_side is None:
             max_side = _max_side_from_json()
@@ -267,6 +271,8 @@ class PetWindow(QMainWindow):
             e.globalPos(),
             on_zoom_in=lambda: self._zoom(ZOOM_STEP),
             on_zoom_out=lambda: self._zoom(-ZOOM_STEP),
+            music_dance_enabled=self._music_dance_enabled(),
+            on_toggle_music_dance=self._on_toggle_music_dance,
             mode_handlers=mode_handlers,
             current_mode_title=self._mode_titles.get(self._director.current_mode_name()),
             on_set_start_pos=self._save_start_position,
