@@ -11,7 +11,7 @@ from core.idle_autoswitch import start_auto_idle_timer
 from core.interaction_map import load_interaction_map
 from core.loader import load_action_config
 from ui.click_through import ClickThroughBadge
-from ui.pet_window import PetWindow
+from ui.dev_window import PetWindow
 
 
 def main() -> int:

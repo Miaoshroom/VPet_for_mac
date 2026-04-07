@@ -7,10 +7,11 @@ from pathlib import Path
 
 from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtGui import QMouseEvent, QPixmap
-from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow
+from PyQt6.QtWidgets import QApplication, QMainWindow
 
 from core.animation import PetAnimationDirector
 from core.interaction_map import InteractionBehavior, InteractionMap
+from ui.pet_display import PetDisplay
 from ui.pet_menu import show_pet_menu
 
 RESIZE_GRIP = 22
@@ -85,17 +86,11 @@ class PetWindow(QMainWindow):
         self._apply_window_flags()
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, not self._dev_mode)
 
-        self._label = QLabel()
-        self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        if self._dev_mode:
-            self._label.setStyleSheet("background: rgba(173, 216, 230, 0.18);")
-        else:
-            self._label.setStyleSheet("background: transparent;")
-        self._label.setScaledContents(False)
+        self._label = PetDisplay(self._interaction_map, self._dev_mode)
         self._source_pixmap = initial_pixmap
 
         pix0 = self._fit_pixmap(initial_pixmap)
-        self._label.setPixmap(pix0)
+        self._label.set_pet_pixmap(pix0)
         self.setCentralWidget(self._label)
 
         w = max(64, pix0.width())
@@ -145,12 +140,12 @@ class PetWindow(QMainWindow):
     def _on_frame(self, pix: QPixmap) -> None:
         self._source_pixmap = pix
         fitted = self._fit_pixmap(pix)
-        self._label.setPixmap(fitted)
+        self._label.set_pet_pixmap(fitted)
         self.resize(max(64, fitted.width()), max(64, fitted.height()))
 
     def _refresh_current_pixmap(self) -> None:
         fitted = self._fit_pixmap(self._source_pixmap)
-        self._label.setPixmap(fitted)
+        self._label.set_pet_pixmap(fitted)
         self.resize(max(64, fitted.width()), max(64, fitted.height()))
 
     def _zoom(self, delta: int) -> None:

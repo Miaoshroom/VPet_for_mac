@@ -58,6 +58,9 @@ class InteractionMap:
 
     def resolve(self, gesture: Gesture, local_pos: QPoint, size: QSize) -> InteractionBehavior:
         row, col = self._cell_for_point(local_pos, size)
+        return self.resolve_cell(gesture, row, col)
+
+    def resolve_cell(self, gesture: Gesture, row: int, col: int) -> InteractionBehavior:
         for region in self.regions:
             if region.matches(row, col):
                 behavior = region.behavior_for(gesture)
