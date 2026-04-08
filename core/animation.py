@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -9,38 +10,60 @@ from typing import Callable
 from PyQt6.QtCore import QObject, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QPixmap
 
+_FRAME_CACHE_MAX = 48
+_FRAME_CACHE: OrderedDict[str, QPixmap] = OrderedDict()
 
-def load_numbered_pngs(folder: Path) -> list[QPixmap]:
+
+def load_numbered_png_paths(folder: Path) -> list[Path]:
     """
-    按顺序加载文件夹中的帧动画图片，一旦缺号或文件无效就break
-    返回：QPixmap 列表（动画帧）
+    按顺序扫描文件夹中的帧动画图片，一旦缺号就停止
+    返回：Path 列表（动画帧路径）
     """
-    frames: list[QPixmap] = []
+    frame_paths: list[Path] = []
     i = 0
     while True:
         path = folder / f"{i}.png"
         if not path.is_file():
             break
-        pix = QPixmap(str(path))
-        if pix.isNull():
-            break
-        frames.append(pix)
+        frame_paths.append(path)
         i += 1
-    return frames
+    return frame_paths
+
+
+def _load_cached_pixmap(path: Path) -> QPixmap:
+    key = str(path)
+    cached = _FRAME_CACHE.get(key)
+    if cached is not None:
+        _FRAME_CACHE.move_to_end(key)
+        return cached
+    pix = QPixmap(key)
+    if pix.isNull():
+        raise ValueError(f"无法加载图片: {path}")
+    _FRAME_CACHE[key] = pix
+    _FRAME_CACHE.move_to_end(key)
+    while len(_FRAME_CACHE) > _FRAME_CACHE_MAX:
+        _FRAME_CACHE.popitem(last=False)
+    return pix
 
 
 @dataclass(frozen=True)
 class Clip:
-    """一个动画 = 多帧 + 播放速度"""
+    """一个动画 = 多帧路径 + 播放速度"""
 
-    frames: list[QPixmap]
+    frame_paths: tuple[Path, ...]
     interval_ms: int
 
-    def __post_init__(self) -> None:  # 动画必须合法
-        if self.interval_ms < 1:  # 贞间隔必须大于1
+    def __post_init__(self) -> None:
+        if self.interval_ms < 1:
             raise ValueError("帧间隔必须大于1")
-        if not self.frames:  # 必须至少有一帧
+        if not self.frame_paths:
             raise ValueError("必须至少有一帧")
+
+    def __len__(self) -> int:
+        return len(self.frame_paths)
+
+    def frame(self, index: int) -> QPixmap:
+        return _load_cached_pixmap(self.frame_paths[index])
 
 
 @dataclass(frozen=True)
@@ -79,7 +102,8 @@ class FlipbookPlayer(QObject):
         self._timer = QTimer(self)
         self._timer.setTimerType(Qt.TimerType.PreciseTimer)
         self._timer.timeout.connect(self._on_tick)
-        self._frames: list[QPixmap] = []
+        self._clip: Clip | None = None
+        self._frame_count = 0
         self._index = 0
         self._loop = False
 
@@ -94,13 +118,15 @@ class FlipbookPlayer(QObject):
 
     def stop(self) -> None:
         self._timer.stop()
+        self._clip = None
+        self._frame_count = 0
 
     def _on_tick(self) -> None:
-        if not self._frames:
+        if self._clip is None or self._frame_count == 0:
             return
-        self.frame_changed.emit(self._frames[self._index])
+        self.frame_changed.emit(self._clip.frame(self._index))
         self._index += 1
-        if self._index < len(self._frames):
+        if self._index < self._frame_count:
             return
         if self._loop:
             self._index = 0
@@ -110,17 +136,18 @@ class FlipbookPlayer(QObject):
 
     def play(self, clip: Clip, *, loop: bool) -> None:
         self.stop()
-        self._frames = clip.frames
+        self._clip = clip
+        self._frame_count = len(clip)
         self._loop = loop
         self._index = 0
-        if not self._frames:
+        if self._frame_count == 0:
             self.finished.emit()
             return
-        self.frame_changed.emit(self._frames[0])
-        if len(self._frames) == 1 and not loop:
+        self.frame_changed.emit(clip.frame(0))
+        if self._frame_count == 1 and not loop:
             self.finished.emit()
             return
-        self._index = 1 if len(self._frames) > 1 else 0
+        self._index = 1 if self._frame_count > 1 else 0
         self._timer.start(clip.interval_ms)
 
 

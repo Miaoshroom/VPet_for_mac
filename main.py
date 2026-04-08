@@ -55,7 +55,7 @@ def main() -> int:
         app.aboutToQuit.connect(music_dance.shutdown)
         win = PetWindow(
             director,
-            initial_clip.frames[0],
+            initial_clip.frame(0),
             interaction_map=interaction_map,
             mode_titles=config.mode_titles,
             music_dance_enabled=music_dance.is_enabled,

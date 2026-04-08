@@ -249,15 +249,15 @@
       "type": "phased",
       "start": {
         "folder": "interactions/sit_down/start",
-        "interval_ms": 250
+        "interval_ms": 125
       },
       "loop": {
         "folder": "interactions/sit_down/loop",
-        "interval_ms": 250
+        "interval_ms": 350
       },
       "end": {
         "folder": "interactions/sit_down/end",
-        "interval_ms": 250
+        "interval_ms": 125
       }
     },
     {
@@ -266,7 +266,7 @@
       "type": "phased",
       "start": {
         "folder": "interactions/sleep/start",
-        "interval_ms": 250
+        "interval_ms": 125
       },
       "loop": {
         "folder": "interactions/sleep/loop",
@@ -274,7 +274,7 @@
       },
       "end": {
         "folder": "interactions/sleep/end",
-        "interval_ms": 250
+        "interval_ms": 125
       }
     },
     {
@@ -283,7 +283,7 @@
       "type": "phased",
       "start": {
         "folder": "interactions/squat/start",
-        "interval_ms": 250
+        "interval_ms": 125
       },
       "loop": {
         "folder": "interactions/squat/loop",
@@ -291,7 +291,7 @@
       },
       "end": {
         "folder": "interactions/squat/end",
-        "interval_ms": 250
+        "interval_ms": 125
       }
     },
     {

@@ -22,8 +22,8 @@ def show_pet_menu(
 ) -> None:
     menu = QMenu(parent)
 
-    zoom_in = menu.addAction("放大 (+30)")
-    zoom_out = menu.addAction("缩小 (-30)")
+    zoom_in = menu.addAction("放大")
+    zoom_out = menu.addAction("缩小")
     music_dance = menu.addAction("随音乐跳舞")
     music_dance.setCheckable(True)
     music_dance.setChecked(music_dance_enabled)
