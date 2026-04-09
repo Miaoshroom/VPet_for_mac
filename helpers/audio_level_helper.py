@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SWIFT_HELPER = ROOT / "helpers" / "audio_level_helper.swift"
-SWIFT_MODULE_CACHE = ROOT / ".swift-module-cache"
 APPLE_SCRIPT = "output volume of (get volume settings)"
 
 
@@ -32,11 +33,11 @@ def _read_system_volume() -> float:
     return max(0.0, min(1.0, value / 100.0))
 
 
-def _start_playback_state_helper() -> subprocess.Popen[str]:
-    SWIFT_MODULE_CACHE.mkdir(exist_ok=True)
+def _start_playback_state_helper() -> tuple[subprocess.Popen[str], Path]:
+    module_cache = Path(tempfile.mkdtemp(prefix="vpet-swift-module-cache-"))
     env = os.environ.copy()
-    env["CLANG_MODULE_CACHE_PATH"] = str(SWIFT_MODULE_CACHE)
-    return subprocess.Popen(
+    env["CLANG_MODULE_CACHE_PATH"] = str(module_cache)
+    proc = subprocess.Popen(
         ["swift", str(SWIFT_HELPER)],
         stdout=subprocess.PIPE,
         stderr=sys.stderr,
@@ -44,10 +45,11 @@ def _start_playback_state_helper() -> subprocess.Popen[str]:
         bufsize=1,
         env=env,
     )
+    return proc, module_cache
 
 
 def main() -> int:
-    proc = _start_playback_state_helper()
+    proc, module_cache = _start_playback_state_helper()
     try:
         while True:
             if proc.stdout is not None:
@@ -65,6 +67,7 @@ def main() -> int:
         if proc.poll() is None:
             proc.kill()
             proc.wait(timeout=1.0)
+        shutil.rmtree(module_cache, ignore_errors=True)
 
 
 if __name__ == "__main__":

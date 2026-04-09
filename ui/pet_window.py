@@ -71,6 +71,7 @@ class PetWindow(QMainWindow):
         self._click_through_enabled = False
         self._music_dance_enabled = music_dance_enabled or (lambda: False)
         self._on_toggle_music_dance = on_toggle_music_dance or (lambda enabled: None)
+        self._on_quit = QApplication.quit
         self._dev_mode = _dev_mode_from_json()
         if max_side is None:
             max_side = _max_side_from_json()
@@ -141,11 +142,14 @@ class PetWindow(QMainWindow):
             Qt.TransformationMode.SmoothTransformation,
         )
 
-    def _on_frame(self, pix: QPixmap) -> None:
+    def set_pixmap(self, pix: QPixmap) -> None:
         self._source_pixmap = pix
         fitted = self._fit_pixmap(pix)
         self._label.set_pet_pixmap(fitted)
         self.resize(max(64, fitted.width()), max(64, fitted.height()))
+
+    def _on_frame(self, pix: QPixmap) -> None:
+        self.set_pixmap(pix)
 
     def _refresh_current_pixmap(self) -> None:
         fitted = self._fit_pixmap(self._source_pixmap)
@@ -161,6 +165,9 @@ class PetWindow(QMainWindow):
         if mode_name not in self._mode_titles:
             return
         self._director.switch_mode(mode_name)
+
+    def set_quit_callback(self, callback) -> None:
+        self._on_quit = callback
 
     def _save_start_position(self) -> None:
         try:
@@ -276,5 +283,5 @@ class PetWindow(QMainWindow):
             mode_handlers=mode_handlers,
             current_mode_title=self._mode_titles.get(self._director.current_mode_name()),
             on_set_start_pos=self._save_start_position,
-            on_quit=QApplication.quit,
+            on_quit=self._on_quit,
         )

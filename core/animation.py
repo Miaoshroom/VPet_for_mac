@@ -305,6 +305,14 @@ class PetAnimationDirector(QObject):
             return
         self._interactions[self._active_interaction_name].end()
 
+    def stop(self) -> None:
+        self._stop_mode_player()
+        for interaction in self._interactions.values():
+            interaction.stop()
+        self._active_interaction_name = None
+        self._pending_mode = None
+        self._phase = "idle"
+
     def _stop_mode_player(self) -> None:
         self._mode_player.stop()
         self._mode_player.disconnect_finished()

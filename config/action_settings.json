@@ -5,7 +5,6 @@
   "idle_autoswitch_interval_max_ms": 600000,
   "auto_idle_modes": [
     "default",
-    "meow",
     "amusement",
     "dance",
     "think",
@@ -19,314 +18,194 @@
     "sleep",
     "squat"
   ],
-  "modes": [
+  "loop_modes": [
     {
       "id": "default",
       "title": "默认",
-      "type": "loop",
-      "loop": {
-        "folder": "states/default",
-        "interval_ms": 125
-      }
-    },
-    {
-      "id": "meow",
-      "title": "喵喵叫",
-      "type": "loop",
-      "loop": {
-        "folder": "states/meow",
-        "interval_ms": 125
-      }
+      "folder": "loop/default",
+      "interval_ms": 125
     },
     {
       "id": "amusement",
       "title": "转圈圈",
-      "type": "loop",
-      "loop": {
-        "folder": "states/amusement",
-        "interval_ms": 125
-      }
-    },
-    {
-      "id": "yawning",
-      "title": "打哈欠",
-      "type": "loop",
-      "loop": {
-        "folder": "states/yawning",
-        "interval_ms": 125
-      }
-    },
+      "folder": "loop/amusement",
+      "interval_ms": 125
+    }
+  ],
+  "phased_modes": [
     {
       "id": "dance",
       "title": "跳舞",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/dance/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/dance/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/dance/end",
-        "interval_ms": 125
-      }
+      "base": "phased/dance",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     },
     {
       "id": "lift",
       "title": "提起",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/lift/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/lift/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/lift/end",
-        "interval_ms": 125
-      }
+      "base": "phased/lift",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     },
     {
       "id": "think",
       "title": "鬼脑发力",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/think/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/think/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/think/end",
-        "interval_ms": 125
-      }
+      "base": "phased/think",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     },
     {
       "id": "touch_head",
       "title": "摸头",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/touch_head/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/touch_head/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/touch_head/end",
-        "interval_ms": 125
-      }
+      "base": "phased/touch_head",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     },
     {
       "id": "pinch_face",
       "title": "捏脸",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/pinch_face/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/pinch_face/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/pinch_face/end",
-        "interval_ms": 125
-      }
+      "base": "phased/pinch_face",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     },
     {
       "id": "aside",
       "title": "侧身",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/aside/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/aside/loop",
-        "interval_ms": 200
-      },
-      "end": {
-        "folder": "interactions/aside/end",
-        "interval_ms": 125
-      }
+      "base": "phased/aside",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 200,
+      "end_interval_ms": 125
     },
     {
       "id": "sleepy",
       "title": "困困",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/sleepy/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/sleepy/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/sleepy/end",
-        "interval_ms": 125
-      }
+      "base": "phased/sleepy",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     },
     {
       "id": "bubbles",
       "title": "冒泡",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/bubbles/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/bubbles/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/bubbles/end",
-        "interval_ms": 125
-      }
+      "base": "phased/bubbles",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     },
     {
       "id": "happy_turn_1",
       "title": "开心转身1",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/happy_turn_1/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/happy_turn_1/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/happy_turn_1/end",
-        "interval_ms": 125
-      }
+      "base": "phased/happy_turn_1",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     },
     {
       "id": "happy_turn_2",
       "title": "开心转身2",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/happy_turn_2/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/happy_turn_2/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/happy_turn_2/end",
-        "interval_ms": 125
-      }
+      "base": "phased/happy_turn_2",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     },
     {
       "id": "meowlook",
       "title": "喵望",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/meowlook/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/meowlook/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/meowlook/end",
-        "interval_ms": 125
-      }
+      "base": "phased/meowlook",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     },
     {
       "id": "sit_down",
       "title": "坐下",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/sit_down/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/sit_down/loop",
-        "interval_ms": 350
-      },
-      "end": {
-        "folder": "interactions/sit_down/end",
-        "interval_ms": 125
-      }
+      "base": "phased/sit_down",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 350,
+      "end_interval_ms": 125
     },
     {
       "id": "sleep",
       "title": "睡觉",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/sleep/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/sleep/loop",
-        "interval_ms": 250
-      },
-      "end": {
-        "folder": "interactions/sleep/end",
-        "interval_ms": 125
-      }
+      "base": "phased/sleep",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 250,
+      "end_interval_ms": 125
     },
     {
       "id": "squat",
       "title": "下蹲",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/squat/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/squat/loop",
-        "interval_ms": 250
-      },
-      "end": {
-        "folder": "interactions/squat/end",
-        "interval_ms": 125
-      }
+      "base": "phased/squat",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 250,
+      "end_interval_ms": 125
     },
     {
       "id": "touch_body_happy",
       "title": "摸身开心",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/touch_body_happy/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/touch_body_happy/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/touch_body_happy/end",
-        "interval_ms": 125
-      }
+      "base": "phased/touch_body_happy",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     },
     {
       "id": "touch_body_shy",
       "title": "摸身害羞",
-      "type": "phased",
-      "start": {
-        "folder": "interactions/touch_body_shy/start",
-        "interval_ms": 125
-      },
-      "loop": {
-        "folder": "interactions/touch_body_shy/loop",
-        "interval_ms": 125
-      },
-      "end": {
-        "folder": "interactions/touch_body_shy/end",
-        "interval_ms": 125
-      }
+      "base": "phased/touch_body_shy",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     }
+  ],
+  "single_modes": [
+    {
+      "id": "meow",
+      "title": "喵喵叫",
+      "folder": "single/meow",
+      "interval_ms": 125
+    },
+    {
+      "id": "yawning",
+      "title": "打哈欠",
+      "folder": "single/yawning",
+      "interval_ms": 125
+    },
+    {
+      "id": "shutdown_2",
+      "title": "关机2",
+      "folder": "single/shutdown_2",
+      "interval_ms": 125
+    },
+    {
+      "id": "startup_1",
+      "title": "启动1",
+      "folder": "single/startup_1",
+      "interval_ms": 125
+    },
+    {
+      "id": "startup_2",
+      "title": "启动2",
+      "folder": "single/startup_2",
+      "interval_ms": 125
+    },
+    {
+      "id": "shutdown_1",
+      "title": "关机1",
+      "folder": "single/shutdown_1",
+      "interval_ms": 125
+    }
+  ],
+  "startup": [
+    "startup_1",
+    "startup_2"
+  ],
+  "shutdown": [
+    "shutdown_1",
+    "shutdown_2"
   ]
 }
