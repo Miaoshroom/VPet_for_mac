@@ -1,4 +1,4 @@
-"""自动切换待机动作"""
+"""自动切换 mode。"""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from PyQt6.QtCore import QObject, QTimer
 from core.animation import PetAnimationDirector
 
 
-def start_auto_idle_timer(
+def start_mode_autoswitch_timer(
     parent: QObject,
     director: PetAnimationDirector,
     interval_min_ms: int,
@@ -24,7 +24,7 @@ def start_auto_idle_timer(
     def reset_interval() -> None:
         timer.setInterval(randint(interval_min_ms, interval_max_ms))
 
-    def switch_auto_idle() -> None:
+    def switch_mode_auto() -> None:
         reset_interval()
         if director.is_press_active():
             return
@@ -36,7 +36,7 @@ def start_auto_idle_timer(
             return
         director.switch_mode(choice(candidates))
 
-    timer.timeout.connect(switch_auto_idle)
+    timer.timeout.connect(switch_mode_auto)
     reset_interval()
     timer.start()
     return timer

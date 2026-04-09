@@ -11,6 +11,7 @@ from core.animation import Clip, Mode, load_numbered_png_paths
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "assets"
 ACTION_SETTINGS = ROOT / "config" / "action_settings.json"
+MODES_SETTINGS = ROOT / "config" / "modes.json"
 
 
 @dataclass(frozen=True)
@@ -21,6 +22,9 @@ class LoadedActions:
     single_titles: dict[str, str]
     startup: tuple[str, ...]
     shutdown: tuple[str, ...]
+    single_insert_interval_min_ms: int
+    single_insert_interval_max_ms: int
+    single_insert_modes: tuple[str, ...]
     default_mode: str
     press_mode: str
     idle_autoswitch_interval_min_ms: int
@@ -29,15 +33,16 @@ class LoadedActions:
 
 
 def load_action_config() -> LoadedActions:
-    """读取动作配置，并把 loop / phased / single 资源组装成运行时对象。"""
+    """读取运行设置与动作定义，并组装成运行时对象。"""
 
-    data = json.loads(ACTION_SETTINGS.read_text(encoding="utf-8"))
+    settings = json.loads(ACTION_SETTINGS.read_text(encoding="utf-8"))
+    modes_data = json.loads(MODES_SETTINGS.read_text(encoding="utf-8"))
     modes: dict[str, Mode] = {}
     mode_titles: dict[str, str] = {}
     single_clips: dict[str, Clip] = {}
     single_titles: dict[str, str] = {}
 
-    for item in data.get("loop_modes", []):
+    for item in modes_data.get("loop_modes", []):
         mode_id = str(item["id"])
         mode_titles[mode_id] = str(item["title"])
         modes[mode_id] = Mode(
@@ -47,7 +52,7 @@ def load_action_config() -> LoadedActions:
             )
         )
 
-    for item in data.get("phased_modes", []):
+    for item in modes_data.get("phased_modes", []):
         mode_id = str(item["id"])
         mode_titles[mode_id] = str(item["title"])
         base = str(item["base"])
@@ -66,7 +71,7 @@ def load_action_config() -> LoadedActions:
             ),
         )
 
-    for item in data.get("single_modes", []):
+    for item in modes_data.get("single_modes", []):
         mode_id = str(item["id"])
         single_titles[mode_id] = str(item["title"])
         single_clips[mode_id] = _clip_from_dir(
@@ -74,13 +79,16 @@ def load_action_config() -> LoadedActions:
             interval_ms=int(item["interval_ms"]),
         )
 
-    startup = tuple(str(mode_id) for mode_id in data.get("startup", []))
-    shutdown = tuple(str(mode_id) for mode_id in data.get("shutdown", []))
-    default_mode = str(data["default_mode"])
-    press_mode = str(data["press_mode"])
-    idle_autoswitch_interval_min_ms = int(data.get("idle_autoswitch_interval_min_ms", 0))
-    idle_autoswitch_interval_max_ms = int(data.get("idle_autoswitch_interval_max_ms", 0))
-    auto_idle_modes = tuple(str(mode_id) for mode_id in data.get("auto_idle_modes", []))
+    startup = tuple(str(mode_id) for mode_id in settings.get("startup", []))
+    shutdown = tuple(str(mode_id) for mode_id in settings.get("shutdown", []))
+    single_insert_modes = tuple(str(mode_id) for mode_id in settings.get("single_insert_modes", []))
+    default_mode = str(settings["default_mode"])
+    press_mode = str(settings["press_mode"])
+    idle_autoswitch_interval_min_ms = int(settings.get("idle_autoswitch_interval_min_ms", 0))
+    idle_autoswitch_interval_max_ms = int(settings.get("idle_autoswitch_interval_max_ms", 0))
+    auto_idle_modes = tuple(str(mode_id) for mode_id in settings.get("auto_idle_modes", []))
+    single_insert_interval_min_ms = int(settings.get("single_insert_interval_min_ms", 0))
+    single_insert_interval_max_ms = int(settings.get("single_insert_interval_max_ms", 0))
 
     if default_mode not in modes:
         raise RuntimeError(f"default_mode 未在 loop_modes / phased_modes 中定义: {default_mode}")
@@ -97,6 +105,9 @@ def load_action_config() -> LoadedActions:
     for mode_id in shutdown:
         if mode_id not in single_clips:
             raise RuntimeError(f"shutdown 未在 single_modes 中定义: {mode_id}")
+    for mode_id in single_insert_modes:
+        if mode_id not in single_clips:
+            raise RuntimeError(f"single_insert_modes 未在 single_modes 中定义: {mode_id}")
 
     return LoadedActions(
         modes=modes,
@@ -105,6 +116,9 @@ def load_action_config() -> LoadedActions:
         single_titles=single_titles,
         startup=startup,
         shutdown=shutdown,
+        single_insert_interval_min_ms=single_insert_interval_min_ms,
+        single_insert_interval_max_ms=single_insert_interval_max_ms,
+        single_insert_modes=single_insert_modes,
         default_mode=default_mode,
         press_mode=press_mode,
         idle_autoswitch_interval_min_ms=idle_autoswitch_interval_min_ms,

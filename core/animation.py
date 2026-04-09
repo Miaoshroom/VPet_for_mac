@@ -313,6 +313,13 @@ class PetAnimationDirector(QObject):
         self._pending_mode = None
         self._phase = "idle"
 
+    def resume_mode(self, mode_name: str | None = None) -> None:
+        if mode_name is not None:
+            if mode_name not in self._modes:
+                raise KeyError(f"未知模式: {mode_name}")
+            self._current_mode = mode_name
+        self._resume_current_mode()
+
     def _stop_mode_player(self) -> None:
         self._mode_player.stop()
         self._mode_player.disconnect_finished()

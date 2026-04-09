@@ -1,26 +1,20 @@
 """桌宠主入口：初始化动画、窗口，元神启动"""
 from __future__ import annotations
 
-import random
 import sys
 sys.dont_write_bytecode = True
 
-from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from core.animation import Clip, FlipbookPlayer, PressHoldAnimator, PetAnimationDirector
-from core.idle_autoswitch import start_auto_idle_timer
+from core.animation import PressHoldAnimator, PetAnimationDirector
 from core.interaction_map import load_interaction_map
 from core.loader import load_action_config
+from core.mode_autoswitch import start_mode_autoswitch_timer
 from core.music_dance import MusicDanceController
+from core.single_autoswitch import SingleAutoSwitch
+from core.start_shut import build_shutdown_handler, pick_startup, play_startup
 from ui.click_through import ClickThroughBadge
 from ui.pet_window import PetWindow
-
-
-def _pick_single_clip(config_ids: tuple[str, ...], single_clips: dict[str, Clip]) -> Clip | None:
-    if not config_ids:
-        return None
-    return single_clips[random.choice(config_ids)]
 
 
 def main() -> int:
@@ -43,17 +37,13 @@ def main() -> int:
             default_interaction=config.press_mode,
         )
 
-        initial_mode = config.modes[config.default_mode]
-        if initial_mode.is_phased:
-            initial_clip = initial_mode.start
-        else:
-            initial_clip = initial_mode.loop
-        assert initial_clip is not None
+        startup_clip, initial_pixmap = pick_startup(
+            config.modes[config.default_mode],
+            config.startup,
+            config.single_clips,
+        )
 
-        startup_clip = _pick_single_clip(config.startup, config.single_clips)
-        initial_pixmap = startup_clip.frame(0) if startup_clip is not None else initial_clip.frame(0)
-
-        auto_idle_timer = start_auto_idle_timer(
+        mode_autoswitch_timer = start_mode_autoswitch_timer(
             app,
             director,
             config.idle_autoswitch_interval_min_ms,
@@ -64,7 +54,7 @@ def main() -> int:
             director=director,
             default_mode=config.default_mode,
             available_mode_ids=set(config.modes),
-            auto_idle_timer=auto_idle_timer,
+            auto_idle_timer=mode_autoswitch_timer,
             parent=app,
         )
         app.aboutToQuit.connect(music_dance.shutdown)
@@ -84,44 +74,33 @@ def main() -> int:
         )
         badge.show()
 
-        startup_player = FlipbookPlayer(app)
-        startup_player.frame_changed.connect(win.set_pixmap)
+        single_autoswitch = SingleAutoSwitch(
+            parent=app,
+            director=director,
+            window=win,
+            interval_min_ms=config.single_insert_interval_min_ms,
+            interval_max_ms=config.single_insert_interval_max_ms,
+            mode_ids=config.single_insert_modes,
+            single_clips=config.single_clips,
+            music_dance_enabled=music_dance.is_enabled,
+            mode_autoswitch_timer=mode_autoswitch_timer,
+        )
 
-        def start_default_mode() -> None:
-            director.start_default_mode()
-            win.setEnabled(True)
+        play_startup(app, win, director, single_autoswitch, startup_clip)
 
-        if startup_clip is not None:
-            win.setEnabled(False)
-            startup_player.finished.connect(start_default_mode)
-            QTimer.singleShot(0, lambda: startup_player.play(startup_clip, loop=False))
-        else:
-            start_default_mode()
-
-        shutdown_player = FlipbookPlayer(app)
-        shutdown_player.frame_changed.connect(win.set_pixmap)
-        is_shutting_down = False
-
-        def request_shutdown() -> None:
-            nonlocal is_shutting_down
-            if is_shutting_down:
-                return
-            is_shutting_down = True
-            win.setEnabled(False)
-            badge.hide()
-            if auto_idle_timer is not None:
-                auto_idle_timer.stop()
-            music_dance.shutdown()
-            director.stop()
-
-            shutdown_clip = _pick_single_clip(config.shutdown, config.single_clips)
-            if shutdown_clip is None:
-                app.quit()
-                return
-            shutdown_player.finished.connect(app.quit)
-            shutdown_player.play(shutdown_clip, loop=False)
-
-        win.set_quit_callback(request_shutdown)
+        win.set_quit_callback(
+            build_shutdown_handler(
+                app=app,
+                window=win,
+                badge=badge,
+                director=director,
+                single_autoswitch=single_autoswitch,
+                music_dance=music_dance,
+                mode_autoswitch_timer=mode_autoswitch_timer,
+                shutdown_ids=config.shutdown,
+                single_clips=config.single_clips,
+            )
+        )
 
         return app.exec()
     except Exception as exc:  # json配置错误
