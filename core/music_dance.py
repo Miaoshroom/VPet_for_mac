@@ -5,19 +5,15 @@ from __future__ import annotations
 import json
 from random import choice
 import sys
-from pathlib import Path
 
 from PyQt6.QtCore import QObject, QProcess, pyqtSignal
 
 from core.animation import PetAnimationDirector
-
-ROOT = Path(__file__).resolve().parent.parent
-HELPER = ROOT / "helpers" / "audio_level_helper.py"
-DANCE_SETTINGS = ROOT / "config" / "music_dance_settings.json"
+from core.app_paths import config_path, helper_binary_path, helper_python_path
 
 
 def _load_settings(_: set[str]) -> tuple[tuple[str, ...], float, float]:
-    data = json.loads(DANCE_SETTINGS.read_text(encoding="utf-8"))
+    data = json.loads(config_path("music_dance_settings.json").read_text(encoding="utf-8"))
     dance_modes = tuple(str(mode_id) for mode_id in data.get("dance_modes", []))
     start_threshold = float(data["start_threshold"])
     stop_threshold = float(data["stop_threshold"])
@@ -81,7 +77,11 @@ class MusicDanceController(QObject):
         if self._process.state() != QProcess.ProcessState.NotRunning:
             self._process.kill()
             self._process.waitForFinished(1000)
-        self._process.start(sys.executable, [str(HELPER)])
+        helper_bin = helper_binary_path()
+        if helper_bin.is_file():
+            self._process.start(str(helper_bin), [])
+            return
+        self._process.start(sys.executable, [str(helper_python_path())])
 
     def _stop_helper(self) -> None:
         if self._process.state() == QProcess.ProcessState.NotRunning:

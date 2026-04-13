@@ -4,14 +4,9 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from pathlib import Path
 
 from core.animation import Clip, Mode, load_numbered_png_paths
-
-ROOT = Path(__file__).resolve().parent.parent
-ASSETS = ROOT / "assets"
-ACTION_SETTINGS = ROOT / "config" / "action_settings.json"
-MODES_SETTINGS = ROOT / "config" / "modes.json"
+from core.app_paths import assets_dir, config_path
 
 
 @dataclass(frozen=True)
@@ -35,8 +30,8 @@ class LoadedActions:
 def load_action_config() -> LoadedActions:
     """读取运行设置与动作定义，并组装成运行时对象。"""
 
-    settings = json.loads(ACTION_SETTINGS.read_text(encoding="utf-8"))
-    modes_data = json.loads(MODES_SETTINGS.read_text(encoding="utf-8"))
+    settings = json.loads(config_path("action_settings.json").read_text(encoding="utf-8"))
+    modes_data = json.loads(config_path("modes.json").read_text(encoding="utf-8"))
     modes: dict[str, Mode] = {}
     mode_titles: dict[str, str] = {}
     single_clips: dict[str, Clip] = {}
@@ -130,7 +125,8 @@ def load_action_config() -> LoadedActions:
 def _clip_from_dir(folder: str, interval_ms: int) -> Clip:
     """按目录读取一组连续编号的图片，并构建 Clip。"""
 
-    frame_paths = load_numbered_png_paths(ASSETS / folder)
+    assets = assets_dir()
+    frame_paths = load_numbered_png_paths(assets / folder)
     if not frame_paths:
-        raise RuntimeError(f"Missing frames in {ASSETS / folder}")
+        raise RuntimeError(f"Missing frames in {assets / folder}")
     return Clip(frame_paths=tuple(frame_paths), interval_ms=interval_ms)

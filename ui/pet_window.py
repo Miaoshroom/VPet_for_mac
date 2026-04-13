@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 from PyQt6.QtCore import QPoint, Qt
@@ -10,18 +11,21 @@ from PyQt6.QtGui import QMouseEvent, QPixmap
 from PyQt6.QtWidgets import QApplication, QMainWindow
 
 from core.animation import PetAnimationDirector
+from core.app_paths import config_path
 from core.interaction_map import InteractionBehavior, InteractionMap
 from ui.pet_display import PetDisplay
 from ui.pet_menu import show_pet_menu
 
 RESIZE_GRIP = 22
-_WINDOW_SETTINGS = Path(__file__).resolve().parent.parent / "config" / "window_settings.json"
+def _window_settings_path() -> Path:
+    return config_path("window_settings.json")
+
 ZOOM_STEP = 30
 
 
 def _load_settings() -> dict:
     # json不对就该直接崩（
-    return json.loads(_WINDOW_SETTINGS.read_text(encoding="utf-8"))
+    return json.loads(_window_settings_path().read_text(encoding="utf-8"))
 
 
 def _max_side_from_json() -> int:
@@ -38,7 +42,7 @@ def _save_display_size_to_json(size: int) -> None:
     try:
         payload = _load_settings()
         payload["display_size"] = max(0, int(size))
-        _WINDOW_SETTINGS.write_text(
+        _window_settings_path().write_text(
             json.dumps(payload, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
@@ -175,7 +179,7 @@ class PetWindow(QMainWindow):
             payload["display_x"] = int(self.x())
             payload["display_y"] = int(self.y())
             payload["display_size"] = max(0, int(self._max_side))
-            _WINDOW_SETTINGS.write_text(
+            _window_settings_path().write_text(
                 json.dumps(payload, ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )

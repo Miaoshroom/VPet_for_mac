@@ -4,16 +4,14 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Literal
 
 from PyQt6.QtCore import QPoint, QSize
 
+from core.app_paths import config_path
+
 Gesture = Literal["press", "click", "drag"]
 BehaviorType = Literal["none", "move_window", "switch_mode", "press_mode"]
-
-ROOT = Path(__file__).resolve().parent.parent
-INTERACTION_MAP = ROOT / "config" / "interaction_map.json"
 
 
 @dataclass(frozen=True)
@@ -83,7 +81,7 @@ class InteractionMap:
 
 
 def load_interaction_map(mode_ids: set[str]) -> InteractionMap:
-    data = json.loads(INTERACTION_MAP.read_text(encoding="utf-8"))
+    data = json.loads(config_path("interaction_map.json").read_text(encoding="utf-8"))
     rows = int(data["grid"]["rows"])
     cols = int(data["grid"]["cols"])
     if rows < 1 or cols < 1:
