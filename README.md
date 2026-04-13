@@ -5,6 +5,8 @@
 mac 上怎么能没有桌宠？😡不行不行！🙅‍♀️
 能在桌面上待着、发呆、被摸头、跟着音乐乱跳，这样就差不多够了喵。
 
+---
+
 ## 你也想玩怎么办
 
 直接去 Release 里下载打包好的 `VPet_for_mac.app` 就可以了喵。
@@ -57,6 +59,8 @@ pip install pyinstaller
 export/VPet_for_mac.app
 ```
 
+---
+
 ## TodoList
 
 - [x] 可以随意拖动
@@ -77,3 +81,9 @@ export/VPet_for_mac.app
 
 剩下的这些有一说一不一定全会做喵。
 她只需要在桌面上可爱就够了喵。
+
+---
+
+## 动画文件来源
+
+[虚拟桌宠模拟器](https://github.com/LorisYounger/VPet)
