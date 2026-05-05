@@ -4,6 +4,9 @@ from __future__ import annotations
 import sys
 sys.dont_write_bytecode = True
 
+from pathlib import Path
+
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.animation import PressHoldAnimator, PetAnimationDirector
@@ -16,9 +19,13 @@ from core.start_shut import build_shutdown_handler, pick_startup, play_startup
 from ui.click_through import ClickThroughBadge
 from ui.pet_window import PetWindow
 
+ROOT = Path(__file__).resolve().parent
+APP_ICON = ROOT / "resources" / "app_icon.png"
+
 
 def main() -> int:
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(str(APP_ICON)))
 
     try:
         config = load_action_config()
