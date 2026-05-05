@@ -9,54 +9,35 @@ mac 上怎么能没有桌宠？😡不行不行！🙅‍♀️
 
 ## 你也想玩怎么办
 
-直接去 Release 里下载打包好的 `VPet_for_mac.app` 就可以了喵。
+这个项目现在不打包成app因为我学不会（，搞了半天还是用熟悉的uv吧。
 
-不过现在还没有 Apple Developer 正式签名，所以第一次打开时，macOS 大概率会拦一下喵。
+`uv` 会自动帮你准备 Python 版本、创建虚拟环境、安装依赖，然后启动桌宠。你不用自己鼓捣乱七八糟的东西x。
 
-可以这样打开喵：
+### 第零步：下载下来，然后点 run
 
-- 在访达里找到 `VPet_for_mac.app`喵
-- 右键应用，选择“打开”喵
-- 如果系统还拦着，就去“系统设置 -> 隐私与安全性”里允许打开喵
+最省事的玩法是直接下载整个项目：
 
-如果系统提示“App 已损坏”或者还是打不开，可以在终端里执行这句喵：
+1. 点 `Download ZIP`，把项目压缩包下载下来并解压。
+23. 点 `run.command`，等它自己启动桌宠。
 
-```bash
-xattr -dr com.apple.quarantine VPet_for_mac.app
-```
+### 如果你不嫌麻烦
 
-默认配置文件会在第一次运行后自动生成到这里喵：
-
-```text
-~/Library/Application Support/VPet_for_mac/config/
-```
-
-## 你想整个 clone 下来自己玩怎么办
-
-先在项目目录里创建并启用虚拟环境喵：
+手动安装 `uv`：
 
 ```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-然后安装依赖喵：
+安装完成后，执行下面的命令验证：
 
 ```bash
-pip install -r requirements.txt
-pip install pyinstaller
+uv --version
 ```
 
-执行一下导出脚本就可以开始编译喵：
+cd到项目目录里执行这个手动启动：
 
 ```bash
-./.venv/bin/python export.py
-```
-
-编译完成后，大概会输出到这里喵：
-
-```text
-export/VPet_for_mac.app
+uv run --python 3.12 --with-requirements requirements.txt python main.py
 ```
 
 ---
