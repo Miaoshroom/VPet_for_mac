@@ -9,34 +9,63 @@ from PyQt6.QtCore import QObject, QTimer
 from core.animation import PetAnimationDirector
 
 
-def start_mode_autoswitch_timer(
-    parent: QObject,
-    director: PetAnimationDirector,
-    interval_min_ms: int,
-    interval_max_ms: int,
-    mode_ids: tuple[str, ...],
-) -> QTimer | None:
-    if interval_max_ms <= 0 or not mode_ids:
-        return None
+class ModeAutoSwitch(QObject):
+    def __init__(
+        self,
+        parent: QObject,
+        director: PetAnimationDirector,
+        interval_min_ms: int,
+        interval_max_ms: int,
+        mode_ids: tuple[str, ...],
+    ) -> None:
+        super().__init__(parent)
+        self._director = director
+        self._interval_min_ms = interval_min_ms
+        self._interval_max_ms = interval_max_ms
+        self._mode_ids = mode_ids
+        self._enabled = interval_max_ms > 0 and bool(mode_ids)
+        self._timer: QTimer | None = None
 
-    timer = QTimer(parent)
+        if self._enabled:
+            self._timer = QTimer(self)
+            self._timer.timeout.connect(self._switch_mode_auto)
+            self.start()
 
-    def reset_interval() -> None:
-        timer.setInterval(randint(interval_min_ms, interval_max_ms))
+    def is_enabled(self) -> bool:
+        return self._enabled
 
-    def switch_mode_auto() -> None:
-        reset_interval()
-        if director.is_press_active():
+    def set_enabled(self, enabled: bool) -> None:
+        self._enabled = bool(enabled) and self._interval_max_ms > 0 and bool(self._mode_ids)
+        if self._enabled:
+            self.start()
+        else:
+            self.stop()
+
+    def isActive(self) -> bool:
+        return self._timer is not None and self._timer.isActive()
+
+    def start(self) -> None:
+        if not self._enabled or self._timer is None:
             return
-        current_mode = director.current_mode_name()
-        if current_mode not in mode_ids:
+        self._reset_interval()
+        self._timer.start()
+
+    def stop(self) -> None:
+        if self._timer is not None:
+            self._timer.stop()
+
+    def _reset_interval(self) -> None:
+        if self._timer is not None:
+            self._timer.setInterval(randint(self._interval_min_ms, self._interval_max_ms))
+
+    def _switch_mode_auto(self) -> None:
+        self._reset_interval()
+        if self._director.is_press_active():
             return
-        candidates = [mode_id for mode_id in mode_ids if mode_id != current_mode]
+        current_mode = self._director.current_mode_name()
+        if current_mode not in self._mode_ids:
+            return
+        candidates = [mode_id for mode_id in self._mode_ids if mode_id != current_mode]
         if not candidates:
             return
-        director.switch_mode(choice(candidates))
-
-    timer.timeout.connect(switch_mode_auto)
-    reset_interval()
-    timer.start()
-    return timer
+        self._director.switch_mode(choice(candidates))

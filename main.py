@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 from core.animation import PressHoldAnimator, PetAnimationDirector
 from core.interaction_map import load_interaction_map
 from core.loader import load_action_config
-from core.mode_autoswitch import start_mode_autoswitch_timer
+from core.mode_autoswitch import ModeAutoSwitch
 from core.music_dance import MusicDanceController
 from core.single_autoswitch import SingleAutoSwitch
 from core.start_shut import build_shutdown_handler, pick_startup, play_startup
@@ -50,7 +50,7 @@ def main() -> int:
             config.single_clips,
         )
 
-        mode_autoswitch_timer = start_mode_autoswitch_timer(
+        mode_autoswitch = ModeAutoSwitch(
             app,
             director,
             config.idle_autoswitch_interval_min_ms,
@@ -61,7 +61,7 @@ def main() -> int:
             director=director,
             default_mode=config.default_mode,
             available_mode_ids=set(config.modes),
-            auto_idle_timer=mode_autoswitch_timer,
+            auto_idle_timer=mode_autoswitch,
             parent=app,
         )
         app.aboutToQuit.connect(music_dance.shutdown)
@@ -72,6 +72,8 @@ def main() -> int:
             mode_titles=config.mode_titles,
             music_dance_enabled=music_dance.is_enabled,
             on_toggle_music_dance=music_dance.set_enabled,
+            mode_autoswitch_enabled=mode_autoswitch.is_enabled,
+            on_toggle_mode_autoswitch=mode_autoswitch.set_enabled,
         )
         win.show()
         badge = ClickThroughBadge(
@@ -90,7 +92,7 @@ def main() -> int:
             mode_ids=config.single_insert_modes,
             single_clips=config.single_clips,
             music_dance_enabled=music_dance.is_enabled,
-            mode_autoswitch_timer=mode_autoswitch_timer,
+            mode_autoswitch_timer=mode_autoswitch,
         )
 
         play_startup(app, win, director, single_autoswitch, startup_clip)
@@ -103,7 +105,7 @@ def main() -> int:
                 director=director,
                 single_autoswitch=single_autoswitch,
                 music_dance=music_dance,
-                mode_autoswitch_timer=mode_autoswitch_timer,
+                mode_autoswitch_timer=mode_autoswitch,
                 shutdown_ids=config.shutdown,
                 single_clips=config.single_clips,
             )
