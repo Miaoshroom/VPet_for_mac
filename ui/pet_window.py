@@ -61,6 +61,8 @@ class PetWindow(QMainWindow):
         on_toggle_music_dance: Callable[[bool], None] | None = None,
         mode_autoswitch_enabled: Callable[[], bool] | None = None,
         on_toggle_mode_autoswitch: Callable[[bool], None] | None = None,
+        auto_move_enabled: Callable[[], bool] | None = None,
+        on_toggle_auto_move: Callable[[bool], None] | None = None,
         *,
         max_side: int | None = None,
     ) -> None:
@@ -79,6 +81,8 @@ class PetWindow(QMainWindow):
         self._on_toggle_music_dance = on_toggle_music_dance or (lambda enabled: None)
         self._mode_autoswitch_enabled = mode_autoswitch_enabled or (lambda: False)
         self._on_toggle_mode_autoswitch = on_toggle_mode_autoswitch or (lambda enabled: None)
+        self._auto_move_enabled = auto_move_enabled or (lambda: False)
+        self._on_toggle_auto_move = on_toggle_auto_move or (lambda enabled: None)
         self._on_quit = QApplication.quit
         self._dev_mode = _dev_mode_from_json()
         if max_side is None:
@@ -290,6 +294,8 @@ class PetWindow(QMainWindow):
             on_toggle_music_dance=self._on_toggle_music_dance,
             mode_autoswitch_enabled=self._mode_autoswitch_enabled(),
             on_toggle_mode_autoswitch=self._on_toggle_mode_autoswitch,
+            auto_move_enabled=self._auto_move_enabled(),
+            on_toggle_auto_move=self._on_toggle_auto_move,
             mode_handlers=mode_handlers,
             current_mode_title=self._mode_titles.get(self._director.current_mode_name()),
             on_set_start_pos=self._save_start_position,

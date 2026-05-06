@@ -64,6 +64,15 @@ def main() -> int:
             auto_idle_timer=mode_autoswitch,
             parent=app,
         )
+        auto_move_enabled = False
+
+        def is_auto_move_enabled() -> bool:
+            return auto_move_enabled
+
+        def set_auto_move_enabled(enabled: bool) -> None:
+            nonlocal auto_move_enabled
+            auto_move_enabled = bool(enabled)
+
         app.aboutToQuit.connect(music_dance.shutdown)
         win = PetWindow(
             director,
@@ -74,6 +83,8 @@ def main() -> int:
             on_toggle_music_dance=music_dance.set_enabled,
             mode_autoswitch_enabled=mode_autoswitch.is_enabled,
             on_toggle_mode_autoswitch=mode_autoswitch.set_enabled,
+            auto_move_enabled=is_auto_move_enabled,
+            on_toggle_auto_move=set_auto_move_enabled,
         )
         win.show()
         badge = ClickThroughBadge(

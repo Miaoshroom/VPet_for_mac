@@ -17,6 +17,8 @@ def show_pet_menu(
     on_toggle_music_dance: Callable[[bool], None],
     mode_autoswitch_enabled: bool,
     on_toggle_mode_autoswitch: Callable[[bool], None],
+    auto_move_enabled: bool,
+    on_toggle_auto_move: Callable[[bool], None],
     mode_handlers: dict[str, Callable[[], None]],  # 生成动态动作列表
     current_mode_title: str | None,
     on_set_start_pos: Callable[[], None],  # 设置启动位置回调
@@ -32,6 +34,9 @@ def show_pet_menu(
     mode_autoswitch = menu.addAction("随机切换动作")
     mode_autoswitch.setCheckable(True)
     mode_autoswitch.setChecked(mode_autoswitch_enabled)
+    auto_move = menu.addAction("随机移动")
+    auto_move.setCheckable(True)
+    auto_move.setChecked(auto_move_enabled)
     switch_menu = menu.addMenu("切换动作")
     action_map = {}
     for title, handler in mode_handlers.items():
@@ -52,6 +57,8 @@ def show_pet_menu(
         on_toggle_music_dance(not music_dance_enabled)
     elif chosen is mode_autoswitch:
         on_toggle_mode_autoswitch(not mode_autoswitch_enabled)
+    elif chosen is auto_move:
+        on_toggle_auto_move(not auto_move_enabled)
     elif chosen in action_map:
         action_map[chosen]()
     elif chosen is set_start_pos:
