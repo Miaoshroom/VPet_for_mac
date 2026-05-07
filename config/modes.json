@@ -141,6 +141,102 @@
       "start_interval_ms": 125,
       "loop_interval_ms": 125,
       "end_interval_ms": 125
+    },
+    {
+      "id": "walk_left",
+      "title": "向左走",
+      "base": "phased/walk_left",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "walk_right",
+      "title": "向右走",
+      "base": "phased/walk_right",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "walk_left_fast",
+      "title": "快速向左走",
+      "base": "phased/walk_left_fast",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "walk_right_fast",
+      "title": "快速向右走",
+      "base": "phased/walk_right_fast",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "climb_left",
+      "title": "左侧向上爬",
+      "base": "phased/climb_left",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "climb_right",
+      "title": "右侧向上爬",
+      "base": "phased/climb_right",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "climb_left_top",
+      "title": "顶部向左爬",
+      "base": "phased/climb_left_top",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "climb_right_top",
+      "title": "顶部向右爬",
+      "base": "phased/climb_right_top",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "fall_left",
+      "title": "向左下落",
+      "base": "phased/fall_left",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "fall_right",
+      "title": "向右下落",
+      "base": "phased/fall_right",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "crawl_left",
+      "title": "向左爬行",
+      "base": "phased/crawl_left",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "crawl_right",
+      "title": "向右爬行",
+      "base": "phased/crawl_right",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     }
   ],
   "single_modes": [
