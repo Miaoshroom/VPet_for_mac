@@ -1,0 +1,75 @@
+{
+  "enabled_default": true,
+  "interval_min_ms": 300000,
+  "interval_max_ms": 1200000,
+  "tick_ms": 33,
+  "moves": [
+    {
+      "mode": "crawl_left",
+      "type": "horizontal",
+      "speed_px_per_sec": 80
+    },
+    {
+      "mode": "crawl_right",
+      "type": "horizontal",
+      "speed_px_per_sec": 80
+    },
+    {
+      "mode": "walk_left",
+      "type": "horizontal",
+      "speed_px_per_sec": 130
+    },
+    {
+      "mode": "walk_right",
+      "type": "horizontal",
+      "speed_px_per_sec": 130
+    },
+    {
+      "mode": "walk_left_fast",
+      "type": "horizontal",
+      "speed_px_per_sec": 220
+    },
+    {
+      "mode": "walk_right_fast",
+      "type": "horizontal",
+      "speed_px_per_sec": 220
+    },
+    {
+      "mode": "climb_left",
+      "type": "left_up",
+      "speed_px_per_sec": 110
+    },
+    {
+      "mode": "climb_right",
+      "type": "right_up",
+      "speed_px_per_sec": 110
+    },
+    {
+      "mode": "climb_left_top",
+      "type": "horizontal_top",
+      "speed_px_per_sec": 100
+    },
+    {
+      "mode": "climb_right_top",
+      "type": "horizontal_top",
+      "speed_px_per_sec": 100
+    },
+    {
+      "mode": "fall_left",
+      "type": "left_down",
+      "speed_px_per_sec": 180
+    },
+    {
+      "mode": "fall_right",
+      "type": "right_down",
+      "speed_px_per_sec": 180
+    }
+  ],
+  "boundary_px": {
+    "left": -80,
+    "right": -80,
+    "top": 0,
+    "bottom": 100
+  },
+  "distance_min_px": 1200
+}

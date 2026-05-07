@@ -10,6 +10,7 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.animation import PressHoldAnimator, PetAnimationDirector
+from core.auto_move import AutoMoveController
 from core.interaction_map import load_interaction_map
 from core.loader import load_action_config
 from core.mode_autoswitch import ModeAutoSwitch
@@ -64,14 +65,14 @@ def main() -> int:
             auto_idle_timer=mode_autoswitch,
             parent=app,
         )
-        auto_move_enabled = False
+        auto_move: AutoMoveController | None = None
 
         def is_auto_move_enabled() -> bool:
-            return auto_move_enabled
+            return auto_move.is_enabled() if auto_move is not None else False
 
         def set_auto_move_enabled(enabled: bool) -> None:
-            nonlocal auto_move_enabled
-            auto_move_enabled = bool(enabled)
+            if auto_move is not None:
+                auto_move.set_enabled(enabled)
 
         app.aboutToQuit.connect(music_dance.shutdown)
         win = PetWindow(
@@ -105,6 +106,16 @@ def main() -> int:
             music_dance_enabled=music_dance.is_enabled,
             mode_autoswitch_timer=mode_autoswitch,
         )
+        auto_move = AutoMoveController(
+            parent=app,
+            director=director,
+            window=win,
+            modes=config.modes,
+            music_dance_enabled=music_dance.is_enabled,
+            single_autoswitch=single_autoswitch,
+            mode_autoswitch=mode_autoswitch,
+        )
+        app.aboutToQuit.connect(auto_move.shutdown)
 
         play_startup(app, win, director, single_autoswitch, startup_clip)
 

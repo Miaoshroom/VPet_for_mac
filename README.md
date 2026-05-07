@@ -53,8 +53,8 @@ uv run --python 3.12 --with-requirements requirements.txt python main.py
 - [x] 实现摸头等互动动作
 - [x] 随音乐跳舞
 - [x] 启动和退出动画
+- [x] 自动移动
 - [ ] 桌宠自动发送表情
-- [ ] 自动移动
 - [ ] 互动列表，睡觉，学习，工作等，自带计时器
 - [ ] 桌宠状态更新，保存存档
 - [ ] 桌宠对话，自动说话聊天
@@ -65,6 +65,8 @@ uv run --python 3.12 --with-requirements requirements.txt python main.py
 
 ---
 
-## 动画文件来源
+## 【非商用用途授权】动画版权声明
 
-[虚拟桌宠模拟器](https://github.com/LorisYounger/VPet)
+桌宠动画文件版权归 虚拟主播模拟器制作组 所有
+
+原项目链接： [虚拟桌宠模拟器](https://github.com/LorisYounger/VPet)
