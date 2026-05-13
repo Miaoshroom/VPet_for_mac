@@ -86,6 +86,7 @@ class PetWindow(QMainWindow):
         self._on_quit = QApplication.quit
         self._plugins = []
         self._drop_handlers: list[Callable[[list[Path]], None]] = []
+        self._single_active = lambda: False
         self._dev_mode = _dev_mode_from_json()
         if max_side is None:
             max_side = _max_side_from_json()
@@ -190,6 +191,9 @@ class PetWindow(QMainWindow):
     def add_drop_handler(self, handler: Callable[[list[Path]], None]) -> None:
         self._drop_handlers.append(handler)
 
+    def set_single_active_callback(self, callback: Callable[[], bool]) -> None:
+        self._single_active = callback
+
     def _plugin_handlers(self) -> dict[str, tuple[bool, Callable[[bool], None]]]:
         handlers = {}
         for plugin in self._plugins:
@@ -239,18 +243,27 @@ class PetWindow(QMainWindow):
         self._pressed_drag_behavior = InteractionBehavior(type="none")
 
     def dragEnterEvent(self, event) -> None:
+        if self._single_active():
+            event.ignore()
+            return
         if _drop_paths(event):
             event.acceptProposedAction()
             return
         super().dragEnterEvent(event)
 
     def dragMoveEvent(self, event) -> None:
+        if self._single_active():
+            event.ignore()
+            return
         if _drop_paths(event):
             event.acceptProposedAction()
             return
         super().dragMoveEvent(event)
 
     def dropEvent(self, event) -> None:
+        if self._single_active():
+            event.ignore()
+            return
         paths = _drop_paths(event)
         if not paths:
             super().dropEvent(event)
@@ -260,6 +273,9 @@ class PetWindow(QMainWindow):
         event.acceptProposedAction()
 
     def mousePressEvent(self, e: QMouseEvent) -> None:
+        if self._single_active():
+            e.accept()
+            return
         if e.button() == Qt.MouseButton.LeftButton:
             lp = e.position().toPoint()
             if self._in_resize_grip(lp) and self.windowHandle() is not None:
@@ -293,6 +309,9 @@ class PetWindow(QMainWindow):
         super().mousePressEvent(e)
 
     def mouseMoveEvent(self, e: QMouseEvent) -> None:
+        if self._single_active():
+            e.accept()
+            return
         if (
             e.buttons() & Qt.MouseButton.LeftButton
             and self._press_global is not None
@@ -310,6 +329,10 @@ class PetWindow(QMainWindow):
         super().mouseMoveEvent(e)
 
     def mouseReleaseEvent(self, e: QMouseEvent) -> None:
+        if self._single_active():
+            self._reset_pointer_state()
+            e.accept()
+            return
         if e.button() == Qt.MouseButton.LeftButton:
             if not self._press_is_drag:
                 self._handle_behavior(self._pressed_click_behavior)

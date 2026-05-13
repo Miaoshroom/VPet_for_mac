@@ -36,7 +36,6 @@ class SinglePlayer(QObject):
         self._active = True
         self._resume_mode = self._director.current_mode_name() if resume else None
         self._on_finished = on_finished
-        self._window.setEnabled(False)
         self._director.stop()
         self._player.play(clip, loop=False)
         return True
@@ -46,7 +45,6 @@ class SinglePlayer(QObject):
         self._active = False
         self._resume_mode = None
         self._on_finished = None
-        self._window.setEnabled(True)
 
     def _finish(self) -> None:
         resume_mode = self._resume_mode
@@ -54,7 +52,6 @@ class SinglePlayer(QObject):
         self._active = False
         self._resume_mode = None
         self._on_finished = None
-        self._window.setEnabled(True)
         if resume_mode is not None:
             self._director.resume_mode(resume_mode)
         if on_finished is not None:

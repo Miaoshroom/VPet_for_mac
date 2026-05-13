@@ -44,7 +44,6 @@ def play_startup(
 
     def start_default_mode() -> None:
         director.start_default_mode()
-        window.setEnabled(True)
         single_autoswitch.start()
 
     if startup_clip is None:
@@ -79,7 +78,6 @@ def build_shutdown_handler(
         if is_shutting_down:
             return
         is_shutting_down = True
-        window.setEnabled(False)
         badge.hide()
         single_autoswitch.stop()
         if mode_autoswitch_timer is not None:

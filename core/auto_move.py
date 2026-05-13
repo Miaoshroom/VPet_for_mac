@@ -96,6 +96,9 @@ class AutoMoveController(QObject):
     def is_enabled(self) -> bool:
         return self._enabled
 
+    def is_active(self) -> bool:
+        return self._active
+
     def set_enabled(self, enabled: bool) -> None:
         enabled = bool(enabled)
         if self._enabled == enabled:
@@ -187,7 +190,6 @@ class AutoMoveController(QObject):
         self._single_autoswitch.stop()
         if self._mode_autoswitch is not None:
             self._mode_autoswitch.stop()
-        self._window.setEnabled(False)
         self._director.start_interaction(rule.mode)
         start_delay = len(mode.start) * mode.start.interval_ms if mode.start is not None else 0
         QTimer.singleShot(start_delay, self._start_move_timer)
@@ -252,7 +254,6 @@ class AutoMoveController(QObject):
         QTimer.singleShot(end_delay, lambda: self._after_move_end(restart_timer))
 
     def _after_move_end(self, restart_timer: bool) -> None:
-        self._window.setEnabled(True)
         self._single_autoswitch.start()
         if self._mode_autoswitch is not None:
             self._mode_autoswitch.start()
