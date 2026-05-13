@@ -24,11 +24,17 @@ class SinglePlayer(QObject):
     def is_active(self) -> bool:
         return self._active
 
-    def play(self, clip: Clip, on_finished: Callable[[], None] | None = None) -> bool:
+    def play(
+        self,
+        clip: Clip,
+        on_finished: Callable[[], None] | None = None,
+        *,
+        resume: bool = True, # 专门给启动和退出动画用的x
+    ) -> bool:
         if self._active:
             return False
         self._active = True
-        self._resume_mode = self._director.current_mode_name()
+        self._resume_mode = self._director.current_mode_name() if resume else None
         self._on_finished = on_finished
         self._window.setEnabled(False)
         self._director.stop()

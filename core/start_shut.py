@@ -8,8 +8,9 @@ from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QApplication
 
-from core.animation import Clip, FlipbookPlayer, Mode, PetAnimationDirector
+from core.animation import Clip, Mode, PetAnimationDirector
 from core.single_autoswitch import SingleAutoSwitch
+from core.single_player import SinglePlayer
 
 
 def pick_single_clip(config_ids: tuple[str, ...], single_clips: dict[str, Clip]) -> Clip | None:
@@ -33,10 +34,10 @@ def pick_startup(
 
 
 def play_startup(
-    parent,
     window,
     director: PetAnimationDirector,
     single_autoswitch: SingleAutoSwitch,
+    single_player: SinglePlayer,
     startup_clip: Clip | None,
 ) -> None:
     """启动时先播 single，播完后再进入默认 mode。"""
@@ -50,11 +51,11 @@ def play_startup(
         start_default_mode()
         return
 
-    startup_player = FlipbookPlayer(parent)
-    startup_player.frame_changed.connect(window.set_pixmap)
-    startup_player.finished.connect(start_default_mode)
-    window.setEnabled(False)
-    QTimer.singleShot(0, lambda: startup_player.play(startup_clip, loop=False))
+    def play_clip() -> None:
+        if not single_player.play(startup_clip, on_finished=start_default_mode, resume=False):
+            start_default_mode()
+
+    QTimer.singleShot(0, play_clip)
 
 
 def build_shutdown_handler(
@@ -63,6 +64,7 @@ def build_shutdown_handler(
     badge,
     director: PetAnimationDirector,
     single_autoswitch: SingleAutoSwitch,
+    single_player: SinglePlayer,
     music_dance,
     mode_autoswitch_timer,
     shutdown_ids: tuple[str, ...],
@@ -70,8 +72,6 @@ def build_shutdown_handler(
 ):
     """构建菜单退出回调：如有配置则先播 shutdown single。"""
 
-    shutdown_player = FlipbookPlayer(app)
-    shutdown_player.frame_changed.connect(window.set_pixmap)
     is_shutting_down = False
 
     def request_shutdown() -> None:
@@ -91,7 +91,11 @@ def build_shutdown_handler(
         if shutdown_clip is None:
             app.quit()
             return
-        shutdown_player.finished.connect(app.quit)
-        shutdown_player.play(shutdown_clip, loop=False)
+        if not single_player.play(
+            shutdown_clip,
+            on_finished=app.quit,
+            resume=False,
+        ):
+            app.quit()
 
     return request_shutdown

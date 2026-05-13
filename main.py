@@ -124,7 +124,7 @@ def main() -> int:
         )
         app.aboutToQuit.connect(auto_move.shutdown)
 
-        play_startup(app, win, director, single_autoswitch, startup_clip)
+        play_startup(win, director, single_autoswitch, single_player, startup_clip)
 
         win.set_quit_callback(
             build_shutdown_handler(
@@ -133,6 +133,7 @@ def main() -> int:
                 badge=badge,
                 director=director,
                 single_autoswitch=single_autoswitch,
+                single_player=single_player,
                 music_dance=music_dance,
                 mode_autoswitch_timer=mode_autoswitch,
                 shutdown_ids=config.shutdown,
