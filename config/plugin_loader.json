@@ -1,5 +1,6 @@
 {
   "plugins": [
-    "show_sticker"
+    "show_sticker",
+    "eat_files"
   ]
 }

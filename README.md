@@ -55,6 +55,7 @@ uv run --python 3.12 --with-requirements requirements.txt python main.py
 - [x] 启动和退出动画
 - [x] 自动移动
 - [x] 桌宠自动发送表情
+- [x] 吃文件（
 - [ ] 互动列表，睡觉，学习，工作等，自带计时器
 - [ ] 桌宠状态更新，保存存档
 - [ ] 桌宠对话，自动说话聊天

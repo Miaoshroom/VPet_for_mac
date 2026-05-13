@@ -1,0 +1,5 @@
+{
+  "enabled": true,
+  "single_animation": "eat_files",
+  "trash_path": "~/.Trash"
+}

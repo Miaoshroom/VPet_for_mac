@@ -85,6 +85,7 @@ class PetWindow(QMainWindow):
         self._on_toggle_auto_move = on_toggle_auto_move or (lambda enabled: None)
         self._on_quit = QApplication.quit
         self._plugins = []
+        self._drop_handlers: list[Callable[[list[Path]], None]] = []
         self._dev_mode = _dev_mode_from_json()
         if max_side is None:
             max_side = _max_side_from_json()
@@ -102,6 +103,7 @@ class PetWindow(QMainWindow):
                 | Qt.WindowType.WindowStaysOnTopHint
             )
         self._apply_window_flags()
+        self.setAcceptDrops(True)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, not self._dev_mode)
 
         self._label = PetDisplay(self._interaction_map, self._dev_mode)
@@ -185,6 +187,9 @@ class PetWindow(QMainWindow):
     def set_plugins(self, plugins) -> None:
         self._plugins = list(plugins)
 
+    def add_drop_handler(self, handler: Callable[[list[Path]], None]) -> None:
+        self._drop_handlers.append(handler)
+
     def _plugin_handlers(self) -> dict[str, tuple[bool, Callable[[bool], None]]]:
         handlers = {}
         for plugin in self._plugins:
@@ -232,6 +237,27 @@ class PetWindow(QMainWindow):
         self._pressed_press_behavior = InteractionBehavior(type="none")
         self._pressed_click_behavior = InteractionBehavior(type="none")
         self._pressed_drag_behavior = InteractionBehavior(type="none")
+
+    def dragEnterEvent(self, event) -> None:
+        if _drop_paths(event):
+            event.acceptProposedAction()
+            return
+        super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event) -> None:
+        if _drop_paths(event):
+            event.acceptProposedAction()
+            return
+        super().dragMoveEvent(event)
+
+    def dropEvent(self, event) -> None:
+        paths = _drop_paths(event)
+        if not paths:
+            super().dropEvent(event)
+            return
+        for handler in self._drop_handlers:
+            handler(paths)
+        event.acceptProposedAction()
 
     def mousePressEvent(self, e: QMouseEvent) -> None:
         if e.button() == Qt.MouseButton.LeftButton:
@@ -316,3 +342,10 @@ class PetWindow(QMainWindow):
             on_set_start_pos=self._save_start_position,
             on_quit=self._on_quit,
         )
+
+
+def _drop_paths(event) -> list[Path]:
+    mime = event.mimeData()
+    if not mime.hasUrls():
+        return []
+    return [Path(url.toLocalFile()) for url in mime.urls() if url.isLocalFile()]
