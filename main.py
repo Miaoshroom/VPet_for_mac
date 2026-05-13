@@ -123,7 +123,8 @@ def main() -> int:
             mode_autoswitch=mode_autoswitch,
         )
         app.aboutToQuit.connect(auto_move.shutdown)
-        win.set_single_active_callback(lambda: single_player.is_active() or auto_move.is_active())
+        win.set_single_active_callback(single_player.is_active)
+        win.set_auto_move_interrupt_callback(auto_move.interrupt)
 
         play_startup(win, director, single_autoswitch, single_player, startup_clip)
 

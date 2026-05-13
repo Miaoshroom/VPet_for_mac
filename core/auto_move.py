@@ -120,6 +120,10 @@ class AutoMoveController(QObject):
         if self._active:
             self._finish_move(restart_timer=False)
 
+    def interrupt(self) -> None:
+        if self._active:
+            self._finish_move(restart_timer=True)
+
     def shutdown(self) -> None:
         self._enabled = False
         self.stop()

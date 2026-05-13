@@ -87,6 +87,7 @@ class PetWindow(QMainWindow):
         self._plugins = []
         self._drop_handlers: list[Callable[[list[Path]], None]] = []
         self._single_active = lambda: False
+        self._interrupt_auto_move = lambda: None
         self._dev_mode = _dev_mode_from_json()
         if max_side is None:
             max_side = _max_side_from_json()
@@ -194,6 +195,9 @@ class PetWindow(QMainWindow):
     def set_single_active_callback(self, callback: Callable[[], bool]) -> None:
         self._single_active = callback
 
+    def set_auto_move_interrupt_callback(self, callback: Callable[[], None]) -> None:
+        self._interrupt_auto_move = callback
+
     def _plugin_handlers(self) -> dict[str, tuple[bool, Callable[[bool], None]]]:
         handlers = {}
         for plugin in self._plugins:
@@ -277,6 +281,7 @@ class PetWindow(QMainWindow):
             e.accept()
             return
         if e.button() == Qt.MouseButton.LeftButton:
+            self._interrupt_auto_move()
             lp = e.position().toPoint()
             if self._in_resize_grip(lp) and self.windowHandle() is not None:
                 self.windowHandle().startSystemResize(
