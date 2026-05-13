@@ -275,6 +275,18 @@
       "title": "关机1",
       "folder": "single/shutdown_1",
       "interval_ms": 125
+    },
+    {
+      "id": "eat_files",
+      "title": "吃文件",
+      "folder": "single/eat_files",
+      "interval_ms": 125
+    },
+    {
+      "id": "gift",
+      "title": "礼物",
+      "folder": "single/gift",
+      "interval_ms": 125
     }
   ]
 }
