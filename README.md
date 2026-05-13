@@ -1,6 +1,6 @@
 # 我想给她在 Mac 上完整的一生喵
 
-![喵](https://imageshostneko.nekostep.cn/PicGo/2026/04/fe5a60c2bde22c92459ab59161a3d5c4.png)
+![喵](https://imageshostneko.nekostep.cn/2026/05/cfa537960b478350e9fd246417e3e5c5.png)
 
 mac 上怎么能没有桌宠？😡不行不行！🙅‍♀️
 能在桌面上待着、发呆、被摸头、跟着音乐乱跳，这样就差不多够了喵。
@@ -54,7 +54,7 @@ uv run --python 3.12 --with-requirements requirements.txt python main.py
 - [x] 随音乐跳舞
 - [x] 启动和退出动画
 - [x] 自动移动
-- [ ] 桌宠自动发送表情
+- [x] 桌宠自动发送表情
 - [ ] 互动列表，睡觉，学习，工作等，自带计时器
 - [ ] 桌宠状态更新，保存存档
 - [ ] 桌宠对话，自动说话聊天
