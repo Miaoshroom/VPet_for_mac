@@ -17,6 +17,7 @@ from core.loader import load_action_config
 from core.mode_autoswitch import ModeAutoSwitch
 from core.music_dance import MusicDanceController
 from core.single_autoswitch import SingleAutoSwitch
+from core.single_player import SinglePlayer
 from core.start_shut import build_shutdown_handler, pick_startup, play_startup
 from ui.click_through import ClickThroughBadge
 from ui.pet_window import PetWindow
@@ -96,15 +97,20 @@ def main() -> int:
         )
         badge.show()
 
-        single_autoswitch = SingleAutoSwitch(
+        single_player = SinglePlayer(
             parent=app,
             director=director,
             window=win,
+        )
+        single_autoswitch = SingleAutoSwitch(
+            parent=app,
+            director=director,
             interval_min_ms=config.single_insert_interval_min_ms,
             interval_max_ms=config.single_insert_interval_max_ms,
             mode_ids=config.single_insert_modes,
             single_clips=config.single_clips,
             music_dance_enabled=music_dance.is_enabled,
+            single_player=single_player,
             mode_autoswitch_timer=mode_autoswitch,
         )
         auto_move = AutoMoveController(
@@ -137,6 +143,8 @@ def main() -> int:
         _plugins = setup_plugins({
             "app": app,
             "window": win,
+            "single_player": single_player,
+            "single_clips": config.single_clips,
         })
         win.set_plugins(_plugins)
 
