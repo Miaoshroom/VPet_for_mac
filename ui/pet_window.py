@@ -84,6 +84,7 @@ class PetWindow(QMainWindow):
         self._auto_move_enabled = auto_move_enabled or (lambda: False)
         self._on_toggle_auto_move = on_toggle_auto_move or (lambda enabled: None)
         self._on_quit = QApplication.quit
+        self._plugins = []
         self._dev_mode = _dev_mode_from_json()
         if max_side is None:
             max_side = _max_side_from_json()
@@ -180,6 +181,19 @@ class PetWindow(QMainWindow):
 
     def set_quit_callback(self, callback) -> None:
         self._on_quit = callback
+
+    def set_plugins(self, plugins) -> None:
+        self._plugins = list(plugins)
+
+    def _plugin_handlers(self) -> dict[str, tuple[bool, Callable[[bool], None]]]:
+        handlers = {}
+        for plugin in self._plugins:
+            menu_title = getattr(plugin, "menu_title", None)
+            is_enabled = getattr(plugin, "is_enabled", None)
+            set_enabled = getattr(plugin, "set_enabled", None)
+            if callable(menu_title) and callable(is_enabled) and callable(set_enabled):
+                handlers[str(menu_title())] = (bool(is_enabled()), set_enabled)
+        return handlers
 
     def _save_start_position(self) -> None:
         try:
@@ -297,6 +311,7 @@ class PetWindow(QMainWindow):
             auto_move_enabled=self._auto_move_enabled(),
             on_toggle_auto_move=self._on_toggle_auto_move,
             mode_handlers=mode_handlers,
+            plugin_handlers=self._plugin_handlers(),
             current_mode_title=self._mode_titles.get(self._director.current_mode_name()),
             on_set_start_pos=self._save_start_position,
             on_quit=self._on_quit,

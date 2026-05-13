@@ -20,6 +20,7 @@ def show_pet_menu(
     auto_move_enabled: bool,
     on_toggle_auto_move: Callable[[bool], None],
     mode_handlers: dict[str, Callable[[], None]],  # 生成动态动作列表
+    plugin_handlers: dict[str, tuple[bool, Callable[[bool], None]]],
     current_mode_title: str | None,
     on_set_start_pos: Callable[[], None],  # 设置启动位置回调
     on_quit: Callable[[], None],  # 退出程序
@@ -37,6 +38,15 @@ def show_pet_menu(
     auto_move = menu.addAction("随机移动")
     auto_move.setCheckable(True)
     auto_move.setChecked(auto_move_enabled)
+    
+    plugin_menu = menu.addMenu("插件")
+    plugin_action_map = {}
+    for title, (enabled, handler) in plugin_handlers.items():
+        action = plugin_menu.addAction(title)
+        action.setCheckable(True)
+        action.setChecked(enabled)
+        plugin_action_map[action] = (enabled, handler)
+
     switch_menu = menu.addMenu("切换动作")
     action_map = {}
     for title, handler in mode_handlers.items():
@@ -59,6 +69,9 @@ def show_pet_menu(
         on_toggle_mode_autoswitch(not mode_autoswitch_enabled)
     elif chosen is auto_move:
         on_toggle_auto_move(not auto_move_enabled)
+    elif chosen in plugin_action_map:
+        enabled, handler = plugin_action_map[chosen]
+        handler(not enabled)
     elif chosen in action_map:
         action_map[chosen]()
     elif chosen is set_start_pos:

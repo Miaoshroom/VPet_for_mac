@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "stickers": [
+    "测试"
+  ],
+  "interval_min_ms": 3000,
+  "interval_max_ms": 40000,
+  "display_duration_ms": 2500,
+  "size_px": 60,
+  "offset_right_px": 300,
+  "offset_top_px": 40
+}

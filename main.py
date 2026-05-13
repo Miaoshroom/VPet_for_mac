@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.animation import PressHoldAnimator, PetAnimationDirector
 from core.auto_move import AutoMoveController
+from core.plugin_loader import setup_plugins
 from core.interaction_map import load_interaction_map
 from core.loader import load_action_config
 from core.mode_autoswitch import ModeAutoSwitch
@@ -132,6 +133,12 @@ def main() -> int:
                 single_clips=config.single_clips,
             )
         )
+
+        _plugins = setup_plugins({
+            "app": app,
+            "window": win,
+        })
+        win.set_plugins(_plugins)
 
         return app.exec()
     except Exception as exc:  # json配置错误
