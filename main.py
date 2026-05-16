@@ -126,6 +126,7 @@ def main() -> int:
             "app": app,
             "window": win,
             "director": director,
+            "modes": config.modes,
             "default_mode": config.default_mode,
             "mode_autoswitch": mode_autoswitch,
             "plugin_runtime": plugin_runtime,

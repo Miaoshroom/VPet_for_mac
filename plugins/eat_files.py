@@ -37,8 +37,11 @@ class EatFilesPlugin:
         if not moved:
             return
         clip = self._single_clips.get(str(self._settings["single_animation"]))
-        if clip is not None:
-            self._single_player.play(clip)
+        if clip is None:
+            return
+        self._window.pause_plugins_for_interaction()
+        if not self._single_player.play(clip, on_finished=self._window.resume_plugins_after_interaction):
+            self._window.resume_plugins_after_interaction() # 避免播放single的时候吃文件导致卡斯
 
     def _move_files(self, paths: list[Path]) -> bool:
         trash_dir = Path(str(self._settings["trash_path"])).expanduser()

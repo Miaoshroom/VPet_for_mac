@@ -1,8 +1,20 @@
 {
-  "enabled": false,
-  "dance_modes": [
-    "dance"
-  ],
+  "enabled": true,
   "start_threshold": 0.1,
-  "stop_threshold": 0.05
+  "stop_threshold": 0.05,
+  "phased_modes": [
+    "dance",
+    "music_dance",
+    "music_dance_1"
+  ],
+  "phased_loop_min": 5,
+  "phased_loop_max": 10,
+  "single_modes": [
+    "music_dance_single",
+    "music_dance_single_1",
+    "music_dance_single_2"
+  ],
+  "single_insert_chance": 0.3,
+  "single_repeat_min": 5,
+  "single_repeat_max": 8
 }

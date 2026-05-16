@@ -242,6 +242,18 @@ class PetWindow(QMainWindow):
         self._pressed_click_behavior = InteractionBehavior(type="none")
         self._pressed_drag_behavior = InteractionBehavior(type="none")
 
+    def pause_plugins_for_interaction(self) -> None:
+        for plugin in self._plugins:
+            pause = getattr(plugin, "pause_for_interaction", None)
+            if callable(pause):
+                pause()
+
+    def resume_plugins_after_interaction(self) -> None:
+        for plugin in self._plugins:
+            resume = getattr(plugin, "resume_after_interaction", None)
+            if callable(resume):
+                resume()
+
     def dragEnterEvent(self, event) -> None:
         if self._single_active():
             event.ignore()
@@ -285,6 +297,7 @@ class PetWindow(QMainWindow):
                 )
                 e.accept()
                 return
+            self.pause_plugins_for_interaction()
             self._press_global = e.globalPosition().toPoint()
             self._press_is_drag = False
             self._pressed_press_behavior = self._interaction_map.resolve(
@@ -339,6 +352,7 @@ class PetWindow(QMainWindow):
                 self._handle_behavior(self._pressed_click_behavior)
             if self._pressed_press_behavior.type == "press_mode":
                 self._director.end_interaction()
+            self.resume_plugins_after_interaction()
             self._reset_pointer_state()
             e.accept()
             return
