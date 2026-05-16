@@ -13,8 +13,6 @@ def show_pet_menu(
     global_pos: QPoint,
     on_zoom_in: Callable[[], None],  # 放大/缩小回调函数
     on_zoom_out: Callable[[], None],
-    music_dance_enabled: bool,
-    on_toggle_music_dance: Callable[[bool], None],
     mode_autoswitch_enabled: bool,
     on_toggle_mode_autoswitch: Callable[[bool], None],
     auto_move_enabled: bool,
@@ -29,9 +27,6 @@ def show_pet_menu(
 
     zoom_in = menu.addAction("放大")
     zoom_out = menu.addAction("缩小")
-    music_dance = menu.addAction("随音乐跳舞")
-    music_dance.setCheckable(True)
-    music_dance.setChecked(music_dance_enabled)
     mode_autoswitch = menu.addAction("随机切换动作")
     mode_autoswitch.setCheckable(True)
     mode_autoswitch.setChecked(mode_autoswitch_enabled)
@@ -63,8 +58,6 @@ def show_pet_menu(
         on_zoom_in()
     elif chosen is zoom_out:
         on_zoom_out()
-    elif chosen is music_dance:
-        on_toggle_music_dance(not music_dance_enabled)
     elif chosen is mode_autoswitch:
         on_toggle_mode_autoswitch(not mode_autoswitch_enabled)
     elif chosen is auto_move:

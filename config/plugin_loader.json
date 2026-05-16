@@ -1,6 +1,7 @@
 {
   "plugins": [
     "show_sticker",
-    "eat_files"
+    "eat_files",
+    "music_dance"
   ]
 }

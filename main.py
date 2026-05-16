@@ -15,7 +15,6 @@ from core.plugin_loader import setup_plugins
 from core.interaction_map import load_interaction_map
 from core.loader import load_action_config
 from core.mode_autoswitch import ModeAutoSwitch
-from core.music_dance import MusicDanceController
 from core.single_autoswitch import SingleAutoSwitch
 from core.single_player import SinglePlayer
 from core.start_shut import build_shutdown_handler, pick_startup, play_startup
@@ -62,13 +61,7 @@ def main() -> int:
             config.idle_autoswitch_interval_max_ms,
             config.auto_idle_modes,
         )
-        music_dance = MusicDanceController(
-            director=director,
-            default_mode=config.default_mode,
-            available_mode_ids=set(config.modes),
-            auto_idle_timer=mode_autoswitch,
-            parent=app,
-        )
+        plugin_flags = {"music_dance_enabled": False}
         auto_move: AutoMoveController | None = None
 
         def is_auto_move_enabled() -> bool:
@@ -78,14 +71,11 @@ def main() -> int:
             if auto_move is not None:
                 auto_move.set_enabled(enabled)
 
-        app.aboutToQuit.connect(music_dance.shutdown)
         win = PetWindow(
             director,
             initial_pixmap,
             interaction_map=interaction_map,
             mode_titles=config.mode_titles,
-            music_dance_enabled=music_dance.is_enabled,
-            on_toggle_music_dance=music_dance.set_enabled,
             mode_autoswitch_enabled=mode_autoswitch.is_enabled,
             on_toggle_mode_autoswitch=mode_autoswitch.set_enabled,
             auto_move_enabled=is_auto_move_enabled,
@@ -111,7 +101,7 @@ def main() -> int:
             interval_max_ms=config.single_insert_interval_max_ms,
             mode_ids=config.single_insert_modes,
             single_clips=config.single_clips,
-            music_dance_enabled=music_dance.is_enabled,
+            music_dance_enabled=lambda: plugin_flags["music_dance_enabled"],
             single_player=single_player,
             mode_autoswitch_timer=mode_autoswitch,
         )
@@ -120,7 +110,7 @@ def main() -> int:
             director=director,
             window=win,
             modes=config.modes,
-            music_dance_enabled=music_dance.is_enabled,
+            music_dance_enabled=lambda: plugin_flags["music_dance_enabled"],
             single_autoswitch=single_autoswitch,
             mode_autoswitch=mode_autoswitch,
         )
@@ -130,6 +120,24 @@ def main() -> int:
 
         play_startup(win, director, single_autoswitch, single_player, startup_clip)
 
+        _plugins = setup_plugins({
+            "app": app,
+            "window": win,
+            "director": director,
+            "default_mode": config.default_mode,
+            "mode_autoswitch": mode_autoswitch,
+            "plugin_flags": plugin_flags,
+            "single_player": single_player,
+            "single_clips": config.single_clips,
+        })
+        win.set_plugins(_plugins)
+
+        def shutdown_plugins() -> None:
+            for plugin in _plugins:
+                shutdown = getattr(plugin, "shutdown", None)
+                if callable(shutdown):
+                    shutdown()
+
         # 右键和状态栏共用退出流程
         quit_callback = build_shutdown_handler(
             app=app,
@@ -138,21 +146,13 @@ def main() -> int:
             director=director,
             single_autoswitch=single_autoswitch,
             single_player=single_player,
-            music_dance=music_dance,
             mode_autoswitch_timer=mode_autoswitch,
+            shutdown_hooks=(shutdown_plugins,),
             shutdown_ids=config.shutdown,
             single_clips=config.single_clips,
         )
         win.set_quit_callback(quit_callback)
         _statusbar_icon = create_statusbar_icon(app, BAR_ICON, quit_callback)
-
-        _plugins = setup_plugins({
-            "app": app,
-            "window": win,
-            "single_player": single_player,
-            "single_clips": config.single_clips,
-        })
-        win.set_plugins(_plugins)
 
         return app.exec()
     except Exception as exc:  # json配置错误

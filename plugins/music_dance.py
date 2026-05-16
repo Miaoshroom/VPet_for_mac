@@ -1,50 +1,42 @@
-"""随音乐跳舞：主程序只消费 helper 输出的音量值"""
+"""随音乐跳舞迁移"""
 
 from __future__ import annotations
 
 import json
-from random import choice
 import sys
+from random import choice
 
-from PyQt6.QtCore import QObject, QProcess, pyqtSignal
+from PyQt6.QtCore import QObject, QProcess
 
-from core.animation import PetAnimationDirector
 from core.app_paths import config_path, helper_binary_path, helper_python_path
 
 
-def _load_settings(_: set[str]) -> tuple[tuple[str, ...], float, float]:
-    data = json.loads(config_path("music_dance_settings.json").read_text(encoding="utf-8"))
-    dance_modes = tuple(str(mode_id) for mode_id in data.get("dance_modes", []))
-    start_threshold = float(data["start_threshold"])
-    stop_threshold = float(data["stop_threshold"])
-    return dance_modes, start_threshold, stop_threshold
+class MusicDancePlugin(QObject):
+    PLUGIN_NAME = "music_dance"
+    MENU_TITLE = "随音乐跳舞"
 
-
-class MusicDanceController(QObject):
-    """管理 helper 进程和 dance 模式切换。"""
-
-    enabled_changed = pyqtSignal(bool)
-
-    def __init__(
-        self,
-        director: PetAnimationDirector,
-        default_mode: str,
-        available_mode_ids: set[str],
-        auto_idle_timer,
-        parent: QObject | None = None,
-    ) -> None:
-        super().__init__(parent)
-        self._dance_modes, self._start_threshold, self._stop_threshold = _load_settings(available_mode_ids)
-        self._director = director
-        self._default_mode = default_mode
-        self._auto_idle_timer = auto_idle_timer
+    def __init__(self, context) -> None:
+        super().__init__(context["app"])
+        settings = _load_settings()
+        self._director = context["director"]
+        self._single_player = context["single_player"]
+        self._default_mode = context["default_mode"]
+        self._auto_idle_timer = context["mode_autoswitch"]
+        self._plugin_flags = context["plugin_flags"]
+        self._dance_modes = tuple(str(mode_id) for mode_id in settings.get("dance_modes", []))
+        self._start_threshold = float(settings["start_threshold"])
+        self._stop_threshold = float(settings["stop_threshold"])
+        self._enabled = bool(settings["enabled"])
+        self._dance_active = False
+        self._fallback_mode = self._default_mode
         self._process = QProcess(self)
         self._process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
         self._process.readyReadStandardOutput.connect(self._on_output_ready)
         self._process.finished.connect(self._on_process_finished)
-        self._enabled = False
-        self._dance_active = False
-        self._fallback_mode = default_mode
+        self._sync_flag()
+
+    def menu_title(self) -> str:
+        return self.MENU_TITLE
 
     def is_enabled(self) -> bool:
         return self._enabled
@@ -54,24 +46,41 @@ class MusicDanceController(QObject):
         if self._enabled == enabled:
             return
         self._enabled = enabled
+        self._sync_flag()
         if enabled:
-            self._dance_active = False
-            current_mode = self._director.current_mode_name()
-            if current_mode not in self._dance_modes:
-                self._fallback_mode = current_mode
-            if self._auto_idle_timer is not None:
-                self._auto_idle_timer.stop()
-            self._start_helper()
+            self.start()
         else:
             self._stop_helper()
             self._leave_dance_if_needed()
-            if self._auto_idle_timer is not None:
-                self._auto_idle_timer.start()
-        self.enabled_changed.emit(self._enabled)
+            self._start_auto_idle()
+
+    def start(self) -> None:
+        if not self._enabled:
+            return
+        self._dance_active = False
+        current_mode = self._director.current_mode_name()
+        if current_mode not in self._dance_modes:
+            self._fallback_mode = current_mode
+        self._stop_auto_idle()
+        self._start_helper()
+        self._sync_flag()
 
     def shutdown(self) -> None:
         self._enabled = False
+        self._sync_flag()
         self._stop_helper()
+        self._leave_dance_if_needed()
+
+    def _sync_flag(self) -> None:
+        self._plugin_flags["music_dance_enabled"] = self._enabled
+
+    def _start_auto_idle(self) -> None:
+        if self._auto_idle_timer is not None:
+            self._auto_idle_timer.start()
+
+    def _stop_auto_idle(self) -> None:
+        if self._auto_idle_timer is not None:
+            self._auto_idle_timer.stop()
 
     def _start_helper(self) -> None:
         if self._process.state() != QProcess.ProcessState.NotRunning:
@@ -93,10 +102,9 @@ class MusicDanceController(QObject):
         if not self._enabled:
             return
         self._enabled = False
+        self._sync_flag()
         self._leave_dance_if_needed()
-        if self._auto_idle_timer is not None:
-            self._auto_idle_timer.start()
-        self.enabled_changed.emit(False)
+        self._start_auto_idle()
 
     def _on_output_ready(self) -> None:
         raw = bytes(self._process.readAllStandardOutput()).decode("utf-8", errors="ignore")
@@ -111,9 +119,9 @@ class MusicDanceController(QObject):
             self._handle_level(level)
 
     def _handle_level(self, level: float) -> None:
-        if not self._enabled:
+        if not self._enabled or self._director.is_interaction_active():
             return
-        if self._director.is_interaction_active():
+        if self._single_player.is_active():
             return
 
         current_mode = self._director.current_mode_name()
@@ -142,3 +150,7 @@ class MusicDanceController(QObject):
         if not candidates:
             return self._dance_modes[0]
         return choice(candidates)
+
+
+def _load_settings() -> dict:
+    return json.loads(config_path("plugin_config/music_dance.json").read_text(encoding="utf-8"))

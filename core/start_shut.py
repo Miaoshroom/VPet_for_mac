@@ -64,10 +64,10 @@ def build_shutdown_handler(
     director: PetAnimationDirector,
     single_autoswitch: SingleAutoSwitch,
     single_player: SinglePlayer,
-    music_dance,
     mode_autoswitch_timer,
     shutdown_ids: tuple[str, ...],
     single_clips: dict[str, Clip],
+    shutdown_hooks=(),
 ):
     """构建菜单退出回调：如有配置则先播 shutdown single。"""
 
@@ -82,7 +82,8 @@ def build_shutdown_handler(
         single_autoswitch.stop()
         if mode_autoswitch_timer is not None:
             mode_autoswitch_timer.stop()
-        music_dance.shutdown()
+        for hook in shutdown_hooks:
+            hook()
         director.stop()
 
         shutdown_clip = pick_single_clip(shutdown_ids, single_clips)
