@@ -52,6 +52,7 @@ class AutoMoveController(QObject):
         action_blocked: Callable[[], bool],
         single_autoswitch: SingleSwitch,
         mode_autoswitch: StartStop | None = None,
+        single_active: Callable[[], bool] | None = None,
     ) -> None:
         super().__init__(parent)
         settings = _load_settings()
@@ -61,6 +62,7 @@ class AutoMoveController(QObject):
         self._action_blocked = action_blocked
         self._single_autoswitch = single_autoswitch
         self._mode_autoswitch = mode_autoswitch
+        self._single_active = single_active or (lambda: False)
         self._enabled = bool(settings["enabled_default"])
         self._interval_min_ms = int(settings["interval_min_ms"])
         self._interval_max_ms = int(settings["interval_max_ms"])
@@ -136,7 +138,7 @@ class AutoMoveController(QObject):
         self._reset_interval()
         if self._active:
             return
-        if self._single_autoswitch.is_active():
+        if self._single_autoswitch.is_active() or self._single_active():
             return
         if self._action_blocked():
             return
@@ -203,6 +205,9 @@ class AutoMoveController(QObject):
 
     def _start_move_timer(self) -> None:
         if not self._active or self._current_rule is None:
+            return
+        if self._single_active():
+            self._finish_move(restart_timer=True)
             return
         vx, vy = _vector_for(self._current_rule)
         length = math.hypot(vx, vy)

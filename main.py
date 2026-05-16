@@ -115,6 +115,7 @@ def main() -> int:
             action_blocked=plugin_runtime.action_active,
             single_autoswitch=single_autoswitch,
             mode_autoswitch=mode_autoswitch,
+            single_active=single_player.is_active,
         )
         app.aboutToQuit.connect(auto_move.shutdown)
         win.set_single_active_callback(single_player.blocks_interaction)

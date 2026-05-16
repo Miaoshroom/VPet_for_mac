@@ -259,6 +259,7 @@ class PetWindow(QMainWindow):
             event.ignore()
             return
         if _drop_paths(event):
+            self._interrupt_auto_move()
             event.acceptProposedAction()
             return
         super().dragEnterEvent(event)
@@ -280,6 +281,7 @@ class PetWindow(QMainWindow):
         if not paths:
             super().dropEvent(event)
             return
+        self._interrupt_auto_move()
         for handler in self._drop_handlers:
             handler(paths)
         event.acceptProposedAction()
