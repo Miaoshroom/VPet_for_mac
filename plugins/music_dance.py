@@ -79,7 +79,7 @@ class MusicDancePlugin(QObject):
         if not self._dance_active:
             return
         if self._playing_single:
-            self._stop_current_single()
+            self._single_player.pause()
             return
         self._phased_player.pause()
 
@@ -90,6 +90,13 @@ class MusicDancePlugin(QObject):
             QTimer.singleShot(50, self.resume_after_interaction)
             return
         self._director.stop()
+        if self._playing_single:
+            if self._single_player.is_paused():
+                self._single_player.resume()
+                return
+            if not self._single_player.is_active():
+                self._after_single()
+                return
         if self._phased_player.is_paused():
             self._phased_player.resume()
             return
@@ -200,6 +207,7 @@ class MusicDancePlugin(QObject):
             clip,
             on_finished=lambda: self._play_single(clip, repeat_left - 1),
             resume=False,
+            interruptible=True,
         )
         if not played:
             self._after_single()

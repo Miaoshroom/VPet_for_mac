@@ -31,7 +31,7 @@ class EatFilesPlugin:
         self._enabled = bool(enabled)
 
     def _on_drop_files(self, paths: list[Path]) -> None:
-        if not self._enabled or self._single_player.is_active():
+        if not self._enabled:
             return
         moved = self._move_files(paths)
         if not moved:
@@ -40,8 +40,11 @@ class EatFilesPlugin:
         if clip is None:
             return
         self._window.pause_plugins_for_interaction()
+        if self._single_player.is_active():
+            self._window.resume_plugins_after_interaction()
+            return
         if not self._single_player.play(clip, on_finished=self._window.resume_plugins_after_interaction):
-            self._window.resume_plugins_after_interaction() # 避免播放single的时候吃文件导致卡斯
+            self._window.resume_plugins_after_interaction()
 
     def _move_files(self, paths: list[Path]) -> bool:
         trash_dir = Path(str(self._settings["trash_path"])).expanduser()

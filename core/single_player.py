@@ -3,10 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 
 from PyQt6.QtCore import QObject
 
 from core.animation import Clip, FlipbookPlayer, PetAnimationDirector
+
+
+@dataclass
+class _SingleRun:
+    clip: Clip
+    resume_mode: str | None
+    on_finished: Callable[[], None] | None
+    interruptible: bool
 
 
 class SinglePlayer(QObject):
@@ -17,42 +26,62 @@ class SinglePlayer(QObject):
         self._player = FlipbookPlayer(self)
         self._player.frame_changed.connect(window.set_pixmap)
         self._player.finished.connect(self._finish)
-        self._resume_mode: str | None = None
-        self._on_finished: Callable[[], None] | None = None
-        self._active = False
+        self._current: _SingleRun | None = None
+        self._paused: _SingleRun | None = None
 
     def is_active(self) -> bool:
-        return self._active
+        return self._current is not None
+
+    def is_paused(self) -> bool:
+        return self._paused is not None
+
+    def blocks_interaction(self) -> bool:
+        return self._current is not None and not self._current.interruptible
 
     def play(
         self,
         clip: Clip,
         on_finished: Callable[[], None] | None = None,
         *,
-        resume: bool = True, # 专门给启动和退出动画用的x
+        resume: bool = True,  # 专门给启动和退出动画用的
+        interruptible: bool = False,
     ) -> bool:
-        if self._active:
+        if self._current is not None:
             return False
-        self._active = True
-        self._resume_mode = self._director.current_mode_name() if resume else None
-        self._on_finished = on_finished
+        resume_mode = self._director.current_mode_name() if resume else None
+        self._current = _SingleRun(clip, resume_mode, on_finished, interruptible)
         self._director.stop()
         self._player.play(clip, loop=False)
         return True
 
+    def pause(self) -> bool:
+        if self._current is None or not self._current.interruptible:
+            return False
+        self._paused = self._current
+        self._current = None
+        self._player.stop()
+        return True
+
+    def resume(self) -> bool:
+        if self._current is not None or self._paused is None:
+            return False
+        self._current = self._paused
+        self._paused = None
+        self._director.stop()
+        self._player.play(self._current.clip, loop=False)
+        return True
+
     def stop(self) -> None:
         self._player.stop()
-        self._active = False
-        self._resume_mode = None
-        self._on_finished = None
+        self._current = None
+        self._paused = None
 
     def _finish(self) -> None:
-        resume_mode = self._resume_mode
-        on_finished = self._on_finished
-        self._active = False
-        self._resume_mode = None
-        self._on_finished = None
-        if resume_mode is not None:
-            self._director.resume_mode(resume_mode)
-        if on_finished is not None:
-            on_finished()
+        current = self._current
+        if current is None:
+            return
+        self._current = None
+        if current.resume_mode is not None:
+            self._director.resume_mode(current.resume_mode)
+        if current.on_finished is not None:
+            current.on_finished()
