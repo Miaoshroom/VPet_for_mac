@@ -21,9 +21,11 @@ from core.single_player import SinglePlayer
 from core.start_shut import build_shutdown_handler, pick_startup, play_startup
 from ui.click_through import ClickThroughBadge
 from ui.pet_window import PetWindow
+from ui.statusbar_icon import create_statusbar_icon
 
 ROOT = Path(__file__).resolve().parent
 APP_ICON = ROOT / "resources" / "app_icon.png"
+BAR_ICON = ROOT / "resources" / "bar_icon.png"
 
 
 def main() -> int:
@@ -128,20 +130,21 @@ def main() -> int:
 
         play_startup(win, director, single_autoswitch, single_player, startup_clip)
 
-        win.set_quit_callback(
-            build_shutdown_handler(
-                app=app,
-                window=win,
-                badge=badge,
-                director=director,
-                single_autoswitch=single_autoswitch,
-                single_player=single_player,
-                music_dance=music_dance,
-                mode_autoswitch_timer=mode_autoswitch,
-                shutdown_ids=config.shutdown,
-                single_clips=config.single_clips,
-            )
+        # 右键和状态栏共用退出流程
+        quit_callback = build_shutdown_handler(
+            app=app,
+            window=win,
+            badge=badge,
+            director=director,
+            single_autoswitch=single_autoswitch,
+            single_player=single_player,
+            music_dance=music_dance,
+            mode_autoswitch_timer=mode_autoswitch,
+            shutdown_ids=config.shutdown,
+            single_clips=config.single_clips,
         )
+        win.set_quit_callback(quit_callback)
+        _statusbar_icon = create_statusbar_icon(app, BAR_ICON, quit_callback)
 
         _plugins = setup_plugins({
             "app": app,
