@@ -237,6 +237,102 @@
       "start_interval_ms": 125,
       "loop_interval_ms": 125,
       "end_interval_ms": 125
+    },
+    {
+      "id": "music_dance",
+      "title": "音乐跳舞",
+      "base": "phased/music_dance",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "music_dance_1",
+      "title": "音乐跳舞1",
+      "base": "phased/music_dance_1",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "talk_self",
+      "title": "指自己说话",
+      "base": "phased/talk_self",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "talk_self_1",
+      "title": "指自己说话1",
+      "base": "phased/talk_self_1",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "talk_self_2",
+      "title": "指自己说话2",
+      "base": "phased/talk_self_2",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "talk_serious",
+      "title": "认真说话",
+      "base": "phased/talk_serious",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "talk_shining",
+      "title": "闪亮说话",
+      "base": "phased/talk_shining",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "talk_shining_1",
+      "title": "闪亮说话1",
+      "base": "phased/talk_shining_1",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "talk_shining_2",
+      "title": "闪亮说话2",
+      "base": "phased/talk_shining_2",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "talk_shy",
+      "title": "害羞说话",
+      "base": "phased/talk_shy",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "talk_shy_1",
+      "title": "害羞说话1",
+      "base": "phased/talk_shy_1",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "talk_shy_2",
+      "title": "害羞说话2",
+      "base": "phased/talk_shy_2",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     }
   ],
   "single_modes": [
@@ -286,6 +382,24 @@
       "id": "gift",
       "title": "礼物",
       "folder": "single/gift",
+      "interval_ms": 125
+    },
+    {
+      "id": "music_dance_single",
+      "title": "音乐跳舞单次",
+      "folder": "single/music_dance_single",
+      "interval_ms": 125
+    },
+    {
+      "id": "music_dance_single_1",
+      "title": "音乐跳舞单次1",
+      "folder": "single/music_dance_single_1",
+      "interval_ms": 125
+    },
+    {
+      "id": "music_dance_single_2",
+      "title": "音乐跳舞单次2",
+      "folder": "single/music_dance_single_2",
       "interval_ms": 125
     }
   ]
