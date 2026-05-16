@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from random import choice, randint
+from collections.abc import Callable
 
 from PyQt6.QtCore import QObject, QTimer
 
@@ -17,12 +18,14 @@ class ModeAutoSwitch(QObject):
         interval_min_ms: int,
         interval_max_ms: int,
         mode_ids: tuple[str, ...],
+        action_blocked: Callable[[], bool] | None = None,
     ) -> None:
         super().__init__(parent)
         self._director = director
         self._interval_min_ms = interval_min_ms
         self._interval_max_ms = interval_max_ms
         self._mode_ids = mode_ids
+        self._action_blocked = action_blocked or (lambda: False)
         self._enabled = interval_max_ms > 0 and bool(mode_ids)
         self._timer: QTimer | None = None
 
@@ -60,6 +63,8 @@ class ModeAutoSwitch(QObject):
 
     def _switch_mode_auto(self) -> None:
         self._reset_interval()
+        if self._action_blocked():
+            return
         if self._director.is_press_active():
             return
         current_mode = self._director.current_mode_name()

@@ -26,7 +26,7 @@ class SingleAutoSwitch(QObject):
         interval_max_ms: int,
         mode_ids: tuple[str, ...],
         single_clips: dict[str, Clip],
-        music_dance_enabled: Callable[[], bool],
+        action_blocked: Callable[[], bool],
         single_player: SinglePlayer,
         mode_autoswitch_timer: StartStop | None = None,
     ) -> None:
@@ -36,7 +36,7 @@ class SingleAutoSwitch(QObject):
         self._interval_max_ms = interval_max_ms
         self._mode_ids = mode_ids
         self._single_clips = single_clips
-        self._music_dance_enabled = music_dance_enabled
+        self._action_blocked = action_blocked
         self._single_player = single_player
         self._mode_autoswitch_timer = mode_autoswitch_timer
         self._timer: QTimer | None = None
@@ -73,7 +73,7 @@ class SingleAutoSwitch(QObject):
         if self._single_player.is_active():
             self._reset_interval()
             return
-        if self._music_dance_enabled() or self._director.is_interaction_active():
+        if self._action_blocked() or self._director.is_interaction_active():
             self._reset_interval()
             return
         clip = self._pick_clip()

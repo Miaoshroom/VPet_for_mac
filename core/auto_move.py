@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import random
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -48,7 +49,7 @@ class AutoMoveController(QObject):
         director: PetAnimationDirector,
         window,
         modes: dict[str, Mode],
-        music_dance_enabled,
+        action_blocked: Callable[[], bool],
         single_autoswitch: SingleSwitch,
         mode_autoswitch: StartStop | None = None,
     ) -> None:
@@ -57,7 +58,7 @@ class AutoMoveController(QObject):
         self._director = director
         self._window = window
         self._modes = modes
-        self._music_dance_enabled = music_dance_enabled
+        self._action_blocked = action_blocked
         self._single_autoswitch = single_autoswitch
         self._mode_autoswitch = mode_autoswitch
         self._enabled = bool(settings["enabled_default"])
@@ -136,6 +137,8 @@ class AutoMoveController(QObject):
         if self._active:
             return
         if self._single_autoswitch.is_active():
+            return
+        if self._action_blocked():
             return
         if self._director.is_interaction_active():
             return

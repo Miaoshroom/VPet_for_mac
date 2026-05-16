@@ -15,6 +15,7 @@ from core.plugin_loader import setup_plugins
 from core.interaction_map import load_interaction_map
 from core.loader import load_action_config
 from core.mode_autoswitch import ModeAutoSwitch
+from core.plugin_runtime import PluginRuntime
 from core.single_autoswitch import SingleAutoSwitch
 from core.single_player import SinglePlayer
 from core.start_shut import build_shutdown_handler, pick_startup, play_startup
@@ -54,14 +55,15 @@ def main() -> int:
             config.single_clips,
         )
 
+        plugin_runtime = PluginRuntime()
         mode_autoswitch = ModeAutoSwitch(
             app,
             director,
             config.idle_autoswitch_interval_min_ms,
             config.idle_autoswitch_interval_max_ms,
             config.auto_idle_modes,
+            action_blocked=plugin_runtime.action_active,
         )
-        plugin_flags = {"music_dance_enabled": False}
         auto_move: AutoMoveController | None = None
 
         def is_auto_move_enabled() -> bool:
@@ -101,7 +103,7 @@ def main() -> int:
             interval_max_ms=config.single_insert_interval_max_ms,
             mode_ids=config.single_insert_modes,
             single_clips=config.single_clips,
-            music_dance_enabled=lambda: plugin_flags["music_dance_enabled"],
+            action_blocked=plugin_runtime.action_active,
             single_player=single_player,
             mode_autoswitch_timer=mode_autoswitch,
         )
@@ -110,7 +112,7 @@ def main() -> int:
             director=director,
             window=win,
             modes=config.modes,
-            music_dance_enabled=lambda: plugin_flags["music_dance_enabled"],
+            action_blocked=plugin_runtime.action_active,
             single_autoswitch=single_autoswitch,
             mode_autoswitch=mode_autoswitch,
         )
@@ -126,7 +128,7 @@ def main() -> int:
             "director": director,
             "default_mode": config.default_mode,
             "mode_autoswitch": mode_autoswitch,
-            "plugin_flags": plugin_flags,
+            "plugin_runtime": plugin_runtime,
             "single_player": single_player,
             "single_clips": config.single_clips,
         })

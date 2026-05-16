@@ -22,7 +22,7 @@ class MusicDancePlugin(QObject):
         self._single_player = context["single_player"]
         self._default_mode = context["default_mode"]
         self._auto_idle_timer = context["mode_autoswitch"]
-        self._plugin_flags = context["plugin_flags"]
+        self._plugin_runtime = context["plugin_runtime"]
         self._dance_modes = tuple(str(mode_id) for mode_id in settings.get("dance_modes", []))
         self._start_threshold = float(settings["start_threshold"])
         self._stop_threshold = float(settings["stop_threshold"])
@@ -33,7 +33,6 @@ class MusicDancePlugin(QObject):
         self._process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
         self._process.readyReadStandardOutput.connect(self._on_output_ready)
         self._process.finished.connect(self._on_process_finished)
-        self._sync_flag()
 
     def menu_title(self) -> str:
         return self.MENU_TITLE
@@ -46,7 +45,6 @@ class MusicDancePlugin(QObject):
         if self._enabled == enabled:
             return
         self._enabled = enabled
-        self._sync_flag()
         if enabled:
             self.start()
         else:
@@ -61,18 +59,12 @@ class MusicDancePlugin(QObject):
         current_mode = self._director.current_mode_name()
         if current_mode not in self._dance_modes:
             self._fallback_mode = current_mode
-        self._stop_auto_idle()
         self._start_helper()
-        self._sync_flag()
 
     def shutdown(self) -> None:
         self._enabled = False
-        self._sync_flag()
         self._stop_helper()
         self._leave_dance_if_needed()
-
-    def _sync_flag(self) -> None:
-        self._plugin_flags["music_dance_enabled"] = self._enabled
 
     def _start_auto_idle(self) -> None:
         if self._auto_idle_timer is not None:
@@ -102,7 +94,6 @@ class MusicDancePlugin(QObject):
         if not self._enabled:
             return
         self._enabled = False
-        self._sync_flag()
         self._leave_dance_if_needed()
         self._start_auto_idle()
 
@@ -129,6 +120,9 @@ class MusicDancePlugin(QObject):
             self._fallback_mode = current_mode
 
         if not self._dance_active and level >= self._start_threshold:
+            if not self._plugin_runtime.try_begin_action(self.PLUGIN_NAME):
+                return
+            self._stop_auto_idle()
             self._dance_active = True
             target_mode = self._pick_dance_mode(current_mode)
             if current_mode != target_mode:
@@ -144,6 +138,9 @@ class MusicDancePlugin(QObject):
         current_mode = self._director.current_mode_name()
         if was_active and current_mode in self._dance_modes:
             self._director.switch_mode(self._fallback_mode or self._default_mode)
+        if was_active:
+            self._plugin_runtime.end_action(self.PLUGIN_NAME)
+            self._start_auto_idle()
 
     def _pick_dance_mode(self, current_mode: str) -> str:
         candidates = [mode_id for mode_id in self._dance_modes if mode_id != current_mode]
