@@ -61,6 +61,7 @@ class PetWindow(QMainWindow):
         on_toggle_mode_autoswitch: Callable[[bool], None] | None = None,
         auto_move_enabled: Callable[[], bool] | None = None,
         on_toggle_auto_move: Callable[[bool], None] | None = None,
+        action_blocked: Callable[[], bool] | None = None,
         *,
         max_side: int | None = None,
     ) -> None:
@@ -79,6 +80,7 @@ class PetWindow(QMainWindow):
         self._on_toggle_mode_autoswitch = on_toggle_mode_autoswitch or (lambda enabled: None)
         self._auto_move_enabled = auto_move_enabled or (lambda: False)
         self._on_toggle_auto_move = on_toggle_auto_move or (lambda enabled: None)
+        self._action_blocked = action_blocked or (lambda: False)
         self._on_quit = QApplication.quit
         self._plugins = []
         self._drop_handlers: list[Callable[[list[Path]], None]] = []
@@ -175,6 +177,8 @@ class PetWindow(QMainWindow):
         _save_display_size_to_json(self._max_side)
 
     def _switch_mode(self, mode_name: str) -> None:
+        if self._action_blocked():
+            return
         if mode_name not in self._mode_titles:
             return
         self._director.switch_mode(mode_name)

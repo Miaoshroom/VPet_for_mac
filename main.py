@@ -82,6 +82,7 @@ def main() -> int:
             on_toggle_mode_autoswitch=mode_autoswitch.set_enabled,
             auto_move_enabled=is_auto_move_enabled,
             on_toggle_auto_move=set_auto_move_enabled,
+            action_blocked=plugin_runtime.action_active,
         )
         win.show()
         badge = ClickThroughBadge(
