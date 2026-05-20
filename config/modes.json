@@ -333,6 +333,86 @@
       "start_interval_ms": 125,
       "loop_interval_ms": 125,
       "end_interval_ms": 125
+    },
+    {
+      "id": "play_ropeskipping",
+      "title": "跳绳",
+      "base": "phased/play_ropeskipping",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "play_videogames",
+      "title": "打游戏",
+      "base": "phased/play_videogames",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "study_calligraphy",
+      "title": "练书法",
+      "base": "phased/study_calligraphy",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "study_paint",
+      "title": "画画",
+      "base": "phased/study_paint",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "study_reading",
+      "title": "读书",
+      "base": "phased/study_reading",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "study_reading2",
+      "title": "读书2",
+      "base": "phased/study_reading2",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "work_clean",
+      "title": "打扫",
+      "base": "phased/work_clean",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "work_deathnoteremove",
+      "title": "死亡笔记",
+      "base": "phased/work_deathnoteremove",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "work_livestream",
+      "title": "直播",
+      "base": "phased/work_livestream",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
+    },
+    {
+      "id": "work_write",
+      "title": "写作",
+      "base": "phased/work_write",
+      "start_interval_ms": 125,
+      "loop_interval_ms": 125,
+      "end_interval_ms": 125
     }
   ],
   "single_modes": [
