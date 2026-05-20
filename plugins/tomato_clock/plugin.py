@@ -16,6 +16,7 @@ RESUME_CHECK_INTERVAL_MS = 50
 PHASE_IDLE = "idle"
 PHASE_FOCUS = "focus"
 PHASE_REST = "rest"
+SETTINGS_FILE = config_path("plugin_config/tomato_clock.json")
 
 
 class TomatoClockPlugin:
@@ -51,7 +52,10 @@ class TomatoClockPlugin:
 
         self._timer = QTimer(self._window)
         self._timer.timeout.connect(self._tick)
-        self._timer_window = TomatoClockWindow(self._window)
+        self._timer_window = TomatoClockWindow(
+            self._window,
+            y_offset_px=int(self._settings.get("timer_window_y_offset_px", -28)),
+        )
         self._phased_player = PhasedPlayer(self._window, self._window)
 
     def build_menu(self, root_menu: QMenu) -> None:
@@ -69,6 +73,8 @@ class TomatoClockPlugin:
             self._rest_minutes,
             self._set_rest_minutes,
         )
+        menu.addAction("上移计时窗口").triggered.connect(lambda: self._move_timer_window(-1))
+        menu.addAction("下移计时窗口").triggered.connect(lambda: self._move_timer_window(1))
         menu.addSeparator()
         start_action = menu.addAction("开始")
         pause_action = menu.addAction("暂停")
@@ -130,6 +136,14 @@ class TomatoClockPlugin:
 
     def _set_rest_minutes(self, minutes: int) -> None:
         self._rest_minutes = int(minutes)
+
+    def _move_timer_window(self, direction: int) -> None:
+        step = int(self._settings.get("timer_window_move_step_px", 8))
+        offset = int(self._settings.get("timer_window_y_offset_px", -28))
+        offset += int(direction) * step
+        self._settings["timer_window_y_offset_px"] = offset
+        self._timer_window.set_y_offset_px(offset)
+        _save_settings(self._settings)
 
     def _start(self) -> None:
         if self._running and not self._paused:
@@ -308,7 +322,14 @@ class TomatoClockPlugin:
 
 
 def _load_settings() -> dict:
-    return json.loads(config_path("plugin_config/tomato_clock.json").read_text(encoding="utf-8"))
+    return json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+
+
+def _save_settings(settings: dict) -> None:
+    SETTINGS_FILE.write_text(
+        json.dumps(settings, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _load_mode_titles() -> dict[str, str]:

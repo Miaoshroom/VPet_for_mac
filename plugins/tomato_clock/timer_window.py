@@ -6,13 +6,14 @@ from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 FOLLOW_INTERVAL_MS = 250
-WINDOW_OVERLAP_PX = 28
+DEFAULT_Y_OFFSET_PX = -28
 
 
 class TomatoClockWindow(QWidget):
-    def __init__(self, target_window: QWidget) -> None:
+    def __init__(self, target_window: QWidget, *, y_offset_px: int = DEFAULT_Y_OFFSET_PX) -> None:
         super().__init__(target_window)
         self._target_window = target_window
+        self._y_offset_px = int(y_offset_px)
         self._follow_timer = QTimer(self)
         self._follow_timer.timeout.connect(self.update_position)
 
@@ -103,10 +104,16 @@ class TomatoClockWindow(QWidget):
         self._follow_timer.stop()
         self.hide()
 
+    def set_y_offset_px(self, value: int) -> None:
+        self._y_offset_px = int(value)
+        if self.isVisible():
+            self.update_position()
+
     def update_position(self) -> None:
         x = (self._target_window.width() - self.width()) // 2
-        y = self._target_window.height() - self.height() - WINDOW_OVERLAP_PX
-        self.move(max(0, x), max(0, y))
+        max_y = max(0, self._target_window.height() - self.height())
+        y = max_y + self._y_offset_px
+        self.move(max(0, x), min(max(0, y), max_y))
         self.raise_()
 
 

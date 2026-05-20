@@ -3,6 +3,8 @@
   "default_mode": "work_write",
   "default_focus_minutes": 25,
   "default_rest_minutes": 5,
+  "timer_window_y_offset_px": -12,
+  "timer_window_move_step_px": 8,
   "focus_minutes": [
     1,
     20,
