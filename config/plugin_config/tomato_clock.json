@@ -1,0 +1,46 @@
+{
+  "default_group": "work",
+  "default_mode": "work_write",
+  "default_focus_minutes": 25,
+  "default_rest_minutes": 5,
+  "focus_minutes": [
+    20,
+    25,
+    30,
+    35,
+    40
+  ],
+  "rest_minutes": [
+    5,
+    10,
+    15
+  ],
+  "rest_mode": "default",
+  "groups": {
+    "work": {
+      "title": "工作",
+      "modes": [
+        "work_write",
+        "work_clean",
+        "work_livestream",
+        "work_deathnoteremove"
+      ]
+    },
+    "study": {
+      "title": "学习",
+      "modes": [
+        "study_reading",
+        "study_reading2",
+        "study_calligraphy",
+        "study_paint"
+      ]
+    },
+    "play": {
+      "title": "玩耍",
+      "modes": [
+        "play_videogames",
+        "play_ropeskipping"
+      ]
+    }
+  }
+}

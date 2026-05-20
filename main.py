@@ -133,6 +133,7 @@ def main() -> int:
             "plugin_runtime": plugin_runtime,
             "single_player": single_player,
             "single_clips": config.single_clips,
+            "auto_move": auto_move,
         })
         win.set_plugins(_plugins)
 
