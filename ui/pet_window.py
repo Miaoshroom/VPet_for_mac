@@ -197,12 +197,22 @@ class PetWindow(QMainWindow):
     def _plugin_handlers(self) -> dict[str, tuple[bool, Callable[[bool], None]]]:
         handlers = {}
         for plugin in self._plugins:
+            if callable(getattr(plugin, "build_menu", None)):
+                continue
             menu_title = getattr(plugin, "menu_title", None)
             is_enabled = getattr(plugin, "is_enabled", None)
             set_enabled = getattr(plugin, "set_enabled", None)
             if callable(menu_title) and callable(is_enabled) and callable(set_enabled):
                 handlers[str(menu_title())] = (bool(is_enabled()), set_enabled)
         return handlers
+
+    def _plugin_menu_builders(self) -> list[Callable]:
+        builders = []
+        for plugin in self._plugins:
+            build_menu = getattr(plugin, "build_menu", None)
+            if callable(build_menu):
+                builders.append(build_menu)
+        return builders
 
     def _save_start_position(self) -> None:
         try:
@@ -376,6 +386,7 @@ class PetWindow(QMainWindow):
             on_toggle_auto_move=self._on_toggle_auto_move,
             mode_handlers=mode_handlers,
             plugin_handlers=self._plugin_handlers(),
+            plugin_menu_builders=self._plugin_menu_builders(),
             current_mode_title=self._mode_titles.get(self._director.current_mode_name()),
             on_set_start_pos=self._save_start_position,
             on_quit=self._on_quit,

@@ -20,6 +20,7 @@ class PhasedPlayer(QObject):
         self._player.finished.connect(self._on_clip_finished)
         self._mode: Mode | None = None
         self._loop_left = 0
+        self._loop_forever = False
         self._phase = "idle"
         self._paused = False
         self._on_finished: Callable[[], None] | None = None
@@ -36,14 +37,36 @@ class PhasedPlayer(QObject):
         loop_count: int,
         on_finished: Callable[[], None] | None = None,
     ) -> bool:
-        if self.is_active() or not mode.is_phased or mode.start is None or mode.end is None:
+        if not self._start(mode, on_finished):
             return False
-        self._mode = mode
         self._loop_left = max(1, int(loop_count))
-        self._phase = "start"
-        self._paused = False
-        self._on_finished = on_finished
+        self._loop_forever = False
         self._player.play(mode.start, loop=False)
+        return True
+
+    def play_forever(
+        self,
+        mode: Mode,
+        on_finished: Callable[[], None] | None = None,
+    ) -> bool:
+        if not self._start(mode, on_finished):
+            return False
+        self._loop_left = 0
+        self._loop_forever = True
+        self._player.play(mode.start, loop=False)
+        return True
+
+    def finish(self) -> bool:
+        if not self.is_active() or self._mode is None:
+            return False
+        if self._phase == "end":
+            return True
+        self._loop_left = 0
+        self._loop_forever = False
+        self._phase = "end"
+        if self._paused:
+            return True
+        self._player.play(self._mode.end, loop=False)
         return True
 
     def pause(self) -> bool:
@@ -64,9 +87,19 @@ class PhasedPlayer(QObject):
         self._player.stop()
         self._mode = None
         self._loop_left = 0
+        self._loop_forever = False
         self._phase = "idle"
         self._paused = False
         self._on_finished = None
+
+    def _start(self, mode: Mode, on_finished: Callable[[], None] | None) -> bool:
+        if self.is_active() or not mode.is_phased or mode.start is None or mode.end is None:
+            return False
+        self._mode = mode
+        self._phase = "start"
+        self._paused = False
+        self._on_finished = on_finished
+        return True
 
     def _play_current_phase(self) -> None:
         if self._mode is None:
@@ -94,6 +127,9 @@ class PhasedPlayer(QObject):
             self._player.play(self._mode.loop, loop=False)
             return
         if self._phase == "loop":
+            if self._loop_forever:
+                self._player.play(self._mode.loop, loop=False)
+                return
             self._loop_left -= 1
             if self._loop_left > 0:
                 self._player.play(self._mode.loop, loop=False)
