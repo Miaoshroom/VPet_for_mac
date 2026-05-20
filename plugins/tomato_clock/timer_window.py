@@ -11,19 +11,13 @@ WINDOW_OVERLAP_PX = 28
 
 class TomatoClockWindow(QWidget):
     def __init__(self, target_window: QWidget) -> None:
-        super().__init__(None)
+        super().__init__(target_window)
         self._target_window = target_window
         self._follow_timer = QTimer(self)
         self._follow_timer.timeout.connect(self.update_position)
 
-        self.setWindowFlags(
-            Qt.WindowType.Window
-            | Qt.WindowType.FramelessWindowHint
-            | Qt.WindowType.WindowStaysOnTopHint
-            | Qt.WindowType.WindowDoesNotAcceptFocus
-            | Qt.WindowType.WindowTransparentForInput
-        )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
 
         self._action_label = QLabel("番茄钟")
         self._time_label = QLabel("00:00")
@@ -87,7 +81,6 @@ class TomatoClockWindow(QWidget):
         )
         self.show()
         self.update_position()
-        self.raise_()
         if not self._follow_timer.isActive():
             self._follow_timer.start(FOLLOW_INTERVAL_MS)
 
@@ -111,10 +104,9 @@ class TomatoClockWindow(QWidget):
         self.hide()
 
     def update_position(self) -> None:
-        geometry = self._target_window.geometry()
-        x = geometry.x() + (geometry.width() - self.width()) // 2
-        y = geometry.y() + geometry.height() - self.height() - WINDOW_OVERLAP_PX
-        self.move(x, y)
+        x = (self._target_window.width() - self.width()) // 2
+        y = self._target_window.height() - self.height() - WINDOW_OVERLAP_PX
+        self.move(max(0, x), max(0, y))
         self.raise_()
 
 

@@ -78,7 +78,7 @@ class TomatoClockPlugin:
         stop_action.triggered.connect(self._stop)
 
     def shutdown(self) -> None:
-        self._stop()
+        self._shutdown_now()
 
     def pause_for_interaction(self) -> None:
         if not self._running:
@@ -168,6 +168,22 @@ class TomatoClockPlugin:
         self._waiting_for_phase_animation = False
         self._timer_window.hide_timer()
         self._finish_animation_then_end_control()
+
+    def _shutdown_now(self) -> None: # 硬停止番茄钟，避免和退出动画抢画面
+        self._timer.stop()
+        self._running = False
+        self._paused = False
+        self._phase = PHASE_IDLE
+        self._remaining_seconds = 0
+        self._count = 0
+        self._interaction_paused = False
+        self._waiting_for_phase_animation = False
+        self._stopping = False
+        self._timer_window.hide_timer()
+        self._phased_player.stop()
+        if self._has_action_control:
+            self._has_action_control = False
+            self._plugin_runtime.end_action(self.PLUGIN_NAME)
 
     def _tick(self) -> None:
         if not self._running or self._paused:
