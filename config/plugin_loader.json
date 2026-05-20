@@ -2,6 +2,7 @@
   "plugins": [
     "show_sticker",
     "eat_files",
-    "music_dance"
+    "music_dance",
+    "tomato_clock"
   ]
 }

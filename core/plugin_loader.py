@@ -7,9 +7,13 @@ from __future__ import annotations
 
 import importlib
 import json
+from pathlib import Path
 from typing import Any
 
 from core.app_paths import config_path
+
+ROOT = Path(__file__).resolve().parent.parent
+PLUGINS = ROOT / "plugins"
 
 Plugin = Any
 PluginContext = dict[str, Any]
@@ -33,9 +37,15 @@ def _load_plugin_creators() -> list[type]:
     creators = []
     for plugin_name in data.get("plugins", []):
         name = str(plugin_name)
-        module = importlib.import_module(f"plugins.{name}")
+        module = importlib.import_module(_plugin_module_name(name))
         creators.append(getattr(module, _plugin_class_name(name)))
     return creators
+
+
+def _plugin_module_name(plugin_name: str) -> str:
+    if (PLUGINS / plugin_name / "plugin.py").is_file():
+        return f"plugins.{plugin_name}.plugin"
+    return f"plugins.{plugin_name}"
 
 
 def _plugin_class_name(plugin_name: str) -> str:
