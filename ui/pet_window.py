@@ -100,6 +100,7 @@ class PetWindow(QMainWindow):
             self._base_window_flags = (
                 Qt.WindowType.Window
                 | Qt.WindowType.FramelessWindowHint
+                | Qt.WindowType.NoDropShadowWindowHint
                 | Qt.WindowType.WindowStaysOnTopHint
             )
         self._apply_window_flags()
@@ -113,8 +114,7 @@ class PetWindow(QMainWindow):
         self._label.set_pet_pixmap(pix0)
         self.setCentralWidget(self._label)
 
-        w = max(64, pix0.width())
-        h = max(64, pix0.height())
+        w, h = self._logical_pixmap_size(pix0)
         self.resize(w, h)
         self.setMinimumSize(48, 48)
         settings = _load_settings()
@@ -148,20 +148,33 @@ class PetWindow(QMainWindow):
     def _fit_pixmap(self, pix: QPixmap) -> QPixmap:
         if self._max_side <= 0:
             return pix
-        if pix.width() <= self._max_side and pix.height() <= self._max_side:
+        dpr = max(1.0, self.devicePixelRatioF())
+        logical_width = pix.width() / pix.devicePixelRatio()
+        logical_height = pix.height() / pix.devicePixelRatio()
+        if logical_width <= self._max_side and logical_height <= self._max_side:
             return pix
-        return pix.scaled(
-            self._max_side,
-            self._max_side,
+        target_side = max(1, round(self._max_side * dpr))
+        fitted = pix.scaled(
+            target_side,
+            target_side,
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation,
+        )
+        fitted.setDevicePixelRatio(dpr)
+        return fitted
+
+    def _logical_pixmap_size(self, pix: QPixmap) -> tuple[int, int]:
+        dpr = pix.devicePixelRatio()
+        return (
+            max(64, round(pix.width() / dpr)),
+            max(64, round(pix.height() / dpr)),
         )
 
     def set_pixmap(self, pix: QPixmap) -> None:
         self._source_pixmap = pix
         fitted = self._fit_pixmap(pix)
         self._label.set_pet_pixmap(fitted)
-        self.resize(max(64, fitted.width()), max(64, fitted.height()))
+        self.resize(*self._logical_pixmap_size(fitted))
 
     def _on_frame(self, pix: QPixmap) -> None:
         self.set_pixmap(pix)
@@ -169,7 +182,7 @@ class PetWindow(QMainWindow):
     def _refresh_current_pixmap(self) -> None:
         fitted = self._fit_pixmap(self._source_pixmap)
         self._label.set_pet_pixmap(fitted)
-        self.resize(max(64, fitted.width()), max(64, fitted.height()))
+        self.resize(*self._logical_pixmap_size(fitted))
 
     def _zoom(self, delta: int) -> None:
         self._max_side = max(0, self._max_side + delta)
@@ -248,6 +261,9 @@ class PetWindow(QMainWindow):
         if behavior.type == "switch_mode" and behavior.mode is not None:
             self._switch_mode(behavior.mode)
 
+    def _should_pause_plugins_for_press(self, behavior: InteractionBehavior) -> bool:
+        return behavior.type == "press_mode"
+
     def _reset_pointer_state(self) -> None:
         self._drag_anchor = None
         self._press_global = None
@@ -313,7 +329,6 @@ class PetWindow(QMainWindow):
                 )
                 e.accept()
                 return
-            self.pause_plugins_for_interaction()
             self._press_global = e.globalPosition().toPoint()
             self._press_is_drag = False
             self._pressed_press_behavior = self._interaction_map.resolve(
@@ -331,6 +346,8 @@ class PetWindow(QMainWindow):
                 lp,
                 self.rect().size(),
             )
+            if self._should_pause_plugins_for_press(self._pressed_press_behavior):
+                self.pause_plugins_for_interaction()
             self._handle_behavior(self._pressed_press_behavior)
             if self._pressed_drag_behavior.type == "move_window":
                 self._drag_anchor = self._press_global - self.pos()
