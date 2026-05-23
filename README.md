@@ -1,8 +1,15 @@
 # 我想给她在 Mac 上完整的一生喵
 
-![喵](https://imageshostneko.nekostep.cn/2026/05/cfa537960b478350e9fd246417e3e5c5.png)
+<p align="center">
+  <img src="https://imageshostneko.nekostep.cn/2026/05/99270e0dee5fe0647aa4c1f1087aea8a.png" alt="喵" width="280">
+</p>
 
-mac 上怎么能没有桌宠？😡不行不行！🙅‍♀️
+<p align="center">
+  图标作者：<a href="https://space.bilibili.com/547026500">bilibili @mmdmb</a><br>
+  大佬太强力画的太好看了x
+</p>
+
+## mac 上怎么能没有桌宠？😡不行不行！🙅‍♀️
 能在桌面上待着、发呆、被摸头、跟着音乐乱跳，这样就差不多够了喵。
 
 ---
