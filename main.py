@@ -11,11 +11,10 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.animation import PressHoldAnimator, PetAnimationDirector
 from core.auto_move import AutoMoveController
-from core.plugin_loader import setup_plugins
 from core.interaction_map import load_interaction_map
 from core.loader import load_action_config
 from core.mode_autoswitch import ModeAutoSwitch
-from core.plugin_runtime import PluginRuntime
+from core.plugin_host import PluginRuntime, setup_plugins
 from core.single_autoswitch import SingleAutoSwitch
 from core.single_player import SinglePlayer
 from core.start_shut import build_shutdown_handler, pick_startup, play_startup

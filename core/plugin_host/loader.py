@@ -1,7 +1,4 @@
-"""插件注册入口。
-
-旧功能先堆屎吧，新插件从 config/plugin_loader.json 注册
-"""
+"""插件注册入口"""
 
 from __future__ import annotations
 
