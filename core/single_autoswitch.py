@@ -9,6 +9,7 @@ from typing import Protocol
 from PyQt6.QtCore import QObject, QTimer
 
 from core.animation import Clip, PetAnimationDirector
+from core.playback.catalog import AnimationCatalog
 from core.single_player import SinglePlayer
 
 
@@ -29,6 +30,7 @@ class SingleAutoSwitch(QObject):
         action_blocked: Callable[[], bool],
         single_player: SinglePlayer,
         mode_autoswitch_timer: StartStop | None = None,
+        animation_catalog: AnimationCatalog | None = None,
     ) -> None:
         super().__init__(parent)
         self._director = director
@@ -39,6 +41,7 @@ class SingleAutoSwitch(QObject):
         self._action_blocked = action_blocked
         self._single_player = single_player
         self._mode_autoswitch_timer = mode_autoswitch_timer
+        self._animation_catalog = animation_catalog
         self._timer: QTimer | None = None
 
         if interval_max_ms > 0 and mode_ids:
@@ -62,7 +65,20 @@ class SingleAutoSwitch(QObject):
     def _pick_clip(self) -> Clip | None:
         if not self._mode_ids:
             return None
-        return self._single_clips[random.choice(self._mode_ids)]
+        if self._animation_catalog is None:
+            candidates = [mode_id for mode_id in self._mode_ids if mode_id in self._single_clips]
+            return self._single_clips[random.choice(candidates)] if candidates else None
+
+        # single 插播也跟着当前状态走 没素材就不插播
+        pet_state = self._director.pet_state()
+        candidates = [
+            mode_id
+            for mode_id in self._mode_ids
+            if self._animation_catalog.is_single_available(mode_id, pet_state)
+        ]
+        if not candidates:
+            return None
+        return self._animation_catalog.single_for(random.choice(candidates), pet_state)
 
     def _reset_interval(self) -> None:
         if self._timer is None:

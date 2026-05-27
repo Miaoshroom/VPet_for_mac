@@ -482,9 +482,12 @@ class PetWindow(QMainWindow):
         super().mouseReleaseEvent(e)
 
     def contextMenuEvent(self, e) -> None:
+        available_modes = self._director.available_mode_ids(self._mode_titles)
         mode_handlers = {
             title: (lambda name=mode_name: self._switch_mode(name))
-            for mode_name, title in self._mode_titles.items()
+            # 右键菜单只展示当前状态能播的动作
+            for mode_name in available_modes
+            if (title := self._mode_titles.get(mode_name)) is not None
         }
         show_pet_menu(
             self,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -188,17 +188,42 @@ class PetAnimationDirector(QObject):
     def pet_state(self) -> str:
         return self._pet_state
 
+    def is_mode_available(self, mode_name: str) -> bool:
+        if self._animation_catalog is not None:
+            return self._animation_catalog.is_mode_available(mode_name, self._pet_state)
+        return mode_name in self._modes
+
+    def available_mode_ids(self, mode_ids: Iterable[str] | None = None) -> tuple[str, ...]:
+        if self._animation_catalog is not None:
+            if mode_ids is None:
+                return (
+                    self._animation_catalog.available_action_ids(self._pet_state, "loop")
+                    + self._animation_catalog.available_action_ids(self._pet_state, "phased")
+                )
+            return tuple(mode_id for mode_id in mode_ids if self.is_mode_available(mode_id))
+        source = mode_ids if mode_ids is not None else self._modes
+        return tuple(mode_id for mode_id in source if mode_id in self._modes)
+
+    def mode_for_action(self, mode_name: str) -> Mode:
+        return self._resolve_mode(mode_name)
+
+    def active_interaction_mode(self) -> Mode | None:
+        return self._active_interaction_mode
+
     def set_pet_state(self, pet_state: str) -> None:
-        old_state = self._pet_state
-        old_mode = self._current_mode_obj
-        self._pet_state = validate_pet_state(pet_state)
+        next_state = validate_pet_state(pet_state)
+        self._pet_state = next_state
+        try:
+            self._current_mode_obj = self._resolve_mode(self._current_mode)
+        except KeyError:
+            # 当前动作在新状态下没有素材时回到默认动作
+            self._current_mode = self._default_mode
+            self._current_mode_obj = self._resolve_mode(self._default_mode)
+        if self._pending_mode is not None and not self.is_mode_available(self._pending_mode):
+            # 待切换动作不可播就丢掉 防止 end 之后再炸
+            self._pending_mode = None
         if not self.is_interaction_active():
-            try:
-                self.resume_mode(self._current_mode)
-            except KeyError:
-                self._pet_state = old_state
-                self._current_mode_obj = old_mode
-                raise
+            self._resume_current_mode()
 
     def is_press_active(self) -> bool:
         return self.is_interaction_active()
@@ -210,13 +235,13 @@ class PetAnimationDirector(QObject):
         self._start_mode(self._default_mode)
 
     def switch_mode(self, mode_name: str) -> None:
-        if mode_name not in self._modes:
-            raise KeyError(f"未知动作: {mode_name}")
+        # 先按当前状态解析素材 成功了再改当前动作
+        next_mode = self._resolve_mode(mode_name)
         if mode_name == self.current_mode_name():
             return
         if self.is_interaction_active():
             self._current_mode = mode_name
-            self._current_mode_obj = self._resolve_mode(mode_name)
+            self._current_mode_obj = next_mode
             self._pending_mode = None
             return
 
@@ -234,22 +259,23 @@ class PetAnimationDirector(QObject):
     def on_mouse_release(self) -> None:
         self.end_interaction()
 
-    def start_interaction(self, interaction_name: str) -> None:
+    def start_interaction(self, interaction_name: str) -> bool:
         if not self._has_action(interaction_name):
             raise KeyError(f"未知互动: {interaction_name}")
         if self.is_interaction_active():
-            return
+            return False
         try:
             interaction = self._interaction_for(interaction_name)
         except KeyError:
             # 当前状态没有该互动素材时忽略本次互动，等待素材提供对应状态或 any
-            return
+            return False
         self._stop_mode_player()
         self._pending_mode = None
         self._active_interaction_name = interaction_name
         self._active_interaction = interaction
         self._active_interaction_mode = self._transient_interaction_mode
         interaction.start(on_resume=self._resume_current_mode)
+        return True
 
     def end_interaction(self) -> None:
         if self._active_interaction is None:
@@ -304,10 +330,9 @@ class PetAnimationDirector(QObject):
 
     def resume_mode(self, mode_name: str | None = None) -> None:
         if mode_name is not None:
-            if mode_name not in self._modes:
-                raise KeyError(f"未知动作: {mode_name}")
+            mode = self._resolve_mode(mode_name)
             self._current_mode = mode_name
-            self._current_mode_obj = self._resolve_mode(mode_name)
+            self._current_mode_obj = mode
         self._resume_current_mode()
 
     def _resolve_mode(self, mode_name: str) -> Mode:
@@ -344,11 +369,11 @@ class PetAnimationDirector(QObject):
         self._mode_player.disconnect_finished()
 
     def _start_mode(self, mode_name: str) -> None:
+        mode = self._resolve_mode(mode_name)
         self._stop_mode_player()
         self._current_mode = mode_name
-        self._current_mode_obj = self._resolve_mode(mode_name)
+        self._current_mode_obj = mode
         self._pending_mode = None
-        mode = self.current_mode()
         if mode.is_phased:
             self._phase = "start"
             assert mode.start is not None
@@ -384,12 +409,13 @@ class PetAnimationDirector(QObject):
         self._play_current_loop(refresh=True)
 
     def _play_current_loop(self, *, refresh: bool = True) -> None:
+        mode = self._resolve_mode(self._current_mode) if refresh else self.current_mode()
         self._stop_mode_player()
         if refresh:
-            self._current_mode_obj = self._resolve_mode(self._current_mode)
+            self._current_mode_obj = mode
         self._phase = "loop"
         self._mode_player.finished.connect(self._after_mode_loop)
-        self._mode_player.play(self.current_mode().loop, loop=False)
+        self._mode_player.play(mode.loop, loop=False)
 
     def _play_current_end(self) -> None:
         mode = self.current_mode()

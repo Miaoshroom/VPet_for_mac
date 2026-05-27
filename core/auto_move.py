@@ -86,6 +86,7 @@ class AutoMoveController(QObject):
         self._move_timer.timeout.connect(self._move_tick)
         self._active = False
         self._current_rule: MoveRule | None = None
+        self._current_move_mode: Mode | None = None
         self._vx = 0.0
         self._vy = 0.0
         self._x = 0.0
@@ -158,7 +159,8 @@ class AutoMoveController(QObject):
         top_rules: list[MoveRule] = []
         rules: list[MoveRule] = []
         for rule in self._rules:
-            if rule.mode not in self._modes:
+            mode = self._mode_for_rule(rule)
+            if mode is None or not mode.is_phased:
                 continue
             vx, vy = _vector_for(rule)
             can_move_left = rect.x() > min_x + max(0, boundary.left)
@@ -190,17 +192,20 @@ class AutoMoveController(QObject):
         return top_rules or rules
 
     def _start_move(self, rule: MoveRule) -> None:
-        mode = self._modes[rule.mode]
-        if not mode.is_phased:
+        mode = self._mode_for_rule(rule)
+        if mode is None or not mode.is_phased:
             return
+        if not self._director.start_interaction(rule.mode):
+            return
+        active_mode = self._director.active_interaction_mode() or mode
         self._active = True
         self._current_rule = rule
+        self._current_move_mode = active_mode
         self._timer.stop()
         self._single_autoswitch.stop()
         if self._mode_autoswitch is not None:
             self._mode_autoswitch.stop()
-        self._director.start_interaction(rule.mode)
-        start_delay = mode.start.duration_ms if mode.start is not None else 0
+        start_delay = active_mode.start.duration_ms if active_mode.start is not None else 0
         QTimer.singleShot(start_delay, self._start_move_timer)
 
     def _start_move_timer(self) -> None:
@@ -256,14 +261,22 @@ class AutoMoveController(QObject):
     def _finish_move(self, restart_timer: bool) -> None:
         self._move_timer.stop()
         rule = self._current_rule
+        mode = self._current_move_mode
         self._active = False
         self._current_rule = None
+        self._current_move_mode = None
         self._director.end_interaction()
         end_delay = 0
-        if rule is not None:
-            mode = self._modes[rule.mode]
+        if rule is not None and mode is not None:
             end_delay = mode.end.duration_ms if mode.end is not None else 0
         QTimer.singleShot(end_delay, lambda: self._after_move_end(restart_timer))
+
+    def _mode_for_rule(self, rule: MoveRule) -> Mode | None:
+        # 移动动作也要按当前状态查素材
+        try:
+            return self._director.mode_for_action(rule.mode)
+        except KeyError:
+            return None
 
     def _after_move_end(self, restart_timer: bool) -> None:
         self._single_autoswitch.start()

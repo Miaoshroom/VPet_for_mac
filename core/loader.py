@@ -61,12 +61,14 @@ def load_action_config(pet_state: str = DEFAULT_PET_STATE) -> LoadedActions:
     mode_titles = {
         spec.id: spec.title
         for spec in action_specs
-        if spec.type in ("loop", "phased") and spec.id in modes
+        # 标题表保存全部 mode 动作 菜单再按当前状态过滤
+        if spec.type in ("loop", "phased")
     }
     single_titles = {
         spec.id: spec.title
         for spec in action_specs
-        if spec.type == "single" and spec.id in single_clips
+        # single 标题同理不绑死在启动状态
+        if spec.type == "single"
     }
 
     startup = tuple(str(mode_id) for mode_id in settings.get("startup", []))

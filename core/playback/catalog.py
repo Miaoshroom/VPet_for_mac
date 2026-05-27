@@ -100,6 +100,61 @@ class AnimationCatalog:
     def has_material_fallback(self, action_id: str) -> bool:
         return "any" in self._action_data(action_id)
 
+    def available_action_ids(
+        self,
+        pet_state: str,
+        action_type: ActionType | None = None,
+    ) -> tuple[str, ...]:
+        # 统一从这里问当前状态能播哪些动作
+        pet_state = validate_pet_state(pet_state)
+        result: list[str] = []
+        for action_id in self.action_ids(action_type):
+            if self.is_action_available(action_id, pet_state, action_type=action_type):
+                result.append(action_id)
+        return tuple(result)
+
+    def is_action_available(
+        self,
+        action_id: str,
+        pet_state: str,
+        *,
+        action_type: ActionType | None = None,
+    ) -> bool:
+        # 可播不是只看目录存在 还要能拿到 main 图层
+        mode_type = action_type or self.action_type(action_id)
+        if mode_type == "single":
+            return self.is_single_available(action_id, pet_state)
+        return self.is_mode_available(action_id, pet_state, action_type=mode_type)
+
+    def is_mode_available(
+        self,
+        action_id: str,
+        pet_state: str,
+        *,
+        action_type: ActionType | None = None,
+    ) -> bool:
+        pet_state = validate_pet_state(pet_state)
+        mode_type = action_type or self.action_type(action_id)
+        if mode_type == "single":
+            return False
+        try:
+            _, state_data = self._state_data(action_id, pet_state)
+        except KeyError:
+            return False
+        if mode_type == "loop":
+            return bool(self._main_variants(state_data, "loop"))
+        if mode_type == "phased":
+            return bool(self._playable_phased_loop_variants(state_data))
+        return False
+
+    def is_single_available(self, action_id: str, pet_state: str) -> bool:
+        pet_state = validate_pet_state(pet_state)
+        try:
+            _, state_data = self._state_data(action_id, pet_state)
+        except KeyError:
+            return False
+        return bool(self._main_variants(state_data, "single"))
+
     def mode_for(
         self,
         action_id: str,
@@ -130,7 +185,7 @@ class AnimationCatalog:
             )
         if mode_type != "phased":
             raise KeyError(f"未知动作类型: {mode_type}")
-        loop_selected = self._pick_variant(state_data, "loop", loop_variant)
+        loop_selected = self._pick_phased_loop_variant(state_data, loop_variant)
         start_selected = self._phase_variant_or_default(state_data, "start", loop_selected)
         end_selected = self._phase_variant_or_default(state_data, "end", loop_selected)
         return Mode(
@@ -251,13 +306,7 @@ class AnimationCatalog:
         phase: str,
         requested: str | None,
     ) -> str:
-        variants = tuple(
-            sorted(
-                variant
-                for variant, layers in state_data.get(phase, {}).items()
-                if MAIN_LAYER in layers
-            )
-        )
+        variants = self._main_variants(state_data, phase)
         if not variants:
             raise KeyError(f"阶段 {phase} 没有可播放 main 图层")
         if requested is not None:
@@ -265,6 +314,52 @@ class AnimationCatalog:
                 raise KeyError(f"阶段 {phase} 不存在变体 {requested}")
             return requested
         return random.choice(variants)
+
+    def _pick_phased_loop_variant(
+        self,
+        state_data: PhaseClips,
+        requested: str | None,
+    ) -> str:
+        variants = self._playable_phased_loop_variants(state_data)
+        if not variants:
+            raise KeyError("phased 动画没有完整可播放的 start-loop-end")
+        if requested is not None:
+            if requested not in variants:
+                raise KeyError(f"phased 动画变体 {requested} 缺少 start 或 end")
+            return requested
+        return random.choice(variants)
+
+    def _playable_phased_loop_variants(self, state_data: PhaseClips) -> tuple[str, ...]:
+        # phased 必须先确认 start loop end 能凑成一套
+        result: list[str] = []
+        for loop_variant in self._main_variants(state_data, "loop"):
+            if (
+                self._phase_variant_available(state_data, "start", loop_variant)
+                and self._phase_variant_available(state_data, "end", loop_variant)
+            ):
+                result.append(loop_variant)
+        return tuple(result)
+
+    def _phase_variant_available(
+        self,
+        state_data: PhaseClips,
+        phase: str,
+        loop_variant: str,
+    ) -> bool:
+        phase_variants = state_data.get(phase, {})
+        if loop_variant in phase_variants and MAIN_LAYER in phase_variants[loop_variant]:
+            return True
+        return "01" in phase_variants and MAIN_LAYER in phase_variants["01"]
+
+    def _main_variants(self, state_data: PhaseClips, phase: str) -> tuple[str, ...]:
+        # 目前只播放 main 图层 所以可播性也只看 main
+        return tuple(
+            sorted(
+                variant
+                for variant, layers in state_data.get(phase, {}).items()
+                if MAIN_LAYER in layers
+            )
+        )
 
     def _phase_variant_or_default(
         self,

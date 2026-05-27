@@ -114,6 +114,7 @@ def main() -> int:
             action_blocked=plugin_runtime.action_active,
             single_player=single_player,
             mode_autoswitch_timer=mode_autoswitch,
+            animation_catalog=config.animation_catalog,
         )
         auto_move = AutoMoveController(
             parent=app,
