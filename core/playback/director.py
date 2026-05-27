@@ -16,11 +16,20 @@ class PressHoldAnimator(QObject):
 
     frame_changed = pyqtSignal(object)
 
-    def __init__(self, start: Clip, loop: Clip, end: Clip, parent: QObject | None = None) -> None:
+    def __init__(
+        self,
+        start: Clip,
+        loop: Clip,
+        end: Clip,
+        parent: QObject | None = None,
+        *,
+        mode_factory: Callable[[], Mode] | None = None,
+    ) -> None:
         super().__init__(parent)
         self._start_c = start
         self._loop_c = loop
         self._end_c = end
+        self._mode_factory = mode_factory
         self._player = FlipbookPlayer(self)
         self._player.frame_changed.connect(self.frame_changed)
         self._on_resume: Callable[[], None] | None = None
@@ -58,8 +67,34 @@ class PressHoldAnimator(QObject):
         if self._wants_end:
             self._play_end()
             return
+        self._play_loop(refresh=False)
+
+    def _after_loop(self) -> None:
+        self._player.disconnect_finished()
+        if self._wants_end:
+            self._play_end()
+            return
+        self._play_loop(refresh=True)
+
+    def _play_loop(self, *, refresh: bool) -> None:
         self._phase = "loop"
-        self._player.play(self._loop_c, loop=True)
+        if refresh:
+            self._refresh_loop_mode()
+        self._player.stop()
+        self._player.disconnect_finished()
+        self._player.finished.connect(self._after_loop)
+        self._player.play(self._loop_c, loop=False)
+
+    def _refresh_loop_mode(self) -> None:
+        if self._mode_factory is None:
+            return
+        try:
+            mode = self._mode_factory()
+        except KeyError:
+            return
+        self._loop_c = mode.loop
+        if mode.end is not None:
+            self._end_c = mode.end
 
     def _play_end(self) -> None:
         self._phase = "end"
@@ -223,7 +258,13 @@ class PetAnimationDirector(QObject):
         mode = self._resolve_mode(interaction_name)
         if not mode.is_phased or mode.start is None or mode.end is None:
             raise KeyError(f"互动动作必须是 phased: {interaction_name}")
-        interaction = PressHoldAnimator(mode.start, mode.loop, mode.end, self)
+        interaction = PressHoldAnimator(
+            mode.start,
+            mode.loop,
+            mode.end,
+            self,
+            mode_factory=lambda: self._resolve_mode(interaction_name),
+        )
         interaction.frame_changed.connect(self.frame_changed)
         self._transient_interaction = interaction
         return interaction
@@ -245,7 +286,7 @@ class PetAnimationDirector(QObject):
             self._mode_player.play(mode.start, loop=False)
             return
         self._phase = "loop"
-        self._mode_player.play(mode.loop, loop=True)
+        self._play_current_loop(refresh=False)
 
     def _resume_current_mode(self) -> None:
         self._stop_mode_player()
@@ -254,16 +295,29 @@ class PetAnimationDirector(QObject):
         self._transient_interaction = None
         self._pending_mode = None
         self._phase = "loop"
-        self._current_mode_obj = self._resolve_mode(self._current_mode)
-        self._mode_player.play(self.current_mode().loop, loop=True)
+        self._play_current_loop(refresh=False)
 
     def _after_mode_start(self) -> None:
         self._mode_player.disconnect_finished()
         if self._pending_mode is not None:
             self._play_current_end()
             return
+        self._play_current_loop(refresh=False)
+
+    def _after_mode_loop(self) -> None:
+        self._mode_player.disconnect_finished()
+        if self._pending_mode is not None:
+            self._play_current_end()
+            return
+        self._play_current_loop(refresh=True)
+
+    def _play_current_loop(self, *, refresh: bool = True) -> None:
+        self._stop_mode_player()
+        if refresh:
+            self._current_mode_obj = self._resolve_mode(self._current_mode)
         self._phase = "loop"
-        self._mode_player.play(self.current_mode().loop, loop=True)
+        self._mode_player.finished.connect(self._after_mode_loop)
+        self._mode_player.play(self.current_mode().loop, loop=False)
 
     def _play_current_end(self) -> None:
         mode = self.current_mode()
