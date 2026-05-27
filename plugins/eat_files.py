@@ -7,6 +7,8 @@ import shutil
 from pathlib import Path
 
 from core.app_paths import config_path
+from core.playback.catalog import AnimationCatalog
+from core.playback.clip import Clip
 
 
 class EatFilesPlugin:
@@ -15,8 +17,9 @@ class EatFilesPlugin:
 
     def __init__(self, context) -> None:
         self._window = context["window"]
+        self._director = context["director"]
         self._single_player = context["single_player"]
-        self._single_clips = context["single_clips"]
+        self._animation_catalog: AnimationCatalog = context["animation_catalog"]
         self._settings = _load_settings()
         self._enabled = bool(self._settings["enabled"])
         self._window.add_drop_handler(self._on_drop_files)
@@ -33,18 +36,26 @@ class EatFilesPlugin:
     def _on_drop_files(self, paths: list[Path]) -> None:
         if not self._enabled:
             return
+        if self._single_player.is_active():
+            return
+        clip = self._clip_for_current_state()
+        if clip is None:
+            # 当前状态没有吃文件动画时不移动文件
+            return
         moved = self._move_files(paths)
         if not moved:
             return
-        clip = self._single_clips.get(str(self._settings["single_animation"]))
-        if clip is None:
-            return
         self._window.pause_plugins_for_interaction()
-        if self._single_player.is_active():
-            self._window.resume_plugins_after_interaction()
-            return
         if not self._single_player.play(clip, on_finished=self._window.resume_plugins_after_interaction):
             self._window.resume_plugins_after_interaction()
+
+    def _clip_for_current_state(self) -> Clip | None:
+        animation_id = str(self._settings["single_animation"])
+        pet_state = self._director.pet_state()
+        try:
+            return self._animation_catalog.single_for(animation_id, pet_state)
+        except KeyError:
+            return None
 
     def _move_files(self, paths: list[Path]) -> bool:
         trash_dir = Path(str(self._settings["trash_path"])).expanduser()

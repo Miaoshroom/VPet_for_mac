@@ -26,22 +26,20 @@ class SingleAutoSwitch(QObject):
         interval_min_ms: int,
         interval_max_ms: int,
         mode_ids: tuple[str, ...],
-        single_clips: dict[str, Clip],
         action_blocked: Callable[[], bool],
         single_player: SinglePlayer,
+        animation_catalog: AnimationCatalog,
         mode_autoswitch_timer: StartStop | None = None,
-        animation_catalog: AnimationCatalog | None = None,
     ) -> None:
         super().__init__(parent)
         self._director = director
         self._interval_min_ms = interval_min_ms
         self._interval_max_ms = interval_max_ms
         self._mode_ids = mode_ids
-        self._single_clips = single_clips
         self._action_blocked = action_blocked
         self._single_player = single_player
-        self._mode_autoswitch_timer = mode_autoswitch_timer
         self._animation_catalog = animation_catalog
+        self._mode_autoswitch_timer = mode_autoswitch_timer
         self._timer: QTimer | None = None
 
         if interval_max_ms > 0 and mode_ids:
@@ -65,9 +63,6 @@ class SingleAutoSwitch(QObject):
     def _pick_clip(self) -> Clip | None:
         if not self._mode_ids:
             return None
-        if self._animation_catalog is None:
-            candidates = [mode_id for mode_id in self._mode_ids if mode_id in self._single_clips]
-            return self._single_clips[random.choice(candidates)] if candidates else None
 
         # single 插播也跟着当前状态走 没素材就不插播
         pet_state = self._director.pet_state()

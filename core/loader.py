@@ -35,8 +35,6 @@ class LoadedActions:
     # 它们不能反向影响素材发现方式
     modes: dict[str, Mode]
     mode_titles: dict[str, str]
-    single_clips: dict[str, Clip]
-    single_titles: dict[str, str]
     startup: tuple[str, ...]
     shutdown: tuple[str, ...]
     single_insert_interval_min_ms: int
@@ -57,18 +55,11 @@ def load_action_config(pet_state: str = DEFAULT_PET_STATE) -> LoadedActions:
     action_specs = _load_action_specs()
     catalog = load_animation_catalog(action_specs=action_specs)
     modes = catalog.build_modes(action_specs, pet_state)
-    single_clips = catalog.build_single_clips(action_specs, pet_state)
     mode_titles = {
         spec.id: spec.title
         for spec in action_specs
         # 标题表保存全部 mode 动作 菜单再按当前状态过滤
         if spec.type in ("loop", "phased")
-    }
-    single_titles = {
-        spec.id: spec.title
-        for spec in action_specs
-        # single 标题同理不绑死在启动状态
-        if spec.type == "single"
     }
 
     startup = tuple(str(mode_id) for mode_id in settings.get("startup", []))
@@ -89,11 +80,11 @@ def load_action_config(pet_state: str = DEFAULT_PET_STATE) -> LoadedActions:
     for mode_id in auto_idle_modes:
         _require_mode(mode_id, modes, "auto_idle_modes")
     for mode_id in startup:
-        _require_single(mode_id, single_clips, "startup")
+        _require_single(mode_id, catalog, pet_state, "startup")
     for mode_id in shutdown:
-        _require_single(mode_id, single_clips, "shutdown")
+        _require_single(mode_id, catalog, pet_state, "shutdown")
     for mode_id in single_insert_modes:
-        _require_single(mode_id, single_clips, "single_insert_modes")
+        _require_single(mode_id, catalog, pet_state, "single_insert_modes")
 
     return LoadedActions(
         animation_catalog=catalog,
@@ -101,8 +92,6 @@ def load_action_config(pet_state: str = DEFAULT_PET_STATE) -> LoadedActions:
         pet_state=pet_state,
         modes=modes,
         mode_titles=mode_titles,
-        single_clips=single_clips,
-        single_titles=single_titles,
         startup=startup,
         shutdown=shutdown,
         single_insert_interval_min_ms=single_insert_interval_min_ms,
@@ -256,6 +245,11 @@ def _require_mode(mode_id: str, modes: dict[str, Mode], field: str) -> None:
         raise RuntimeError(f"{field} 引用了未配置或不可播放的动作: {mode_id}")
 
 
-def _require_single(mode_id: str, single_clips: dict[str, Clip], field: str) -> None:
-    if mode_id not in single_clips:
+def _require_single(
+    mode_id: str,
+    catalog: AnimationCatalog,
+    pet_state: str,
+    field: str,
+) -> None:
+    if not catalog.is_single_available(mode_id, pet_state):
         raise RuntimeError(f"{field} 引用了未配置或不可播放的 single 动作: {mode_id}")

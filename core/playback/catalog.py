@@ -265,21 +265,6 @@ class AnimationCatalog:
                     pass
         return modes
 
-    def build_single_clips(
-        self,
-        action_specs: tuple[ActionSpec, ...],
-        pet_state: str = DEFAULT_PET_STATE,
-    ) -> dict[str, Clip]:
-        clips: dict[str, Clip] = {}
-        for spec in action_specs:
-            if spec.type == "single":
-                try:
-                    clips[spec.id] = self.single_for(spec.id, pet_state)
-                except KeyError:
-                    # 迁移期兼容字段只暴露当前状态可用的动作
-                    pass
-        return clips
-
     def _action_data(self, action_id: str) -> StateClips:
         try:
             return self._clips[action_id]

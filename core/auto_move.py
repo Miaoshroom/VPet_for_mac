@@ -48,7 +48,6 @@ class AutoMoveController(QObject):
         parent: QObject,
         director: PetAnimationDirector,
         window,
-        modes: dict[str, Mode],
         action_blocked: Callable[[], bool],
         single_autoswitch: SingleSwitch,
         mode_autoswitch: StartStop | None = None,
@@ -58,7 +57,6 @@ class AutoMoveController(QObject):
         settings = _load_settings()
         self._director = director
         self._window = window
-        self._modes = modes
         self._action_blocked = action_blocked
         self._single_autoswitch = single_autoswitch
         self._mode_autoswitch = mode_autoswitch
@@ -195,9 +193,9 @@ class AutoMoveController(QObject):
         mode = self._mode_for_rule(rule)
         if mode is None or not mode.is_phased:
             return
-        if not self._director.start_interaction(rule.mode):
+        active_mode = self._director.start_interaction(rule.mode)
+        if active_mode is None:
             return
-        active_mode = self._director.active_interaction_mode() or mode
         self._active = True
         self._current_rule = rule
         self._current_move_mode = active_mode

@@ -259,23 +259,23 @@ class PetAnimationDirector(QObject):
     def on_mouse_release(self) -> None:
         self.end_interaction()
 
-    def start_interaction(self, interaction_name: str) -> bool:
+    def start_interaction(self, interaction_name: str) -> Mode | None:
         if not self._has_action(interaction_name):
             raise KeyError(f"未知互动: {interaction_name}")
         if self.is_interaction_active():
-            return False
+            return None
         try:
             interaction = self._interaction_for(interaction_name)
         except KeyError:
             # 当前状态没有该互动素材时忽略本次互动，等待素材提供对应状态或 any
-            return False
+            return None
         self._stop_mode_player()
         self._pending_mode = None
         self._active_interaction_name = interaction_name
         self._active_interaction = interaction
         self._active_interaction_mode = self._transient_interaction_mode
         interaction.start(on_resume=self._resume_current_mode)
-        return True
+        return self._active_interaction_mode
 
     def end_interaction(self) -> None:
         if self._active_interaction is None:

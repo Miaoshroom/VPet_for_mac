@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import QMenu
 
 from core.app_paths import config_path
 from core.phased_player import PhasedPlayer
+from core.playback.catalog import AnimationCatalog
 from plugins.tomato_clock.timer_window import TomatoClockWindow
 
 TICK_MS = 1000
@@ -26,7 +27,7 @@ class TomatoClockPlugin:
     def __init__(self, context) -> None:
         self._window = context["window"]
         self._director = context["director"]
-        self._modes = context["modes"]
+        self._animation_catalog: AnimationCatalog = context["animation_catalog"]
         self._default_mode = context["default_mode"]
         self._mode_autoswitch = context["mode_autoswitch"]
         self._plugin_runtime = context["plugin_runtime"]
@@ -48,6 +49,8 @@ class TomatoClockPlugin:
         self._has_action_control = False
         self._interaction_paused = False
         self._waiting_for_phase_animation = False
+        self._animation_active = False
+        self._took_animation_control = False
         self._stopping = False
 
         self._timer = QTimer(self._window)
@@ -100,7 +103,6 @@ class TomatoClockPlugin:
             QTimer.singleShot(RESUME_CHECK_INTERVAL_MS, self.resume_after_interaction)
             return
         self._interaction_paused = False
-        self._director.stop()
         self._start_phase_animation()
 
     def _build_mode_menu(self, menu: QMenu) -> None:
@@ -111,6 +113,7 @@ class TomatoClockPlugin:
                 action = group_menu.addAction(self._mode_titles.get(mode_id, mode_id))
                 action.setCheckable(True)
                 action.setChecked(mode_id == self._mode_id)
+                action.setEnabled(self._mode_for_current_state(mode_id) is not None)
                 action.triggered.connect(
                     lambda checked=False, group_id=group_id, mode_id=mode_id: self._select_mode(group_id, mode_id)
                 )
@@ -192,6 +195,8 @@ class TomatoClockPlugin:
         self._count = 0
         self._interaction_paused = False
         self._waiting_for_phase_animation = False
+        self._animation_active = False
+        self._took_animation_control = False
         self._stopping = False
         self._timer_window.hide_timer()
         self._phased_player.stop()
@@ -230,7 +235,6 @@ class TomatoClockPlugin:
         self._mode_autoswitch.stop()
         if self._auto_move is not None:
             self._auto_move.interrupt()
-        self._director.stop()
         return True
 
     def _finish_animation_then_end_control(self) -> None:
@@ -243,12 +247,17 @@ class TomatoClockPlugin:
     def _end_action_control(self) -> None:
         self._stopping = False
         self._phased_player.stop()
+        had_animation_control = self._took_animation_control
+        self._animation_active = False
+        self._took_animation_control = False
         if not self._has_action_control:
             return
         self._has_action_control = False
-        self._director.stop()
+        if had_animation_control:
+            self._director.stop()
         self._plugin_runtime.end_action(self.PLUGIN_NAME)
-        self._director.resume_mode(self._default_mode)
+        if had_animation_control and self._director.is_mode_available(self._default_mode):
+            self._director.resume_mode(self._default_mode)
         self._mode_autoswitch.start()
 
     def _transition_phase_animation(self) -> None:
@@ -267,11 +276,24 @@ class TomatoClockPlugin:
         if not self._running or self._manual_animation_active():
             return
         mode_id = self._current_mode_id()
-        mode = self._modes[mode_id]
+        mode = self._mode_for_current_state(mode_id)
+        if mode is None:
+            # 当前状态没有专注或休息素材时只计时 不强行切回默认动作
+            if self._animation_active:
+                self._director.stop()
+            self._animation_active = False
+            self._phased_player.stop()
+            return
         self._phased_player.stop()
         self._director.stop()
+        self._animation_active = True
+        self._took_animation_control = True
         if mode.is_phased:
-            self._phased_player.play_forever(mode, self._after_phase_animation_finished)
+            if not self._phased_player.play_forever(mode, self._after_phase_animation_finished):
+                self._animation_active = False
+            return
+        if not self._director.is_mode_available(mode_id):
+            self._animation_active = False
             return
         self._director.resume_mode(mode_id)
 
@@ -312,6 +334,12 @@ class TomatoClockPlugin:
     def _current_action_title(self) -> str:
         mode_id = self._current_mode_id()
         return self._mode_titles.get(mode_id, mode_id)
+
+    def _mode_for_current_state(self, mode_id: str):
+        try:
+            return self._animation_catalog.mode_for(mode_id, self._director.pet_state())
+        except KeyError:
+            return None
 
     def _phase_title(self) -> str:
         if self._paused:

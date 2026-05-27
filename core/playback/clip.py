@@ -68,14 +68,18 @@ class Clip:
     def from_paths(cls, frame_paths: list[Path] | tuple[Path, ...]) -> "Clip":
         if not frame_paths:
             raise ValueError("Clip 必须至少包含一帧")
-        parsed: list[tuple[str, int, Path]] = []
+        parsed: list[tuple[int, str, int, Path]] = []
+        seen_indices: set[int] = set()
         for path in frame_paths:
-            _, delay_ms = parse_frame_filename(path)
-            parsed.append((path.name, delay_ms, path))
-        parsed.sort(key=lambda item: item[0])
+            frame_index, delay_ms = parse_frame_filename(path)
+            if frame_index in seen_indices:
+                raise ValueError(f"图片帧序号重复: {path}")
+            seen_indices.add(frame_index)
+            parsed.append((frame_index, path.name, delay_ms, path))
+        parsed.sort(key=lambda item: (item[0], item[1]))
         return cls(
-            frame_paths=tuple(path for _, _, path in parsed),
-            frame_intervals_ms=tuple(delay_ms for _, delay_ms, _ in parsed),
+            frame_paths=tuple(path for _, _, _, path in parsed),
+            frame_intervals_ms=tuple(delay_ms for _, _, delay_ms, _ in parsed),
         )
 
     def __len__(self) -> int:

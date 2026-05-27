@@ -54,7 +54,8 @@ def main() -> int:
         startup_clip, initial_pixmap = pick_startup(
             config.modes[config.default_mode],
             config.startup,
-            config.single_clips,
+            animation_catalog=config.animation_catalog,
+            pet_state=config.pet_state,
         )
 
         plugin_runtime = PluginRuntime()
@@ -110,17 +111,15 @@ def main() -> int:
             interval_min_ms=config.single_insert_interval_min_ms,
             interval_max_ms=config.single_insert_interval_max_ms,
             mode_ids=config.single_insert_modes,
-            single_clips=config.single_clips,
             action_blocked=plugin_runtime.action_active,
             single_player=single_player,
-            mode_autoswitch_timer=mode_autoswitch,
             animation_catalog=config.animation_catalog,
+            mode_autoswitch_timer=mode_autoswitch,
         )
         auto_move = AutoMoveController(
             parent=app,
             director=director,
             window=win,
-            modes=config.modes,
             action_blocked=plugin_runtime.action_active,
             single_autoswitch=single_autoswitch,
             mode_autoswitch=mode_autoswitch,
@@ -136,13 +135,11 @@ def main() -> int:
             "app": app,
             "window": win,
             "director": director,
-            "modes": config.modes,
             "animation_catalog": config.animation_catalog,
             "default_mode": config.default_mode,
             "mode_autoswitch": mode_autoswitch,
             "plugin_runtime": plugin_runtime,
             "single_player": single_player,
-            "single_clips": config.single_clips,
             "auto_move": auto_move,
         })
         win.set_plugins(_plugins)
@@ -164,7 +161,6 @@ def main() -> int:
             mode_autoswitch_timer=mode_autoswitch,
             shutdown_hooks=(shutdown_plugins,),
             shutdown_ids=config.shutdown,
-            single_clips=config.single_clips,
             animation_catalog=config.animation_catalog,
         )
         win.set_quit_callback(quit_callback)
