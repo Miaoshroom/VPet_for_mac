@@ -165,6 +165,7 @@ def main() -> int:
             shutdown_hooks=(shutdown_plugins,),
             shutdown_ids=config.shutdown,
             single_clips=config.single_clips,
+            animation_catalog=config.animation_catalog,
         )
         win.set_quit_callback(quit_callback)
         _statusbar_icon = create_statusbar_icon(app, BAR_ICON, quit_callback)

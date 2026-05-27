@@ -9,6 +9,7 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QApplication
 
 from core.animation import Clip, Mode, PetAnimationDirector
+from core.playback.catalog import AnimationCatalog
 from core.single_autoswitch import SingleAutoSwitch
 from core.single_player import SinglePlayer
 
@@ -17,6 +18,27 @@ def pick_single_clip(config_ids: tuple[str, ...], single_clips: dict[str, Clip])
     if not config_ids:
         return None
     return single_clips[random.choice(config_ids)]
+
+
+def pick_single_clip_for_state(
+    config_ids: tuple[str, ...],
+    single_clips: dict[str, Clip],
+    *,
+    animation_catalog: AnimationCatalog | None = None,
+    pet_state: str | None = None,
+) -> Clip | None:
+    if not config_ids:
+        return None
+    if animation_catalog is None or pet_state is None:
+        return pick_single_clip(config_ids, single_clips)
+    candidates = [
+        mode_id
+        for mode_id in config_ids
+        if animation_catalog.is_single_available(mode_id, pet_state)
+    ]
+    if not candidates:
+        return None
+    return animation_catalog.single_for(random.choice(candidates), pet_state)
 
 
 def pick_startup(
@@ -67,6 +89,7 @@ def build_shutdown_handler(
     mode_autoswitch_timer,
     shutdown_ids: tuple[str, ...],
     single_clips: dict[str, Clip],
+    animation_catalog: AnimationCatalog | None = None,
     shutdown_hooks=(),
 ):
     """构建菜单退出回调：如有配置则先播 shutdown single。"""
@@ -86,7 +109,12 @@ def build_shutdown_handler(
             hook()
         director.stop()
 
-        shutdown_clip = pick_single_clip(shutdown_ids, single_clips)
+        shutdown_clip = pick_single_clip_for_state(
+            shutdown_ids,
+            single_clips,
+            animation_catalog=animation_catalog,
+            pet_state=director.pet_state(),
+        )
         if shutdown_clip is None:
             app.quit()
             return
