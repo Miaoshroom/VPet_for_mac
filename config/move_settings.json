@@ -15,9 +15,24 @@
       "speed_px_per_sec": 80
     },
     {
+      "mode": "walk_left_slow",
+      "type": "horizontal",
+      "speed_px_per_sec": 90
+    },
+    {
       "mode": "walk_left",
       "type": "horizontal",
       "speed_px_per_sec": 130
+    },
+    {
+      "mode": "walk_left_faster",
+      "type": "horizontal",
+      "speed_px_per_sec": 180
+    },
+    {
+      "mode": "walk_right_slow",
+      "type": "horizontal",
+      "speed_px_per_sec": 90
     },
     {
       "mode": "walk_right",
@@ -25,14 +40,9 @@
       "speed_px_per_sec": 130
     },
     {
-      "mode": "walk_left_fast",
+      "mode": "walk_right_faster",
       "type": "horizontal",
-      "speed_px_per_sec": 220
-    },
-    {
-      "mode": "walk_right_fast",
-      "type": "horizontal",
-      "speed_px_per_sec": 220
+      "speed_px_per_sec": 180
     },
     {
       "mode": "climb_left",
@@ -45,12 +55,12 @@
       "speed_px_per_sec": 110
     },
     {
-      "mode": "climb_left_top",
+      "mode": "climb_top_left",
       "type": "horizontal_top",
       "speed_px_per_sec": 100
     },
     {
-      "mode": "climb_right_top",
+      "mode": "climb_top_right",
       "type": "horizontal_top",
       "speed_px_per_sec": 100
     },

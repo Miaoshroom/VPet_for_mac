@@ -1,486 +1,354 @@
 {
-  "loop_modes": [
+  "actions": [
     {
       "id": "default",
       "title": "默认",
-      "folder": "loop/default",
-      "interval_ms": 125
+      "type": "loop"
     },
     {
       "id": "amusement",
-      "title": "转圈圈",
-      "folder": "loop/amusement",
-      "interval_ms": 125
-    }
-  ],
-  "phased_modes": [
-    {
-      "id": "dance",
-      "title": "跳舞",
-      "base": "phased/dance",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
+      "title": "甩手手",
+      "type": "loop"
     },
     {
-      "id": "lift",
-      "title": "提起",
-      "base": "phased/lift",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "think",
-      "title": "鬼脑发力",
-      "base": "phased/think",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "touch_head",
-      "title": "摸头",
-      "base": "phased/touch_head",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "pinch_face",
-      "title": "捏脸",
-      "base": "phased/pinch_face",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "aside",
-      "title": "侧身",
-      "base": "phased/aside",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 200,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "sleepy",
-      "title": "困困",
-      "base": "phased/sleepy",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "bubbles",
-      "title": "冒泡",
-      "base": "phased/bubbles",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "happy_turn_1",
-      "title": "开心转身1",
-      "base": "phased/happy_turn_1",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "happy_turn_2",
-      "title": "开心转身2",
-      "base": "phased/happy_turn_2",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
+      "id": "meow",
+      "title": "喵喵",
+      "type": "loop"
     },
     {
       "id": "meowlook",
       "title": "喵望",
-      "base": "phased/meowlook",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "sit_down",
-      "title": "坐下",
-      "base": "phased/sit_down",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 350,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "sleep",
-      "title": "睡觉",
-      "base": "phased/sleep",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 250,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "squat",
-      "title": "下蹲",
-      "base": "phased/squat",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 250,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "touch_body_happy",
-      "title": "摸身开心",
-      "base": "phased/touch_body_happy",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "touch_body_shy",
-      "title": "摸身害羞",
-      "base": "phased/touch_body_shy",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "walk_left",
-      "title": "向左走",
-      "base": "phased/walk_left",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "walk_right",
-      "title": "向右走",
-      "base": "phased/walk_right",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "walk_left_fast",
-      "title": "快速向左走",
-      "base": "phased/walk_left_fast",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "walk_right_fast",
-      "title": "快速向右走",
-      "base": "phased/walk_right_fast",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "climb_left",
-      "title": "左侧向上爬",
-      "base": "phased/climb_left",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "climb_right",
-      "title": "右侧向上爬",
-      "base": "phased/climb_right",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "climb_left_top",
-      "title": "顶部向左爬",
-      "base": "phased/climb_left_top",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "climb_right_top",
-      "title": "顶部向右爬",
-      "base": "phased/climb_right_top",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "fall_left",
-      "title": "向左下落",
-      "base": "phased/fall_left",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "fall_right",
-      "title": "向右下落",
-      "base": "phased/fall_right",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "crawl_left",
-      "title": "向左爬行",
-      "base": "phased/crawl_left",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "crawl_right",
-      "title": "向右爬行",
-      "base": "phased/crawl_right",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "music_dance",
-      "title": "音乐跳舞",
-      "base": "phased/music_dance",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "music_dance_1",
-      "title": "音乐跳舞1",
-      "base": "phased/music_dance_1",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "talk_self",
-      "title": "指自己说话",
-      "base": "phased/talk_self",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "talk_self_1",
-      "title": "指自己说话1",
-      "base": "phased/talk_self_1",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "talk_self_2",
-      "title": "指自己说话2",
-      "base": "phased/talk_self_2",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "talk_serious",
-      "title": "认真说话",
-      "base": "phased/talk_serious",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "talk_shining",
-      "title": "闪亮说话",
-      "base": "phased/talk_shining",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "talk_shining_1",
-      "title": "闪亮说话1",
-      "base": "phased/talk_shining_1",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "talk_shining_2",
-      "title": "闪亮说话2",
-      "base": "phased/talk_shining_2",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "talk_shy",
-      "title": "害羞说话",
-      "base": "phased/talk_shy",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "talk_shy_1",
-      "title": "害羞说话1",
-      "base": "phased/talk_shy_1",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "talk_shy_2",
-      "title": "害羞说话2",
-      "base": "phased/talk_shy_2",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "play_ropeskipping",
-      "title": "跳绳",
-      "base": "phased/play_ropeskipping",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "play_videogames",
-      "title": "打游戏",
-      "base": "phased/play_videogames",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "study_calligraphy",
-      "title": "练书法",
-      "base": "phased/study_calligraphy",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "study_paint",
-      "title": "画画",
-      "base": "phased/study_paint",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "study_reading",
-      "title": "读书",
-      "base": "phased/study_reading",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "study_reading2",
-      "title": "读书2",
-      "base": "phased/study_reading2",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "work_clean",
-      "title": "打扫",
-      "base": "phased/work_clean",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "work_deathnoteremove",
-      "title": "死亡笔记",
-      "base": "phased/work_deathnoteremove",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "work_livestream",
-      "title": "直播",
-      "base": "phased/work_livestream",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    },
-    {
-      "id": "work_write",
-      "title": "写作",
-      "base": "phased/work_write",
-      "start_interval_ms": 125,
-      "loop_interval_ms": 125,
-      "end_interval_ms": 125
-    }
-  ],
-  "single_modes": [
-    {
-      "id": "meow",
-      "title": "喵喵叫",
-      "folder": "single/meow",
-      "interval_ms": 125
+      "type": "loop"
     },
     {
       "id": "yawning",
       "title": "打哈欠",
-      "folder": "single/yawning",
-      "interval_ms": 125
+      "type": "loop"
     },
     {
-      "id": "shutdown_2",
-      "title": "关机2",
-      "folder": "single/shutdown_2",
-      "interval_ms": 125
+      "id": "aside",
+      "title": "摇头晃脑",
+      "type": "phased"
     },
     {
-      "id": "startup_1",
-      "title": "启动1",
-      "folder": "single/startup_1",
-      "interval_ms": 125
+      "id": "dance_kawaii",
+      "title": "可爱舞",
+      "type": "phased"
     },
     {
-      "id": "startup_2",
-      "title": "启动2",
-      "folder": "single/startup_2",
-      "interval_ms": 125
+      "id": "boring",
+      "title": "困困",
+      "type": "phased"
     },
     {
-      "id": "shutdown_1",
-      "title": "关机1",
-      "folder": "single/shutdown_1",
-      "interval_ms": 125
+      "id": "bubbles",
+      "title": "吹泡泡",
+      "type": "phased"
     },
     {
-      "id": "eat_files",
-      "title": "吃文件",
-      "folder": "single/eat_files",
-      "interval_ms": 125
+      "id": "calligraphy",
+      "title": "写书法",
+      "type": "phased"
+    },
+    {
+      "id": "climb_left",
+      "title": "左侧向上爬",
+      "type": "phased"
+    },
+    {
+      "id": "climb_right",
+      "title": "右侧向上爬",
+      "type": "phased"
+    },
+    {
+      "id": "climb_top_left",
+      "title": "顶部向左爬",
+      "type": "phased"
+    },
+    {
+      "id": "climb_top_right",
+      "title": "顶部向右爬",
+      "type": "phased"
+    },
+    {
+      "id": "crawl_left",
+      "title": "向左爬行",
+      "type": "phased"
+    },
+    {
+      "id": "crawl_right",
+      "title": "向右爬行",
+      "type": "phased"
+    },
+    {
+      "id": "fall_left",
+      "title": "向左下落",
+      "type": "phased"
+    },
+    {
+      "id": "fall_right",
+      "title": "向右下落",
+      "type": "phased"
+    },
+    {
+      "id": "dance_music_1",
+      "title": "音乐舞1",
+      "type": "phased"
+    },
+    {
+      "id": "dance_music_2",
+      "title": "音乐舞2",
+      "type": "phased"
+    },
+    {
+      "id": "pinch",
+      "title": "捏脸",
+      "type": "phased"
+    },
+    {
+      "id": "play_one",
+      "title": "打游戏",
+      "type": "phased"
+    },
+    {
+      "id": "raise_raised_static",
+      "title": "提起安静",
+      "type": "phased"
+    },
+    {
+      "id": "remove_object",
+      "title": "死亡笔记",
+      "type": "phased"
+    },
+    {
+      "id": "rope_skipping",
+      "title": "跳绳",
+      "type": "phased"
+    },
+    {
+      "id": "say_self",
+      "title": "指自己说话",
+      "type": "phased"
+    },
+    {
+      "id": "say_serious",
+      "title": "认真说话",
+      "type": "phased"
+    },
+    {
+      "id": "say_shining",
+      "title": "闪亮说话",
+      "type": "phased"
+    },
+    {
+      "id": "say_shy",
+      "title": "害羞说话",
+      "type": "phased"
+    },
+    {
+      "id": "sleep",
+      "title": "睡觉",
+      "type": "phased"
+    },
+    {
+      "id": "squat",
+      "title": "下蹲",
+      "type": "phased"
+    },
+    {
+      "id": "state_one",
+      "title": "坐下",
+      "type": "phased"
+    },
+    {
+      "id": "state_two",
+      "title": "摊x",
+      "type": "phased"
+    },
+    {
+      "id": "study",
+      "title": "读书",
+      "type": "phased"
+    },
+    {
+      "id": "study_paint",
+      "title": "画画",
+      "type": "phased"
+    },
+    {
+      "id": "study_two",
+      "title": "小红书",
+      "type": "phased"
+    },
+    {
+      "id": "tennis",
+      "title": "打网球",
+      "type": "phased"
+    },
+    {
+      "id": "think",
+      "title": "挠头x",
+      "type": "phased"
+    },
+    {
+      "id": "touch_head",
+      "title": "摸头",
+      "type": "phased"
+    },
+    {
+      "id": "walk_left",
+      "title": "向左走",
+      "type": "phased"
+    },
+    {
+      "id": "walk_right",
+      "title": "向右走",
+      "type": "phased"
+    },
+    {
+      "id": "work_clean",
+      "title": "打扫",
+      "type": "phased"
+    },
+    {
+      "id": "work_live",
+      "title": "直播",
+      "type": "phased"
+    },
+    {
+      "id": "work_penspining",
+      "title": "转笔",
+      "type": "phased"
+    },
+    {
+      "id": "level_up",
+      "title": "升级",
+      "type": "single"
+    },
+    {
+      "id": "shutdown",
+      "title": "关机",
+      "type": "single"
+    },
+    {
+      "id": "start_up",
+      "title": "启动",
+      "type": "single"
+    },
+    {
+      "id": "start_up_newyear",
+      "title": "新年启动",
+      "type": "single"
+    },
+    {
+      "id": "switch_down",
+      "title": "向下切换",
+      "type": "single"
+    },
+    {
+      "id": "switch_hunger",
+      "title": "饥饿切换",
+      "type": "single"
+    },
+    {
+      "id": "switch_thirsty",
+      "title": "口渴切换",
+      "type": "single"
+    },
+    {
+      "id": "switch_up",
+      "title": "病起",
+      "type": "single"
+    },
+    {
+      "id": "drink",
+      "title": "喝水",
+      "type": "single"
+    },
+    {
+      "id": "eat",
+      "title": "吃东西",
+      "type": "single"
     },
     {
       "id": "gift",
-      "title": "礼物",
-      "folder": "single/gift",
-      "interval_ms": 125
+      "title": "收到礼物",
+      "type": "single"
     },
     {
-      "id": "music_dance_single",
-      "title": "音乐跳舞单次",
-      "folder": "single/music_dance_single",
-      "interval_ms": 125
+      "id": "dance_single",
+      "title": "单次舞蹈",
+      "type": "single"
     },
     {
-      "id": "music_dance_single_1",
-      "title": "音乐跳舞单次1",
-      "folder": "single/music_dance_single_1",
-      "interval_ms": 125
+      "id": "like520",
+      "title": "喜欢你！",
+      "type": "loop"
     },
     {
-      "id": "music_dance_single_2",
-      "title": "音乐跳舞单次2",
-      "folder": "single/music_dance_single_2",
-      "interval_ms": 125
+      "id": "raise_raised_dynamic",
+      "title": "提起乱动",
+      "type": "loop"
+    },
+    {
+      "id": "side_hide_left_main",
+      "title": "左侧藏起",
+      "type": "phased"
+    },
+    {
+      "id": "side_hide_left_knock",
+      "title": "左侧藏起敲敲",
+      "type": "phased"
+    },
+    {
+      "id": "side_hide_right_main",
+      "title": "右侧藏起",
+      "type": "phased"
+    },
+    {
+      "id": "side_hide_right_knock",
+      "title": "右侧藏起敲敲",
+      "type": "phased"
+    },
+    {
+      "id": "touch_body_ill",
+      "title": "摸身体生病",
+      "type": "phased"
+    },
+    {
+      "id": "touch_body_happy",
+      "title": "摸身体高兴",
+      "type": "phased"
+    },
+    {
+      "id": "touch_body_shy",
+      "title": "摸身体害羞",
+      "type": "phased"
+    },
+    {
+      "id": "touch_body_turn",
+      "title": "摸身体转圈",
+      "type": "phased"
+    },
+    {
+      "id": "walk_left_faster",
+      "title": "向左快走",
+      "type": "phased"
+    },
+    {
+      "id": "walk_left_slow",
+      "title": "向左慢走",
+      "type": "phased"
+    },
+    {
+      "id": "walk_right_faster",
+      "title": "向右快走",
+      "type": "phased"
+    },
+    {
+      "id": "walk_right_slow",
+      "title": "向右慢走",
+      "type": "phased"
     }
   ]
 }

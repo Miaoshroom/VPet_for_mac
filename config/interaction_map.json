@@ -27,14 +27,14 @@
       }
     },
     {
-      "name": "pinch_face_handle",
+      "name": "pinch_handle",
       "row_start": 2,
       "row_end": 2,
       "col_start": 2,
       "col_end": 2,
       "press": {
         "type": "press_mode",
-        "mode": "pinch_face"
+        "mode": "pinch"
       }
     },
     {
@@ -45,32 +45,54 @@
       "col_end": 4,
       "press": {
         "type": "press_mode",
-        "mode": "lift"
+        "mode": "raise_raised_static"
       },
       "drag": {
         "type": "move_window"
       }
     },
     {
-      "name": "touch_body_happy_left",
+      "name": "touch_body_turn_left_edge",
       "row_start": 3,
       "row_end": 4,
       "col_start": 2,
       "col_end": 2,
       "press": {
         "type": "press_mode",
-        "mode": "touch_body_happy"
+        "mode": "touch_body_turn"
       }
     },
     {
-      "name": "touch_body_happy_right",
+      "name": "touch_body_turn_right_edge",
       "row_start": 3,
       "row_end": 4,
       "col_start": 4,
       "col_end": 4,
       "press": {
         "type": "press_mode",
-        "mode": "touch_body_happy"
+        "mode": "touch_body_turn"
+      }
+    },
+    {
+      "name": "touch_body_shy",
+      "row_start": 3,
+      "row_end": 3,
+      "col_start": 3,
+      "col_end": 3,
+      "press": {
+        "type": "press_mode",
+        "mode": "touch_body_shy"
+      }
+    },
+    {
+      "name": "touch_body_center_lower",
+      "row_start": 4,
+      "row_end": 4,
+      "col_start": 3,
+      "col_end": 3,
+      "press": {
+        "type": "press_mode",
+        "mode": "touch_body_shy"
       }
     },
     {
@@ -82,17 +104,6 @@
       "press": {
         "type": "press_mode",
         "mode": "touch_body_happy"
-      }
-    },
-    {
-      "name": "touch_body_shy_center",
-      "row_start": 3,
-      "row_end": 4,
-      "col_start": 3,
-      "col_end": 3,
-      "press": {
-        "type": "press_mode",
-        "mode": "touch_body_shy"
       }
     }
   ]

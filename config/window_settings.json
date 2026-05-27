@@ -1,6 +1,6 @@
 {
-  "dev_mode": false,
-  "display_size": 260,
+  "dev_mode": true,
+  "display_size": 470,
   "display_x": 1244,
   "display_y": 680
 }

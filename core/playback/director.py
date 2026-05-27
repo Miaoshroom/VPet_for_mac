@@ -168,11 +168,15 @@ class PetAnimationDirector(QObject):
         self.end_interaction()
 
     def start_interaction(self, interaction_name: str) -> None:
-        if interaction_name not in self._interactions and interaction_name not in self._modes:
+        if not self._has_action(interaction_name):
             raise KeyError(f"未知互动: {interaction_name}")
         if self.is_interaction_active():
             return
-        interaction = self._interaction_for(interaction_name)
+        try:
+            interaction = self._interaction_for(interaction_name)
+        except KeyError:
+            # 当前状态没有该互动素材时忽略本次互动，等待素材提供对应状态或 any
+            return
         self._stop_mode_player()
         self._pending_mode = None
         self._active_interaction_name = interaction_name
@@ -207,6 +211,11 @@ class PetAnimationDirector(QObject):
         if self._animation_catalog is not None:
             return self._animation_catalog.mode_for(mode_name, self._pet_state)
         return self._modes[mode_name]
+
+    def _has_action(self, action_name: str) -> bool:
+        if self._animation_catalog is not None:
+            return self._animation_catalog.has_action(action_name)
+        return action_name in self._interactions or action_name in self._modes
 
     def _interaction_for(self, interaction_name: str) -> PressHoldAnimator:
         if self._animation_catalog is None and interaction_name in self._interactions:

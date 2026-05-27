@@ -1,6 +1,6 @@
 {
   "default_group": "work",
-  "default_mode": "work_write",
+  "default_mode": "work_penspining",
   "default_focus_minutes": 25,
   "default_rest_minutes": 5,
   "timer_window_y_offset_px": -12,
@@ -24,26 +24,27 @@
     "work": {
       "title": "工作",
       "modes": [
-        "work_write",
+        "work_penspining",
         "work_clean",
-        "work_livestream",
-        "work_deathnoteremove"
+        "work_live",
+        "remove_object"
       ]
     },
     "study": {
       "title": "学习",
       "modes": [
-        "study_reading",
-        "study_reading2",
-        "study_calligraphy",
+        "study",
+        "study_two",
+        "calligraphy",
         "study_paint"
       ]
     },
     "play": {
       "title": "玩耍",
       "modes": [
-        "play_videogames",
-        "play_ropeskipping"
+        "play_one",
+        "rope_skipping",
+        "tennis"
       ]
     }
   }

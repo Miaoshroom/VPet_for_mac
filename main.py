@@ -34,7 +34,7 @@ def main() -> int:
 
     try:
         config = load_action_config()
-        interaction_map = load_interaction_map(set(config.modes))
+        interaction_map = load_interaction_map(set(config.animation_catalog.action_ids()))
         interactions: dict[str, PressHoldAnimator] = {}
         for mode_name, mode in config.modes.items():
             if not mode.is_phased:
