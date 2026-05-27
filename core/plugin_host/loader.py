@@ -9,7 +9,7 @@ from typing import Any
 
 from core.app_paths import config_path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 PLUGINS = ROOT / "plugins"
 
 Plugin = Any
