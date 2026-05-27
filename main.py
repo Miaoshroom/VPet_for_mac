@@ -47,6 +47,8 @@ def main() -> int:
             default_mode=config.default_mode,
             interactions=interactions,
             default_interaction=config.press_mode,
+            animation_catalog=config.animation_catalog,
+            pet_state=config.pet_state,
         )
 
         startup_clip, initial_pixmap = pick_startup(
@@ -129,6 +131,7 @@ def main() -> int:
             "window": win,
             "director": director,
             "modes": config.modes,
+            "animation_catalog": config.animation_catalog,
             "default_mode": config.default_mode,
             "mode_autoswitch": mode_autoswitch,
             "plugin_runtime": plugin_runtime,

@@ -200,7 +200,7 @@ class AutoMoveController(QObject):
         if self._mode_autoswitch is not None:
             self._mode_autoswitch.stop()
         self._director.start_interaction(rule.mode)
-        start_delay = len(mode.start) * mode.start.interval_ms if mode.start is not None else 0
+        start_delay = mode.start.duration_ms if mode.start is not None else 0
         QTimer.singleShot(start_delay, self._start_move_timer)
 
     def _start_move_timer(self) -> None:
@@ -262,7 +262,7 @@ class AutoMoveController(QObject):
         end_delay = 0
         if rule is not None:
             mode = self._modes[rule.mode]
-            end_delay = len(mode.end) * mode.end.interval_ms if mode.end is not None else 0
+            end_delay = mode.end.duration_ms if mode.end is not None else 0
         QTimer.singleShot(end_delay, lambda: self._after_move_end(restart_timer))
 
     def _after_move_end(self, restart_timer: bool) -> None:

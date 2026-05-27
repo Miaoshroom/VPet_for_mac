@@ -335,7 +335,6 @@ def _save_settings(settings: dict) -> None:
 def _load_mode_titles() -> dict[str, str]:
     data = json.loads(config_path("modes.json").read_text(encoding="utf-8"))
     titles = {}
-    for group in ("loop_modes", "phased_modes", "single_modes"):
-        for item in data[group]:
-            titles[str(item["id"])] = str(item["title"])
+    for item in data.get("actions", []):
+        titles[str(item["id"])] = str(item["title"])
     return titles

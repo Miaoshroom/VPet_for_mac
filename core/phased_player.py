@@ -1,4 +1,4 @@
-"""播放一次完整的 phased 动画，主要用于plugins"""
+"""绑定窗口的分段播放兼容壳"""
 
 from __future__ import annotations
 
@@ -6,30 +6,22 @@ from collections.abc import Callable
 
 from PyQt6.QtCore import QObject
 
-from core.animation import FlipbookPlayer, Mode
+from core.animation import Mode, PhasedSequencePlayer
 
 
 class PhasedPlayer(QObject):
-    """把一个phased播成start然后loopN次最后end"""
+    """将一个分段 Mode 播放到窗口 pixmap"""
 
     def __init__(self, parent: QObject | None, window) -> None:
         super().__init__(parent)
-        self._window = window
-        self._player = FlipbookPlayer(self)
+        self._player = PhasedSequencePlayer(self)
         self._player.frame_changed.connect(window.set_pixmap)
-        self._player.finished.connect(self._on_clip_finished)
-        self._mode: Mode | None = None
-        self._loop_left = 0
-        self._loop_forever = False
-        self._phase = "idle"
-        self._paused = False
-        self._on_finished: Callable[[], None] | None = None
 
     def is_active(self) -> bool:
-        return self._phase != "idle"
+        return self._player.is_active()
 
     def is_paused(self) -> bool:
-        return self._paused
+        return self._player.is_paused()
 
     def play(
         self,
@@ -37,108 +29,23 @@ class PhasedPlayer(QObject):
         loop_count: int,
         on_finished: Callable[[], None] | None = None,
     ) -> bool:
-        if not self._start(mode, on_finished):
-            return False
-        self._loop_left = max(1, int(loop_count))
-        self._loop_forever = False
-        self._player.play(mode.start, loop=False)
-        return True
+        return self._player.play(mode, loop_count, on_finished)
 
     def play_forever(
         self,
         mode: Mode,
         on_finished: Callable[[], None] | None = None,
     ) -> bool:
-        if not self._start(mode, on_finished):
-            return False
-        self._loop_left = 0
-        self._loop_forever = True
-        self._player.play(mode.start, loop=False)
-        return True
+        return self._player.play_forever(mode, on_finished)
 
     def finish(self) -> bool:
-        if not self.is_active() or self._mode is None:
-            return False
-        if self._phase == "end":
-            return True
-        self._loop_left = 0
-        self._loop_forever = False
-        self._phase = "end"
-        if self._paused:
-            return True
-        self._player.play(self._mode.end, loop=False)
-        return True
+        return self._player.finish()
 
     def pause(self) -> bool:
-        if not self.is_active() or self._paused:
-            return False
-        self._paused = True
-        self._player.stop()
-        return True
+        return self._player.pause()
 
     def resume(self) -> bool:
-        if not self.is_active() or not self._paused:
-            return False
-        self._paused = False
-        self._play_current_phase()
-        return True
+        return self._player.resume()
 
     def stop(self) -> None:
         self._player.stop()
-        self._mode = None
-        self._loop_left = 0
-        self._loop_forever = False
-        self._phase = "idle"
-        self._paused = False
-        self._on_finished = None
-
-    def _start(self, mode: Mode, on_finished: Callable[[], None] | None) -> bool:
-        if self.is_active() or not mode.is_phased or mode.start is None or mode.end is None:
-            return False
-        self._mode = mode
-        self._phase = "start"
-        self._paused = False
-        self._on_finished = on_finished
-        return True
-
-    def _play_current_phase(self) -> None:
-        if self._mode is None:
-            self.stop()
-            return
-        if self._phase == "start" and self._mode.start is not None:
-            self._player.play(self._mode.start, loop=False)
-            return
-        if self._phase == "loop":
-            self._player.play(self._mode.loop, loop=False)
-            return
-        if self._phase == "end" and self._mode.end is not None:
-            self._player.play(self._mode.end, loop=False)
-            return
-        self.stop()
-
-    def _on_clip_finished(self) -> None:
-        if self._paused:
-            return
-        if self._mode is None:
-            self.stop()
-            return
-        if self._phase == "start":
-            self._phase = "loop"
-            self._player.play(self._mode.loop, loop=False)
-            return
-        if self._phase == "loop":
-            if self._loop_forever:
-                self._player.play(self._mode.loop, loop=False)
-                return
-            self._loop_left -= 1
-            if self._loop_left > 0:
-                self._player.play(self._mode.loop, loop=False)
-                return
-            self._phase = "end"
-            self._player.play(self._mode.end, loop=False)
-            return
-        if self._phase == "end":
-            on_finished = self._on_finished
-            self.stop()
-            if on_finished is not None:
-                on_finished()
