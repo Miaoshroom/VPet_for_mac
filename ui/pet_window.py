@@ -8,12 +8,12 @@ from pathlib import Path
 
 from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtGui import QMouseEvent, QPixmap
-from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
-from core.animation import PetAnimationDirector
+from core.animation import PET_STATES, PlaybackDebugSnapshot, PetAnimationDirector
 from core.app_paths import config_path
-from core.interaction_map import InteractionBehavior, InteractionMap
-from ui.pet_display import PetDisplay
+from core.interaction_map import Gesture, InteractionBehavior, InteractionMap
+from ui.pet_display import DevModePanel, PetDisplay
 from ui.pet_menu import show_pet_menu
 
 RESIZE_GRIP = 22
@@ -85,6 +85,8 @@ class PetWindow(QMainWindow):
         self._plugins = []
         self._drop_handlers: list[Callable[[list[Path]], None]] = []
         self._single_active = lambda: False
+        self._single_debug_snapshot: Callable[[], PlaybackDebugSnapshot | None] = lambda: None
+        self._single_replay_current: Callable[[], bool] = lambda: False
         self._interrupt_auto_move = lambda: None
         self._dev_mode = _dev_mode_from_json()
         if max_side is None:
@@ -108,19 +110,33 @@ class PetWindow(QMainWindow):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, not self._dev_mode)
 
         self._label = PetDisplay(self._interaction_map, self._dev_mode)
+        self._dev_panel: DevModePanel | None = None
         self._source_pixmap = initial_pixmap
 
         pix0 = self._fit_pixmap(initial_pixmap)
         self._label.set_pet_pixmap(pix0)
-        self.setCentralWidget(self._label)
+        if self._dev_mode:
+            self._dev_panel = DevModePanel(PET_STATES)
+            self._dev_panel.pet_state_requested.connect(self._set_dev_pet_state)
+            self._dev_panel.replay_requested.connect(self._replay_dev_action)
+            central = QWidget(self)
+            layout = QVBoxLayout(central)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(0)
+            layout.addWidget(self._label, 1)
+            layout.addWidget(self._dev_panel, 0)
+            self.setCentralWidget(central)
+        else:
+            self.setCentralWidget(self._label)
 
         w, h = self._logical_pixmap_size(pix0)
-        self.resize(w, h)
+        self._resize_for_pixmap_size(w, h)
         self.setMinimumSize(48, 48)
         settings = _load_settings()
         self.move(int(settings["display_x"]), int(settings["display_y"]))
 
         director.frame_changed.connect(self._on_frame)
+        self._refresh_dev_debug()
 
     def click_through_enabled(self) -> bool:
         return self._click_through_enabled
@@ -170,11 +186,19 @@ class PetWindow(QMainWindow):
             max(64, round(pix.height() / dpr)),
         )
 
+    def _resize_for_pixmap_size(self, width: int, height: int) -> None:
+        if self._dev_panel is None:
+            self.resize(width, height)
+            return
+        panel_hint = self._dev_panel.sizeHint()
+        self.resize(max(width, panel_hint.width()), height + panel_hint.height())
+
     def set_pixmap(self, pix: QPixmap) -> None:
         self._source_pixmap = pix
         fitted = self._fit_pixmap(pix)
         self._label.set_pet_pixmap(fitted)
-        self.resize(*self._logical_pixmap_size(fitted))
+        self._resize_for_pixmap_size(*self._logical_pixmap_size(fitted))
+        self._refresh_dev_debug()
 
     def _on_frame(self, pix: QPixmap) -> None:
         self.set_pixmap(pix)
@@ -182,7 +206,8 @@ class PetWindow(QMainWindow):
     def _refresh_current_pixmap(self) -> None:
         fitted = self._fit_pixmap(self._source_pixmap)
         self._label.set_pet_pixmap(fitted)
-        self.resize(*self._logical_pixmap_size(fitted))
+        self._resize_for_pixmap_size(*self._logical_pixmap_size(fitted))
+        self._refresh_dev_debug()
 
     def _zoom(self, delta: int) -> None:
         self._max_side = max(0, self._max_side + delta)
@@ -195,6 +220,45 @@ class PetWindow(QMainWindow):
         if mode_name not in self._mode_titles:
             return
         self._director.switch_mode(mode_name)
+        self._refresh_dev_debug()
+
+    def _current_debug_snapshot(self) -> PlaybackDebugSnapshot:
+        return self._single_debug_snapshot() or self._director.debug_snapshot()
+
+    def _refresh_dev_debug(self) -> None:
+        if self._dev_panel is None:
+            return
+        self._dev_panel.set_snapshot(self._current_debug_snapshot())
+
+    def _single_debug_active(self) -> bool:
+        return self._single_debug_snapshot() is not None
+
+    def _set_dev_pet_state(self, pet_state: str) -> None:
+        if self._action_blocked() or self._single_debug_active():
+            self._refresh_dev_debug()
+            if self._dev_panel is not None:
+                self._dev_panel.set_notice("动画占用中，状态切换已跳过，避免抢当前动作。")
+            return
+        try:
+            self._director.set_pet_state(pet_state)
+        except KeyError as exc:
+            self._refresh_dev_debug()
+            if self._dev_panel is not None:
+                self._dev_panel.set_error(str(exc))
+            return
+        self._refresh_dev_debug()
+
+    def _replay_dev_action(self) -> None:
+        if self._single_replay_current():
+            self._refresh_dev_debug()
+            return
+        if self._action_blocked():
+            self._refresh_dev_debug()
+            if self._dev_panel is not None:
+                self._dev_panel.set_notice("插件动作运行中，重播已跳过，避免抢当前动作。")
+            return
+        self._director.replay_current_action()
+        self._refresh_dev_debug()
 
     def set_quit_callback(self, callback) -> None:
         self._on_quit = callback
@@ -207,6 +271,14 @@ class PetWindow(QMainWindow):
 
     def set_single_active_callback(self, callback: Callable[[], bool]) -> None:
         self._single_active = callback
+
+    def set_single_debug_callbacks(
+        self,
+        snapshot: Callable[[], PlaybackDebugSnapshot | None],
+        replay_current: Callable[[], bool],
+    ) -> None:
+        self._single_debug_snapshot = snapshot
+        self._single_replay_current = replay_current
 
     def set_auto_move_interrupt_callback(self, callback: Callable[[], None]) -> None:
         self._interrupt_auto_move = callback
@@ -249,6 +321,23 @@ class PetWindow(QMainWindow):
         return (
             local_pos.x() >= r.width() - RESIZE_GRIP
             and local_pos.y() >= r.height() - RESIZE_GRIP
+        )
+
+    def _display_local_pos(self, window_pos: QPoint) -> QPoint | None:
+        display_pos = self._label.mapFrom(self, window_pos)
+        if not self._label.rect().contains(display_pos):
+            return None
+        return display_pos
+
+    def _resolve_display_behavior(
+        self,
+        gesture: Gesture,
+        display_pos: QPoint,
+    ) -> InteractionBehavior:
+        return self._interaction_map.resolve(
+            gesture,
+            display_pos,
+            self._label.rect().size(),
         )
 
     def _handle_behavior(self, behavior: InteractionBehavior) -> None:
@@ -329,22 +418,23 @@ class PetWindow(QMainWindow):
                 )
                 e.accept()
                 return
+            display_pos = self._display_local_pos(lp)
+            if display_pos is None:
+                super().mousePressEvent(e)
+                return
             self._press_global = e.globalPosition().toPoint()
             self._press_is_drag = False
-            self._pressed_press_behavior = self._interaction_map.resolve(
+            self._pressed_press_behavior = self._resolve_display_behavior(
                 "press",
-                lp,
-                self.rect().size(),
+                display_pos,
             )
-            self._pressed_click_behavior = self._interaction_map.resolve(
+            self._pressed_click_behavior = self._resolve_display_behavior(
                 "click",
-                lp,
-                self.rect().size(),
+                display_pos,
             )
-            self._pressed_drag_behavior = self._interaction_map.resolve(
+            self._pressed_drag_behavior = self._resolve_display_behavior(
                 "drag",
-                lp,
-                self.rect().size(),
+                display_pos,
             )
             if self._should_pause_plugins_for_press(self._pressed_press_behavior):
                 self.pause_plugins_for_interaction()

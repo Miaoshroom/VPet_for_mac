@@ -2,9 +2,21 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from pathlib import Path
+
 from PyQt6.QtCore import QObject, Qt, QTimer, pyqtSignal
 
 from core.playback.clip import Clip
+
+
+@dataclass(frozen=True)
+class FlipbookDebugInfo:
+    frame_index: int
+    frame_count: int
+    frame_path: Path
+    interval_ms: int
+    clip: Clip
 
 
 class FlipbookPlayer(QObject):
@@ -25,6 +37,17 @@ class FlipbookPlayer(QObject):
 
     def is_playing(self) -> bool:
         return self._clip is not None and self._timer.isActive()
+
+    def debug_info(self) -> FlipbookDebugInfo | None:
+        if self._clip is None:
+            return None
+        return FlipbookDebugInfo(
+            frame_index=self._index,
+            frame_count=len(self._clip),
+            frame_path=self._clip.frame_paths[self._index],
+            interval_ms=self._clip.interval_for(self._index),
+            clip=self._clip,
+        )
 
     def disconnect_finished(self) -> None:
         try:

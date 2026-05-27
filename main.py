@@ -98,6 +98,11 @@ def main() -> int:
             parent=app,
             director=director,
             window=win,
+            animation_catalog=config.animation_catalog,
+        )
+        win.set_single_debug_callbacks(
+            single_player.debug_snapshot,
+            single_player.replay_current_action,
         )
         single_autoswitch = SingleAutoSwitch(
             parent=app,

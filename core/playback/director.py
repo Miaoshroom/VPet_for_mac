@@ -3,12 +3,29 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
+from pathlib import Path
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from core.playback.catalog import AnimationCatalog, DEFAULT_PET_STATE, validate_pet_state
 from core.playback.clip import Clip, Mode
-from core.playback.flipbook import FlipbookPlayer
+from core.playback.flipbook import FlipbookDebugInfo, FlipbookPlayer
+
+
+@dataclass(frozen=True)
+class PlaybackDebugSnapshot:
+    source: str
+    action_id: str | None
+    action_title: str | None
+    phase: str
+    pet_state: str
+    source_state: str | None
+    variant: str | None
+    frame_index: int | None
+    frame_count: int | None
+    frame_path: Path | None
+    pending_mode: str | None = None
 
 
 class PressHoldAnimator(QObject):
@@ -61,6 +78,12 @@ class PressHoldAnimator(QObject):
 
     def is_active(self) -> bool:
         return self._phase != "idle"
+
+    def current_phase(self) -> str:
+        return self._phase
+
+    def debug_frame(self) -> FlipbookDebugInfo | None:
+        return self._player.debug_info()
 
     def _after_start(self) -> None:
         self._player.disconnect_finished()
@@ -148,7 +171,9 @@ class PetAnimationDirector(QObject):
         self._default_interaction = default_interaction
         self._active_interaction_name: str | None = None
         self._active_interaction: PressHoldAnimator | None = None
+        self._active_interaction_mode: Mode | None = None
         self._transient_interaction: PressHoldAnimator | None = None
+        self._transient_interaction_mode: Mode | None = None
         self._mode_player = FlipbookPlayer(self)
         self._mode_player.frame_changed.connect(self.frame_changed)
         for interaction in self._interactions.values():
@@ -164,9 +189,16 @@ class PetAnimationDirector(QObject):
         return self._pet_state
 
     def set_pet_state(self, pet_state: str) -> None:
+        old_state = self._pet_state
+        old_mode = self._current_mode_obj
         self._pet_state = validate_pet_state(pet_state)
         if not self.is_interaction_active():
-            self.resume_mode(self._current_mode)
+            try:
+                self.resume_mode(self._current_mode)
+            except KeyError:
+                self._pet_state = old_state
+                self._current_mode_obj = old_mode
+                raise
 
     def is_press_active(self) -> bool:
         return self.is_interaction_active()
@@ -216,6 +248,7 @@ class PetAnimationDirector(QObject):
         self._pending_mode = None
         self._active_interaction_name = interaction_name
         self._active_interaction = interaction
+        self._active_interaction_mode = self._transient_interaction_mode
         interaction.start(on_resume=self._resume_current_mode)
 
     def end_interaction(self) -> None:
@@ -231,8 +264,43 @@ class PetAnimationDirector(QObject):
             self._transient_interaction.stop()
         self._active_interaction = None
         self._active_interaction_name = None
+        self._active_interaction_mode = None
+        self._transient_interaction_mode = None
         self._pending_mode = None
         self._phase = "idle"
+
+    def replay_current_action(self) -> None:
+        if self._active_interaction_name is not None:
+            interaction_name = self._active_interaction_name
+            if self._active_interaction is not None:
+                self._active_interaction.stop()
+            self._active_interaction = None
+            self._active_interaction_name = None
+            self._active_interaction_mode = None
+            self._transient_interaction = None
+            self._transient_interaction_mode = None
+            self.start_interaction(interaction_name)
+            return
+        self._start_mode(self._pending_mode or self._current_mode)
+
+    def debug_snapshot(self) -> PlaybackDebugSnapshot:
+        if self._active_interaction is not None:
+            mode = self._active_interaction_mode
+            action_id = self._active_interaction_name
+            return self._build_debug_snapshot(
+                source="interaction",
+                action_id=action_id,
+                mode=mode,
+                phase=self._active_interaction.current_phase(),
+                frame=self._active_interaction.debug_frame(),
+            )
+        return self._build_debug_snapshot(
+            source="mode",
+            action_id=self._current_mode,
+            mode=self.current_mode(),
+            phase=self._phase,
+            frame=self._mode_player.debug_info(),
+        )
 
     def resume_mode(self, mode_name: str | None = None) -> None:
         if mode_name is not None:
@@ -253,6 +321,7 @@ class PetAnimationDirector(QObject):
         return action_name in self._interactions or action_name in self._modes
 
     def _interaction_for(self, interaction_name: str) -> PressHoldAnimator:
+        self._transient_interaction_mode = None
         if self._animation_catalog is None and interaction_name in self._interactions:
             return self._interactions[interaction_name]
         mode = self._resolve_mode(interaction_name)
@@ -267,6 +336,7 @@ class PetAnimationDirector(QObject):
         )
         interaction.frame_changed.connect(self.frame_changed)
         self._transient_interaction = interaction
+        self._transient_interaction_mode = mode
         return interaction
 
     def _stop_mode_player(self) -> None:
@@ -292,7 +362,9 @@ class PetAnimationDirector(QObject):
         self._stop_mode_player()
         self._active_interaction = None
         self._active_interaction_name = None
+        self._active_interaction_mode = None
         self._transient_interaction = None
+        self._transient_interaction_mode = None
         self._pending_mode = None
         self._phase = "loop"
         self._play_current_loop(refresh=False)
@@ -340,3 +412,59 @@ class PetAnimationDirector(QObject):
             self._resume_current_mode()
             return
         self._start_mode(next_mode)
+
+    def _build_debug_snapshot(
+        self,
+        *,
+        source: str,
+        action_id: str | None,
+        mode: Mode | None,
+        phase: str,
+        frame: FlipbookDebugInfo | None,
+    ) -> PlaybackDebugSnapshot:
+        clip = frame.clip if frame is not None else None
+        resolved_action_id = action_id or (mode.action_id if mode is not None else None)
+        if clip is not None and clip.action_id is not None:
+            resolved_action_id = clip.action_id
+        source_state = None
+        if mode is not None:
+            source_state = mode.source_state
+        if clip is not None and clip.source_state is not None:
+            source_state = clip.source_state
+        variant = self._variant_for_phase(mode, phase)
+        if clip is not None and clip.variant is not None:
+            variant = clip.variant
+        return PlaybackDebugSnapshot(
+            source=source,
+            action_id=resolved_action_id,
+            action_title=self._action_title(resolved_action_id),
+            phase=phase,
+            pet_state=self._pet_state,
+            source_state=source_state,
+            variant=variant,
+            frame_index=frame.frame_index if frame is not None else None,
+            frame_count=frame.frame_count if frame is not None else None,
+            frame_path=frame.frame_path if frame is not None else None,
+            pending_mode=self._pending_mode,
+        )
+
+    def _action_title(self, action_id: str | None) -> str | None:
+        if action_id is None:
+            return None
+        if self._animation_catalog is None:
+            return action_id
+        try:
+            return self._animation_catalog.action_title(action_id)
+        except KeyError:
+            return action_id
+
+    def _variant_for_phase(self, mode: Mode | None, phase: str) -> str | None:
+        if mode is None:
+            return None
+        if phase == "start":
+            return mode.start_variant
+        if phase == "end":
+            return mode.end_variant
+        if phase == "loop":
+            return mode.loop_variant
+        return None

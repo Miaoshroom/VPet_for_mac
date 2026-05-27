@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from PyQt6.QtCore import QObject
 
 from core.animation import Clip, FlipbookPlayer, PetAnimationDirector
+from core.playback.catalog import AnimationCatalog
+from core.playback.director import PlaybackDebugSnapshot
 
 
 @dataclass
@@ -19,10 +21,18 @@ class _SingleRun:
 
 
 class SinglePlayer(QObject):
-    def __init__(self, parent: QObject, director: PetAnimationDirector, window) -> None:
+    def __init__(
+        self,
+        parent: QObject,
+        director: PetAnimationDirector,
+        window,
+        *,
+        animation_catalog: AnimationCatalog | None = None,
+    ) -> None:
         super().__init__(parent)
         self._director = director
         self._window = window
+        self._animation_catalog = animation_catalog
         self._player = FlipbookPlayer(self)
         self._player.frame_changed.connect(window.set_pixmap)
         self._player.finished.connect(self._finish)
@@ -76,6 +86,31 @@ class SinglePlayer(QObject):
         self._current = None
         self._paused = None
 
+    def replay_current_action(self) -> bool:
+        if self._current is None:
+            return False
+        self._player.play(self._current.clip, loop=False)
+        return True
+
+    def debug_snapshot(self) -> PlaybackDebugSnapshot | None:
+        if self._current is None:
+            return None
+        frame = self._player.debug_info()
+        clip = self._current.clip
+        action_id = clip.action_id
+        return PlaybackDebugSnapshot(
+            source="single",
+            action_id=action_id,
+            action_title=self._action_title(action_id),
+            phase=clip.phase or "single",
+            pet_state=self._director.pet_state(),
+            source_state=clip.source_state,
+            variant=clip.variant,
+            frame_index=frame.frame_index if frame is not None else None,
+            frame_count=frame.frame_count if frame is not None else len(clip),
+            frame_path=frame.frame_path if frame is not None else clip.frame_paths[0],
+        )
+
     def _finish(self) -> None:
         current = self._current
         if current is None:
@@ -85,3 +120,13 @@ class SinglePlayer(QObject):
             self._director.resume_mode(current.resume_mode)
         if current.on_finished is not None:
             current.on_finished()
+
+    def _action_title(self, action_id: str | None) -> str | None:
+        if action_id is None:
+            return None
+        if self._animation_catalog is None:
+            return action_id
+        try:
+            return self._animation_catalog.action_title(action_id)
+        except KeyError:
+            return action_id

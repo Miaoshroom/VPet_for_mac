@@ -115,7 +115,13 @@ class AnimationCatalog:
         state_name, state_data = self._state_data(action_id, pet_state)
         if mode_type == "loop":
             variant = self._pick_variant(state_data, "loop", loop_variant)
-            loop = self._clip_for_variant(state_data, "loop", variant)
+            loop = self._clip_for_variant(
+                state_data,
+                "loop",
+                variant,
+                action_id=action_id,
+                source_state=state_name,
+            )
             return Mode(
                 loop=loop,
                 action_id=action_id,
@@ -128,9 +134,27 @@ class AnimationCatalog:
         start_selected = self._phase_variant_or_default(state_data, "start", loop_selected)
         end_selected = self._phase_variant_or_default(state_data, "end", loop_selected)
         return Mode(
-            loop=self._clip_for_variant(state_data, "loop", loop_selected),
-            start=self._clip_for_variant(state_data, "start", start_selected),
-            end=self._clip_for_variant(state_data, "end", end_selected),
+            loop=self._clip_for_variant(
+                state_data,
+                "loop",
+                loop_selected,
+                action_id=action_id,
+                source_state=state_name,
+            ),
+            start=self._clip_for_variant(
+                state_data,
+                "start",
+                start_selected,
+                action_id=action_id,
+                source_state=state_name,
+            ),
+            end=self._clip_for_variant(
+                state_data,
+                "end",
+                end_selected,
+                action_id=action_id,
+                source_state=state_name,
+            ),
             action_id=action_id,
             source_state=state_name,
             loop_variant=loop_selected,
@@ -146,9 +170,15 @@ class AnimationCatalog:
         variant: str | None = None,
     ) -> Clip:
         pet_state = validate_pet_state(pet_state)
-        _, state_data = self._state_data(action_id, pet_state)
+        state_name, state_data = self._state_data(action_id, pet_state)
         selected = self._pick_variant(state_data, "single", variant)
-        return self._clip_for_variant(state_data, "single", selected)
+        return self._clip_for_variant(
+            state_data,
+            "single",
+            selected,
+            action_id=action_id,
+            source_state=state_name,
+        )
 
     def variants_for(
         self,
@@ -249,8 +279,24 @@ class AnimationCatalog:
             return "01"
         raise KeyError(f"phased 动画缺少 {phase}/{loop_variant}，且没有 {phase}/01 可回退")
 
-    def _clip_for_variant(self, state_data: PhaseClips, phase: str, variant: str) -> Clip:
+    def _clip_for_variant(
+        self,
+        state_data: PhaseClips,
+        phase: str,
+        variant: str,
+        *,
+        action_id: str | None = None,
+        source_state: str | None = None,
+    ) -> Clip:
         try:
-            return state_data[phase][variant][MAIN_LAYER]
+            clip = state_data[phase][variant][MAIN_LAYER]
         except KeyError as exc:
             raise KeyError(f"阶段 {phase}/{variant} 没有可播放 main 图层") from exc
+        if action_id is None or source_state is None:
+            return clip
+        return clip.with_debug_metadata(
+            action_id=action_id,
+            source_state=source_state,
+            phase=phase,
+            variant=variant,
+        )

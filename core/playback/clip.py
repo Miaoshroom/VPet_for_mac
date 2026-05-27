@@ -51,6 +51,10 @@ class Clip:
 
     frame_paths: tuple[Path, ...]
     frame_intervals_ms: tuple[int, ...]
+    action_id: str | None = None
+    source_state: str | None = None
+    phase: str | None = None
+    variant: str | None = None
 
     def __post_init__(self) -> None:
         if not self.frame_paths:
@@ -92,6 +96,23 @@ class Clip:
 
     def frame(self, index: int) -> QPixmap:
         return _load_cached_pixmap(self.frame_paths[index])
+
+    def with_debug_metadata(
+        self,
+        *,
+        action_id: str,
+        source_state: str,
+        phase: str,
+        variant: str,
+    ) -> "Clip":
+        return Clip(
+            frame_paths=self.frame_paths,
+            frame_intervals_ms=self.frame_intervals_ms,
+            action_id=action_id,
+            source_state=source_state,
+            phase=phase,
+            variant=variant,
+        )
 
 
 @dataclass(frozen=True)
