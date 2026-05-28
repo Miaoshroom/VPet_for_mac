@@ -242,13 +242,21 @@ class AnimationCatalog:
         pet_state: str,
         phase: str,
         *,
-        layer: str = MAIN_LAYER,
+        layer: str | None = None,
     ) -> tuple[str, ...]:
         pet_state = validate_pet_state(pet_state)
         if phase not in PHASES:
             raise KeyError(f"阶段不合法: {phase}")
         _, state_data = self._state_data(action_id, pet_state)
         variants = state_data.get(phase, {})
+        if layer is None:
+            return tuple(
+                sorted(
+                    variant
+                    for variant, layers in variants.items()
+                    if self._has_playable_layer(layers)
+                )
+            )
         return tuple(sorted(variant for variant, layers in variants.items() if layer in layers))
 
     def build_modes(
