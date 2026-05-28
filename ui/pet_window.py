@@ -234,13 +234,13 @@ class PetWindow(QMainWindow):
         return self._single_debug_snapshot() is not None
 
     def _set_dev_pet_state(self, pet_state: str) -> None:
-        if self._action_blocked() or self._single_debug_active():
+        if self._single_debug_active():
             self._refresh_dev_debug()
             if self._dev_panel is not None:
-                self._dev_panel.set_notice("动画占用中，状态切换已跳过，避免抢当前动作。")
+                self._dev_panel.set_notice("单次动画播放中，状态切换已跳过，避免抢当前动作。")
             return
         try:
-            self._director.set_pet_state(pet_state)
+            self._director.set_pet_state(pet_state, resume=not self._action_blocked())
         except KeyError as exc:
             self._refresh_dev_debug()
             if self._dev_panel is not None:

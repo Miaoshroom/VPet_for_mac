@@ -140,6 +140,7 @@ class PetAnimationDirector(QObject):
     """调度当前动作切换和按住互动"""
 
     frame_changed = pyqtSignal(object)
+    pet_state_changed = pyqtSignal(str)
 
     def __init__(
         self,
@@ -217,8 +218,9 @@ class PetAnimationDirector(QObject):
     def active_interaction_mode(self) -> Mode | None:
         return self._active_interaction_mode
 
-    def set_pet_state(self, pet_state: str) -> None:
+    def set_pet_state(self, pet_state: str, *, resume: bool = True) -> None:
         next_state = validate_pet_state(pet_state)
+        previous_state = self._pet_state
         self._pet_state = next_state
         try:
             self._current_mode_obj = self._resolve_mode(self._current_mode)
@@ -229,8 +231,10 @@ class PetAnimationDirector(QObject):
         if self._pending_mode is not None and not self.is_mode_available(self._pending_mode):
             # 待切换动作不可播就丢掉 防止 end 之后再炸
             self._pending_mode = None
-        if not self.is_interaction_active():
+        if resume and not self.is_interaction_active():
             self._resume_current_mode()
+        if previous_state != next_state:
+            self.pet_state_changed.emit(next_state)
 
     def is_press_active(self) -> bool:
         return self.is_interaction_active()

@@ -52,6 +52,7 @@ class TomatoClockPlugin:
         self._animation_active = False
         self._took_animation_control = False
         self._stopping = False
+        self._restart_after_manual_animation = False
 
         self._timer = QTimer(self._window)
         self._timer.timeout.connect(self._tick)
@@ -61,6 +62,7 @@ class TomatoClockPlugin:
         )
         self._phased_player = PhasedSequencePlayer(self._window)
         self._phased_player.frame_changed.connect(self._window.set_pixmap)
+        self._director.pet_state_changed.connect(self._on_pet_state_changed)
 
     def build_menu(self, root_menu: QMenu) -> None:
         menu = root_menu.addMenu(self.MENU_TITLE)
@@ -156,8 +158,9 @@ class TomatoClockPlugin:
             self._paused = False
             self._timer.start(TICK_MS)
             self._update_window()
+            self._restart_phase_animation_from_start()
             return
-        if not self._begin_action_control():
+        if self._single_player.is_active():
             return
         self._running = True
         self._paused = False
@@ -184,6 +187,7 @@ class TomatoClockPlugin:
         self._count = 0
         self._interaction_paused = False
         self._waiting_for_phase_animation = False
+        self._restart_after_manual_animation = False
         self._timer_window.hide_timer()
         self._finish_animation_then_end_control()
 
@@ -199,6 +203,7 @@ class TomatoClockPlugin:
         self._animation_active = False
         self._took_animation_control = False
         self._stopping = False
+        self._restart_after_manual_animation = False
         self._timer_window.hide_timer()
         self._phased_player.stop()
         if self._has_action_control:
@@ -213,6 +218,8 @@ class TomatoClockPlugin:
             self._advance_phase()
             return
         self._update_window()
+        if not self._animation_active and not self._has_action_control:
+            self._start_phase_animation()
 
     def _advance_phase(self) -> None:
         if self._phase == PHASE_FOCUS:
@@ -273,17 +280,95 @@ class TomatoClockPlugin:
             return
         self._start_phase_animation()
 
+    def _on_pet_state_changed(self, _pet_state: str) -> None:
+        # 收到状态变化通知后同步当前番茄动画
+        if not self._running or self._paused:
+            return
+        self._sync_phase_animation_after_state_change()
+
+    def _sync_phase_animation_after_state_change(self) -> None:
+        # 按当前状态决定番茄动画接 loop 重播 start 或停掉释放锁
+        if not self._running:
+            return
+        if self._manual_animation_active():
+            self._phased_player.stop()
+            self._animation_active = False
+            if self._restart_after_manual_animation:
+                return
+            self._restart_after_manual_animation = True
+            QTimer.singleShot(RESUME_CHECK_INTERVAL_MS, self._retry_sync_phase_animation_after_state_change)
+            return
+        self._restart_after_manual_animation = False
+        mode_id = self._current_mode_id()
+        mode = self._mode_for_current_state(mode_id)
+        if mode is None:
+            self._stop_phase_animation_for_unavailable_state()
+            return
+        if (
+            self._animation_active
+            and self._has_action_control
+            and self._phased_player.is_active()
+            and not self._waiting_for_phase_animation
+            and not self._stopping
+            and mode.is_phased
+        ):
+            if self._phased_player.switch_to_loop(
+                mode,
+                mode_factory=self._mode_factory(mode_id),
+            ):
+                self._animation_active = True
+                self._took_animation_control = True
+                return
+        self._start_phase_animation()
+
+    def _retry_sync_phase_animation_after_state_change(self) -> None:
+        # 等手动或 single 动画结束后再次同步状态变化
+        self._restart_after_manual_animation = False
+        self._sync_phase_animation_after_state_change()
+
+    def _restart_phase_animation_from_start(self) -> None:
+        # 从 start 重启动画
+        if not self._running:
+            return
+        if self._manual_animation_active():
+            self._phased_player.stop()
+            self._animation_active = False
+            if self._restart_after_manual_animation:
+                return
+            self._restart_after_manual_animation = True
+            QTimer.singleShot(RESUME_CHECK_INTERVAL_MS, self._retry_restart_phase_animation_from_start)
+            return
+        self._restart_after_manual_animation = False
+        self._waiting_for_phase_animation = False
+        self._phased_player.stop()
+        if self._animation_active:
+            self._director.stop()
+        self._animation_active = False
+        self._start_phase_animation()
+
+    def _retry_restart_phase_animation_from_start(self) -> None:
+        # 等手动或 single 动画结束后再次尝试从 start 重启
+        self._restart_after_manual_animation = False
+        self._restart_phase_animation_from_start()
+
+    def _stop_phase_animation_for_unavailable_state(self) -> None:
+        # 当前状态没有番茄动画素材时停止动画并释放锁
+        if self._animation_active:
+            self._director.stop()
+        self._animation_active = False
+        self._phased_player.stop()
+        if self._has_action_control:
+            self._end_action_control()
+
     def _start_phase_animation(self) -> None:
         if not self._running or self._manual_animation_active():
             return
         mode_id = self._current_mode_id()
         mode = self._mode_for_current_state(mode_id)
         if mode is None:
-            # 当前状态没有专注或休息素材时只计时 不强行切回默认动作
-            if self._animation_active:
-                self._director.stop()
-            self._animation_active = False
-            self._phased_player.stop()
+            self._stop_phase_animation_for_unavailable_state()
+            return
+        if not self._begin_action_control():
             return
         self._phased_player.stop()
         self._director.stop()
@@ -296,9 +381,11 @@ class TomatoClockPlugin:
                 mode_factory=self._mode_factory(mode_id),
             ):
                 self._animation_active = False
+                self._end_action_control()
             return
         if not self._director.is_mode_available(mode_id):
             self._animation_active = False
+            self._end_action_control()
             return
         self._director.resume_mode(mode_id)
 

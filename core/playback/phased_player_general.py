@@ -66,6 +66,23 @@ class PhasedSequencePlayer(QObject):
         self._player.play(mode.start, loop=False)
         return True
 
+    def switch_to_loop(
+        self,
+        mode: Mode,
+        *,
+        mode_factory: Callable[[], Mode] | None = None,
+    ) -> bool:
+        if not self.is_active() or not mode.is_phased or mode.start is None or mode.end is None:
+            return False
+        self._mode = mode
+        self._mode_factory = mode_factory
+        self._phase = "loop"
+        self._loop_left = 0
+        self._loop_forever = True
+        if not self._paused:
+            self._player.play(mode.loop, loop=False)
+        return True
+
     def finish(self) -> bool:
         if not self.is_active() or self._mode is None:
             return False
