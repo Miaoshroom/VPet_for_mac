@@ -1,4 +1,4 @@
-"""拖文件给桌宠吃掉。"""
+"""拖文件给桌宠吃掉"""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from pathlib import Path
 from core.app_paths import config_path
 from core.playback.catalog import AnimationCatalog
 from core.playback.clip import Clip
+from plugins.eat_files.icon_overlay import clip_with_file_icon
 
 
 class EatFilesPlugin:
@@ -38,7 +39,7 @@ class EatFilesPlugin:
             return
         if self._single_player.is_active():
             return
-        clip = self._clip_for_current_state()
+        clip = self._clip_for_current_state(paths)
         if clip is None:
             # 当前状态没有吃文件动画时不移动文件
             return
@@ -49,13 +50,24 @@ class EatFilesPlugin:
         if not self._single_player.play(clip, on_finished=self._window.resume_plugins_after_interaction):
             self._window.resume_plugins_after_interaction()
 
-    def _clip_for_current_state(self) -> Clip | None:
+    def _clip_for_current_state(self, paths: list[Path]) -> Clip | None:
         animation_id = str(self._settings["single_animation"])
         pet_state = self._director.pet_state()
         try:
-            return self._animation_catalog.single_for(animation_id, pet_state)
+            clip = self._animation_catalog.single_for(animation_id, pet_state)
         except KeyError:
             return None
+        return clip_with_file_icon(
+            clip,
+            _first_existing_path(paths),
+            icon_size_ratio=float(self._settings.get("file_icon_size_ratio", 0.15)),
+            center_x_ratio=float(self._settings.get("file_icon_center_x_ratio", 0.5)),
+            center_y_ratio=float(self._settings.get("file_icon_center_y_ratio", 0.575)),
+            visible_start_ratio=float(self._settings.get("file_icon_visible_start_ratio", 0.0)),
+            visible_end_ratio=float(self._settings.get("file_icon_visible_end_ratio", 1.0)),
+            opacity=float(self._settings.get("file_icon_opacity", 1.0)),
+            layer=str(self._settings.get("file_icon_layer", "behind_front")),
+        )
 
     def _move_files(self, paths: list[Path]) -> bool:
         trash_dir = Path(str(self._settings["trash_path"])).expanduser()
@@ -74,6 +86,13 @@ class EatFilesPlugin:
 
 def _load_settings() -> dict:
     return json.loads(config_path("plugin_config/eat_files.json").read_text(encoding="utf-8"))
+
+
+def _first_existing_path(paths: list[Path]) -> Path | None:
+    for path in paths:
+        if path.exists():
+            return path
+    return None
 
 
 def _unique_target(folder: Path, name: str) -> Path:
