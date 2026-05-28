@@ -72,6 +72,7 @@ class SinglePlayer(QObject):
         self._paused = self._current
         self._current = None
         self._player.stop()
+        self._end_visual_override()
         return True
 
     def resume(self) -> bool:
@@ -79,6 +80,7 @@ class SinglePlayer(QObject):
             return False
         self._current = self._paused
         self._paused = None
+        self._begin_visual_override()
         self._director.stop()
         self._player.play(self._current.clip, loop=False)
         return True
