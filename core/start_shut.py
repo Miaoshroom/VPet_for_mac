@@ -9,26 +9,46 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QApplication
 
 from core.animation import Clip, Mode, PetAnimationDirector
+from core.playback.catalog import AnimationCatalog
 from core.single_autoswitch import SingleAutoSwitch
 from core.single_player import SinglePlayer
 
 
-def pick_single_clip(config_ids: tuple[str, ...], single_clips: dict[str, Clip]) -> Clip | None:
+def pick_single_clip_for_state(
+    config_ids: tuple[str, ...],
+    *,
+    animation_catalog: AnimationCatalog,
+    pet_state: str,
+) -> Clip | None:
     if not config_ids:
         return None
-    return single_clips[random.choice(config_ids)]
+    # 启动和关闭 single 也按当前状态挑 没素材就跳过
+    candidates = [
+        mode_id
+        for mode_id in config_ids
+        if animation_catalog.is_single_available(mode_id, pet_state)
+    ]
+    if not candidates:
+        return None
+    return animation_catalog.single_for(random.choice(candidates), pet_state)
 
 
 def pick_startup(
     default_mode: Mode,
     startup_ids: tuple[str, ...],
-    single_clips: dict[str, Clip],
+    *,
+    animation_catalog: AnimationCatalog,
+    pet_state: str,
 ) -> tuple[Clip | None, QPixmap]:
     """选择启动 single，并返回窗口初始显示的首帧。"""
 
     default_clip = default_mode.start if default_mode.is_phased else default_mode.loop
     assert default_clip is not None
-    startup_clip = pick_single_clip(startup_ids, single_clips)
+    startup_clip = pick_single_clip_for_state(
+        startup_ids,
+        animation_catalog=animation_catalog,
+        pet_state=pet_state,
+    )
     initial_pixmap = startup_clip.frame(0) if startup_clip is not None else default_clip.frame(0)
     return startup_clip, initial_pixmap
 
@@ -66,7 +86,7 @@ def build_shutdown_handler(
     single_player: SinglePlayer,
     mode_autoswitch_timer,
     shutdown_ids: tuple[str, ...],
-    single_clips: dict[str, Clip],
+    animation_catalog: AnimationCatalog,
     shutdown_hooks=(),
 ):
     """构建菜单退出回调：如有配置则先播 shutdown single。"""
@@ -86,7 +106,11 @@ def build_shutdown_handler(
             hook()
         director.stop()
 
-        shutdown_clip = pick_single_clip(shutdown_ids, single_clips)
+        shutdown_clip = pick_single_clip_for_state(
+            shutdown_ids,
+            animation_catalog=animation_catalog,
+            pet_state=director.pet_state(),
+        )
         if shutdown_clip is None:
             app.quit()
             return

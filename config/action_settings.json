@@ -1,35 +1,31 @@
 {
   "default_mode": "default",
-  "press_mode": "lift",
+  "press_mode": "raise_raised_static",
   "idle_autoswitch_interval_min_ms": 180000,
   "idle_autoswitch_interval_max_ms": 600000,
   "auto_idle_modes": [
     "default",
     "amusement",
-    "dance",
+    "meowlook",
+    "yawning",
     "think",
     "aside",
-    "sleepy",
     "bubbles",
-    "happy_turn_1",
-    "happy_turn_2",
-    "meowlook",
-    "sit_down",
+    "boring",
     "sleep",
     "squat"
   ],
   "startup": [
-    "startup_1",
-    "startup_2"
+    "start_up",
+    "start_up_newyear"
   ],
   "shutdown": [
-    "shutdown_1",
-    "shutdown_2"
+    "shutdown"
   ],
   "single_insert_interval_min_ms": 180000,
   "single_insert_interval_max_ms": 600000,
   "single_insert_modes": [
-    "meow",
-    "yawning"
+    "level_up",
+    "switch_down"
   ]
 }

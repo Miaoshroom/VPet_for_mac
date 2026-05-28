@@ -11,11 +11,10 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.animation import PressHoldAnimator, PetAnimationDirector
 from core.auto_move import AutoMoveController
-from core.plugin_loader import setup_plugins
 from core.interaction_map import load_interaction_map
 from core.loader import load_action_config
 from core.mode_autoswitch import ModeAutoSwitch
-from core.plugin_runtime import PluginRuntime
+from core.plugin_host import PluginRuntime, setup_plugins
 from core.single_autoswitch import SingleAutoSwitch
 from core.single_player import SinglePlayer
 from core.start_shut import build_shutdown_handler, pick_startup, play_startup
@@ -34,7 +33,7 @@ def main() -> int:
 
     try:
         config = load_action_config()
-        interaction_map = load_interaction_map(set(config.modes))
+        interaction_map = load_interaction_map(set(config.animation_catalog.action_ids()))
         interactions: dict[str, PressHoldAnimator] = {}
         for mode_name, mode in config.modes.items():
             if not mode.is_phased:
@@ -47,12 +46,15 @@ def main() -> int:
             default_mode=config.default_mode,
             interactions=interactions,
             default_interaction=config.press_mode,
+            animation_catalog=config.animation_catalog,
+            pet_state=config.pet_state,
         )
 
         startup_clip, initial_pixmap = pick_startup(
             config.modes[config.default_mode],
             config.startup,
-            config.single_clips,
+            animation_catalog=config.animation_catalog,
+            pet_state=config.pet_state,
         )
 
         plugin_runtime = PluginRuntime()
@@ -96,6 +98,11 @@ def main() -> int:
             parent=app,
             director=director,
             window=win,
+            animation_catalog=config.animation_catalog,
+        )
+        win.set_single_debug_callbacks(
+            single_player.debug_snapshot,
+            single_player.replay_current_action,
         )
         single_autoswitch = SingleAutoSwitch(
             parent=app,
@@ -103,16 +110,15 @@ def main() -> int:
             interval_min_ms=config.single_insert_interval_min_ms,
             interval_max_ms=config.single_insert_interval_max_ms,
             mode_ids=config.single_insert_modes,
-            single_clips=config.single_clips,
             action_blocked=plugin_runtime.action_active,
             single_player=single_player,
+            animation_catalog=config.animation_catalog,
             mode_autoswitch_timer=mode_autoswitch,
         )
         auto_move = AutoMoveController(
             parent=app,
             director=director,
             window=win,
-            modes=config.modes,
             action_blocked=plugin_runtime.action_active,
             single_autoswitch=single_autoswitch,
             mode_autoswitch=mode_autoswitch,
@@ -128,12 +134,11 @@ def main() -> int:
             "app": app,
             "window": win,
             "director": director,
-            "modes": config.modes,
+            "animation_catalog": config.animation_catalog,
             "default_mode": config.default_mode,
             "mode_autoswitch": mode_autoswitch,
             "plugin_runtime": plugin_runtime,
             "single_player": single_player,
-            "single_clips": config.single_clips,
             "auto_move": auto_move,
         })
         win.set_plugins(_plugins)
@@ -153,9 +158,9 @@ def main() -> int:
             single_autoswitch=single_autoswitch,
             single_player=single_player,
             mode_autoswitch_timer=mode_autoswitch,
-            shutdown_hooks=(shutdown_plugins,),
+            shutdown_hooks=(auto_move.shutdown, shutdown_plugins),
             shutdown_ids=config.shutdown,
-            single_clips=config.single_clips,
+            animation_catalog=config.animation_catalog,
         )
         win.set_quit_callback(quit_callback)
         _statusbar_icon = create_statusbar_icon(app, BAR_ICON, quit_callback)

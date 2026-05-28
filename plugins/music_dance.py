@@ -8,9 +8,10 @@ import sys
 
 from PyQt6.QtCore import QObject, QProcess, QTimer
 
-from core.animation import Clip, Mode
 from core.app_paths import config_path, helper_binary_path, helper_python_path
-from core.phased_player import PhasedPlayer
+from core.playback.catalog import AnimationCatalog
+from core.playback.clip import Clip
+from core.playback.phased_player_general import PhasedSequencePlayer
 
 
 class MusicDancePlugin(QObject):
@@ -21,8 +22,7 @@ class MusicDancePlugin(QObject):
         super().__init__(context["app"])
         settings = _load_settings()
         self._director = context["director"]
-        self._modes: dict[str, Mode] = context["modes"]
-        self._single_clips: dict[str, Clip] = context["single_clips"]
+        self._animation_catalog: AnimationCatalog = context["animation_catalog"]
         self._single_player = context["single_player"]
         self._default_mode = context["default_mode"]
         self._auto_idle_timer = context["mode_autoswitch"]
@@ -42,7 +42,10 @@ class MusicDancePlugin(QObject):
         self._dance_active = False
         self._playing_single = False
         self._fallback_mode = self._default_mode
-        self._phased_player = PhasedPlayer(self, context["window"])
+        self._current_phased_mode_id: str | None = None
+        self._phased_player = PhasedSequencePlayer(self)
+        self._phased_player.frame_changed.connect(context["window"].set_pixmap)
+        self._director.pet_state_changed.connect(self._on_pet_state_changed)
 
         self._process = QProcess(self)
         self._process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
@@ -158,6 +161,10 @@ class MusicDancePlugin(QObject):
             self._start_dance()
 
     def _start_dance(self) -> None:
+        first_mode_id = self._pick_phased_mode_id()
+        if first_mode_id is None:
+            # 当前状态没有舞蹈素材时不接管动画
+            return
         if not self._plugin_runtime.try_begin_action(self.PLUGIN_NAME):
             return
         current_mode = self._director.current_mode_name()
@@ -165,27 +172,70 @@ class MusicDancePlugin(QObject):
         self._dance_active = True
         self._stop_auto_idle()
         self._director.stop()
-        self._start_next_phased()
+        self._start_next_phased(first_mode_id)
 
     def _stop_dance(self) -> None:
         was_active = self._dance_active
         self._dance_active = False
+        self._current_phased_mode_id = None
         self._phased_player.stop()
         self._stop_current_single()
         if was_active:
             self._plugin_runtime.end_action(self.PLUGIN_NAME)
-            self._director.resume_mode(self._fallback_mode or self._default_mode)
+            self._resume_fallback_mode()
             self._start_auto_idle()
 
-    def _start_next_phased(self) -> None:
+    def _start_next_phased(self, mode_id: str | None = None) -> None:
         if not self._dance_active:
             return
-        mode_id = self._pick_phased_mode()
+        mode_id = mode_id or self._pick_phased_mode_id()
         if mode_id is None:
             self._stop_dance()
             return
-        if not self._phased_player.play(self._modes[mode_id], self._random_phased_loop_count(), self._after_phased):
+        mode = self._mode_for_current_state(mode_id)
+        if mode is None:
             self._stop_dance()
+            return
+        self._current_phased_mode_id = mode_id
+        if not self._phased_player.play(
+            mode,
+            self._random_phased_loop_count(),
+            self._after_phased,
+            mode_factory=self._mode_factory(mode_id),
+        ):
+            self._current_phased_mode_id = None
+            self._stop_dance()
+
+    def _on_pet_state_changed(self, _pet_state: str) -> None:
+        if not self._dance_active:
+            return
+        self._sync_after_pet_state_change()
+
+    def _sync_after_pet_state_change(self) -> None:
+        if not self._dance_active:
+            return
+        if self._director.is_interaction_active():
+            QTimer.singleShot(50, self._sync_after_pet_state_change)
+            return
+        if self._playing_single:
+            self._stop_current_single()
+            self._start_next_phased()
+            return
+        if self._single_player.is_active():
+            QTimer.singleShot(50, self._sync_after_pet_state_change)
+            return
+        mode_id = self._current_phased_mode_id
+        if mode_id is not None:
+            mode = self._mode_for_current_state(mode_id)
+            if mode is not None and self._phased_player.is_active():
+                if self._phased_player.switch_to_loop(
+                    mode,
+                    mode_factory=self._mode_factory(mode_id),
+                ):
+                    return
+        self._phased_player.stop()
+        self._current_phased_mode_id = None
+        self._start_next_phased()
 
     def _after_phased(self) -> None:
         if not self._dance_active:
@@ -238,21 +288,50 @@ class MusicDancePlugin(QObject):
     def _should_insert_single(self) -> bool:
         return random.random() <= self._single_insert_chance
 
-    def _pick_phased_mode(self) -> str | None:
+    def _pick_phased_mode_id(self) -> str | None:
+        pet_state = self._director.pet_state()
         candidates = [
             mode_id
             for mode_id in self._phased_modes
-            if mode_id in self._modes and self._modes[mode_id].is_phased
+            if self._animation_catalog.is_mode_available(mode_id, pet_state)
         ]
         if not candidates:
             return None
         return random.choice(candidates)
 
+    def _mode_for_current_state(self, mode_id: str):
+        try:
+            mode = self._animation_catalog.mode_for(mode_id, self._director.pet_state())
+        except KeyError:
+            return None
+        return mode if mode.is_phased else None
+
+    def _mode_factory(self, mode_id: str):
+        def factory():
+            mode = self._mode_for_current_state(mode_id)
+            if mode is None:
+                raise KeyError(mode_id)
+            return mode
+
+        return factory
+
     def _pick_single_clip(self) -> Clip | None:
-        candidates = [mode_id for mode_id in self._single_modes if mode_id in self._single_clips]
+        pet_state = self._director.pet_state()
+        candidates = [
+            mode_id
+            for mode_id in self._single_modes
+            if self._animation_catalog.is_single_available(mode_id, pet_state)
+        ]
         if not candidates:
             return None
-        return self._single_clips[random.choice(candidates)]
+        return self._animation_catalog.single_for(random.choice(candidates), pet_state)
+
+    def _resume_fallback_mode(self) -> None:
+        for mode_id in (self._fallback_mode, self._default_mode):
+            if mode_id and self._director.is_mode_available(mode_id):
+                self._director.resume_mode(mode_id)
+                return
+        self._director.start_default_mode()
 
 
 def _load_settings() -> dict:

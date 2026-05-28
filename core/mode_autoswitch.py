@@ -70,7 +70,12 @@ class ModeAutoSwitch(QObject):
         current_mode = self._director.current_mode_name()
         if current_mode not in self._mode_ids:
             return
-        candidates = [mode_id for mode_id in self._mode_ids if mode_id != current_mode]
+        # 只从当前状态真的能播的动作里随机
+        candidates = [
+            mode_id
+            for mode_id in self._director.available_mode_ids(self._mode_ids)
+            if mode_id != current_mode
+        ]
         if not candidates:
             return
         self._director.switch_mode(choice(candidates))
