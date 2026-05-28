@@ -215,7 +215,7 @@ class PetWindow(QMainWindow):
         _save_display_size_to_json(self._max_side)
 
     def _switch_mode(self, mode_name: str) -> None:
-        if self._action_blocked():
+        if self._action_blocked() or self._single_debug_active():
             return
         if mode_name not in self._mode_titles:
             return
@@ -482,6 +482,9 @@ class PetWindow(QMainWindow):
         super().mouseReleaseEvent(e)
 
     def contextMenuEvent(self, e) -> None:
+        if self._single_active():
+            e.accept()
+            return
         available_modes = self._director.available_mode_ids(self._mode_titles)
         mode_handlers = {
             title: (lambda name=mode_name: self._switch_mode(name))
