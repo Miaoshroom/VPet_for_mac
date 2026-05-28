@@ -8,8 +8,8 @@ from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QMenu
 
 from core.app_paths import config_path
-from core.phased_player import PhasedPlayer
 from core.playback.catalog import AnimationCatalog
+from core.playback.phased_player_general import PhasedSequencePlayer
 from plugins.tomato_clock.timer_window import TomatoClockWindow
 
 TICK_MS = 1000
@@ -59,7 +59,8 @@ class TomatoClockPlugin:
             self._window,
             y_offset_px=int(self._settings.get("timer_window_y_offset_px", -28)),
         )
-        self._phased_player = PhasedPlayer(self._window, self._window)
+        self._phased_player = PhasedSequencePlayer(self._window)
+        self._phased_player.frame_changed.connect(self._window.set_pixmap)
 
     def build_menu(self, root_menu: QMenu) -> None:
         menu = root_menu.addMenu(self.MENU_TITLE)
@@ -289,7 +290,11 @@ class TomatoClockPlugin:
         self._animation_active = True
         self._took_animation_control = True
         if mode.is_phased:
-            if not self._phased_player.play_forever(mode, self._after_phase_animation_finished):
+            if not self._phased_player.play_forever(
+                mode,
+                self._after_phase_animation_finished,
+                mode_factory=self._mode_factory(mode_id),
+            ):
                 self._animation_active = False
             return
         if not self._director.is_mode_available(mode_id):
@@ -340,6 +345,15 @@ class TomatoClockPlugin:
             return self._animation_catalog.mode_for(mode_id, self._director.pet_state())
         except KeyError:
             return None
+
+    def _mode_factory(self, mode_id: str):
+        def factory():
+            mode = self._mode_for_current_state(mode_id)
+            if mode is None:
+                raise KeyError(mode_id)
+            return mode
+
+        return factory
 
     def _phase_title(self) -> str:
         if self._paused:

@@ -27,6 +27,7 @@ class PhasedSequencePlayer(QObject):
         self._phase = "idle"
         self._paused = False
         self._on_finished: Callable[[], None] | None = None
+        self._mode_factory: Callable[[], Mode] | None = None
 
     def is_active(self) -> bool:
         return self._phase != "idle"
@@ -39,8 +40,10 @@ class PhasedSequencePlayer(QObject):
         mode: Mode,
         loop_count: int = 1,
         on_finished: Callable[[], None] | None = None,
+        *,
+        mode_factory: Callable[[], Mode] | None = None,
     ) -> bool:
-        if not self._start(mode, on_finished):
+        if not self._start(mode, on_finished, mode_factory):
             return False
         self._loop_left = max(1, int(loop_count))
         self._loop_forever = False
@@ -52,8 +55,10 @@ class PhasedSequencePlayer(QObject):
         self,
         mode: Mode,
         on_finished: Callable[[], None] | None = None,
+        *,
+        mode_factory: Callable[[], Mode] | None = None,
     ) -> bool:
-        if not self._start(mode, on_finished):
+        if not self._start(mode, on_finished, mode_factory):
             return False
         self._loop_left = 0
         self._loop_forever = True
@@ -96,14 +101,21 @@ class PhasedSequencePlayer(QObject):
         self._phase = "idle"
         self._paused = False
         self._on_finished = None
+        self._mode_factory = None
 
-    def _start(self, mode: Mode, on_finished: Callable[[], None] | None) -> bool:
+    def _start(
+        self,
+        mode: Mode,
+        on_finished: Callable[[], None] | None,
+        mode_factory: Callable[[], Mode] | None,
+    ) -> bool:
         if self.is_active() or not mode.is_phased or mode.start is None or mode.end is None:
             return False
         self._mode = mode
         self._phase = "start"
         self._paused = False
         self._on_finished = on_finished
+        self._mode_factory = mode_factory
         return True
 
     def _play_current_phase(self) -> None:
@@ -135,11 +147,11 @@ class PhasedSequencePlayer(QObject):
             return
         if self._phase == "loop":
             if self._loop_forever:
-                self._player.play(self._mode.loop, loop=False)
+                self._play_next_loop()
                 return
             self._loop_left -= 1
             if self._loop_left > 0:
-                self._player.play(self._mode.loop, loop=False)
+                self._play_next_loop()
                 return
             self._phase = "end"
             assert self._mode.end is not None
@@ -151,3 +163,21 @@ class PhasedSequencePlayer(QObject):
             self.finished.emit()
             if on_finished is not None:
                 on_finished()
+
+    def _play_next_loop(self) -> None:
+        self._refresh_mode_for_next_loop()
+        if self._mode is None:
+            self.stop()
+            return
+        self._player.play(self._mode.loop, loop=False)
+
+    def _refresh_mode_for_next_loop(self) -> None:
+        if self._mode_factory is None:
+            return
+        try:
+            mode = self._mode_factory()
+        except KeyError:
+            return
+        if not mode.is_phased or mode.start is None or mode.end is None:
+            return
+        self._mode = mode

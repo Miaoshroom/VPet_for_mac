@@ -8,10 +8,10 @@ import sys
 
 from PyQt6.QtCore import QObject, QProcess, QTimer
 
-from core.animation import Clip
 from core.app_paths import config_path, helper_binary_path, helper_python_path
-from core.phased_player import PhasedPlayer
 from core.playback.catalog import AnimationCatalog
+from core.playback.clip import Clip
+from core.playback.phased_player_general import PhasedSequencePlayer
 
 
 class MusicDancePlugin(QObject):
@@ -42,7 +42,8 @@ class MusicDancePlugin(QObject):
         self._dance_active = False
         self._playing_single = False
         self._fallback_mode = self._default_mode
-        self._phased_player = PhasedPlayer(self, context["window"])
+        self._phased_player = PhasedSequencePlayer(self)
+        self._phased_player.frame_changed.connect(context["window"].set_pixmap)
 
         self._process = QProcess(self)
         self._process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
@@ -158,8 +159,8 @@ class MusicDancePlugin(QObject):
             self._start_dance()
 
     def _start_dance(self) -> None:
-        first_mode = self._pick_phased_mode()
-        if first_mode is None:
+        first_mode_id = self._pick_phased_mode_id()
+        if first_mode_id is None:
             # 当前状态没有舞蹈素材时不接管动画
             return
         if not self._plugin_runtime.try_begin_action(self.PLUGIN_NAME):
@@ -169,7 +170,7 @@ class MusicDancePlugin(QObject):
         self._dance_active = True
         self._stop_auto_idle()
         self._director.stop()
-        self._start_next_phased(first_mode)
+        self._start_next_phased(first_mode_id)
 
     def _stop_dance(self) -> None:
         was_active = self._dance_active
@@ -181,14 +182,23 @@ class MusicDancePlugin(QObject):
             self._resume_fallback_mode()
             self._start_auto_idle()
 
-    def _start_next_phased(self, mode=None) -> None:
+    def _start_next_phased(self, mode_id: str | None = None) -> None:
         if not self._dance_active:
             return
-        mode = mode or self._pick_phased_mode()
+        mode_id = mode_id or self._pick_phased_mode_id()
+        if mode_id is None:
+            self._stop_dance()
+            return
+        mode = self._mode_for_current_state(mode_id)
         if mode is None:
             self._stop_dance()
             return
-        if not self._phased_player.play(mode, self._random_phased_loop_count(), self._after_phased):
+        if not self._phased_player.play(
+            mode,
+            self._random_phased_loop_count(),
+            self._after_phased,
+            mode_factory=self._mode_factory(mode_id),
+        ):
             self._stop_dance()
 
     def _after_phased(self) -> None:
@@ -242,19 +252,32 @@ class MusicDancePlugin(QObject):
     def _should_insert_single(self) -> bool:
         return random.random() <= self._single_insert_chance
 
-    def _pick_phased_mode(self):
+    def _pick_phased_mode_id(self) -> str | None:
         pet_state = self._director.pet_state()
-        candidates = []
-        for mode_id in self._phased_modes:
-            try:
-                mode = self._animation_catalog.mode_for(mode_id, pet_state)
-            except KeyError:
-                continue
-            if mode.is_phased:
-                candidates.append(mode)
+        candidates = [
+            mode_id
+            for mode_id in self._phased_modes
+            if self._animation_catalog.is_mode_available(mode_id, pet_state)
+        ]
         if not candidates:
             return None
         return random.choice(candidates)
+
+    def _mode_for_current_state(self, mode_id: str):
+        try:
+            mode = self._animation_catalog.mode_for(mode_id, self._director.pet_state())
+        except KeyError:
+            return None
+        return mode if mode.is_phased else None
+
+    def _mode_factory(self, mode_id: str):
+        def factory():
+            mode = self._mode_for_current_state(mode_id)
+            if mode is None:
+                raise KeyError(mode_id)
+            return mode
+
+        return factory
 
     def _pick_single_clip(self) -> Clip | None:
         pet_state = self._director.pet_state()
