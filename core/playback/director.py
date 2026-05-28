@@ -182,6 +182,7 @@ class PetAnimationDirector(QObject):
         self._active_interaction_mode: Mode | None = None
         self._transient_interaction: PressHoldAnimator | None = None
         self._transient_interaction_mode: Mode | None = None
+        self._visual_override_depth = 0
         self._mode_player = FlipbookPlayer(self)
         self._mode_player.frame_changed.connect(self.frame_changed)
         for interaction in self._interactions.values():
@@ -218,6 +219,15 @@ class PetAnimationDirector(QObject):
     def active_interaction_mode(self) -> Mode | None:
         return self._active_interaction_mode
 
+    def begin_visual_override(self) -> None:
+        self._visual_override_depth += 1
+
+    def end_visual_override(self) -> None:
+        self._visual_override_depth = max(0, self._visual_override_depth - 1)
+
+    def is_visual_override_active(self) -> bool:
+        return self._visual_override_depth > 0
+
     def set_pet_state(self, pet_state: str, *, resume: bool = True) -> None:
         next_state = validate_pet_state(pet_state)
         previous_state = self._pet_state
@@ -231,7 +241,11 @@ class PetAnimationDirector(QObject):
         if self._pending_mode is not None and not self.is_mode_available(self._pending_mode):
             # 待切换动作不可播就丢掉 防止 end 之后再炸
             self._pending_mode = None
-        if resume and not self.is_interaction_active():
+        if (
+            resume
+            and not self.is_interaction_active()
+            and not self.is_visual_override_active()
+        ):
             self._resume_current_mode()
         if previous_state != next_state:
             self.pet_state_changed.emit(next_state)
@@ -243,12 +257,22 @@ class PetAnimationDirector(QObject):
         return self._active_interaction is not None
 
     def start_default_mode(self) -> None:
+        if self.is_visual_override_active():
+            self._current_mode = self._default_mode
+            self._current_mode_obj = self._resolve_mode(self._default_mode)
+            self._pending_mode = None
+            return
         self._start_mode(self._default_mode)
 
     def switch_mode(self, mode_name: str) -> None:
         # 先按当前状态解析素材 成功了再改当前动作
         next_mode = self._resolve_mode(mode_name)
         if mode_name == self.current_mode_name():
+            return
+        if self.is_visual_override_active():
+            self._current_mode = mode_name
+            self._current_mode_obj = next_mode
+            self._pending_mode = None
             return
         if self.is_interaction_active():
             self._current_mode = mode_name
@@ -273,6 +297,8 @@ class PetAnimationDirector(QObject):
     def start_interaction(self, interaction_name: str) -> Mode | None:
         if not self._has_action(interaction_name):
             raise KeyError(f"未知互动: {interaction_name}")
+        if self.is_visual_override_active():
+            return None
         if self.is_interaction_active():
             return None
         try:
@@ -344,6 +370,8 @@ class PetAnimationDirector(QObject):
             mode = self._resolve_mode(mode_name)
             self._current_mode = mode_name
             self._current_mode_obj = mode
+        if self.is_visual_override_active():
+            return
         self._resume_current_mode()
 
     def _resolve_mode(self, mode_name: str) -> Mode:

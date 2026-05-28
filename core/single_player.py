@@ -38,6 +38,7 @@ class SinglePlayer(QObject):
         self._player.finished.connect(self._finish)
         self._current: _SingleRun | None = None
         self._paused: _SingleRun | None = None
+        self._visual_override_active = False
 
     def is_active(self) -> bool:
         return self._current is not None
@@ -60,6 +61,7 @@ class SinglePlayer(QObject):
             return False
         resume_mode = self._director.current_mode_name() if resume else None
         self._current = _SingleRun(clip, resume_mode, on_finished, interruptible)
+        self._begin_visual_override()
         self._director.stop()
         self._player.play(clip, loop=False)
         return True
@@ -85,6 +87,7 @@ class SinglePlayer(QObject):
         self._player.stop()
         self._current = None
         self._paused = None
+        self._end_visual_override()
 
     def replay_current_action(self) -> bool:
         if self._current is None:
@@ -116,10 +119,27 @@ class SinglePlayer(QObject):
         if current is None:
             return
         self._current = None
+        self._end_visual_override()
         if current.resume_mode is not None:
-            self._director.resume_mode(current.resume_mode)
+            resume_mode = self._director.current_mode_name()
+            if self._director.is_mode_available(resume_mode):
+                self._director.resume_mode(resume_mode)
+            else:
+                self._director.start_default_mode()
         if current.on_finished is not None:
             current.on_finished()
+
+    def _begin_visual_override(self) -> None:
+        if self._visual_override_active:
+            return
+        self._director.begin_visual_override()
+        self._visual_override_active = True
+
+    def _end_visual_override(self) -> None:
+        if not self._visual_override_active:
+            return
+        self._director.end_visual_override()
+        self._visual_override_active = False
 
     def _action_title(self, action_id: str | None) -> str | None:
         if action_id is None:
