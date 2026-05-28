@@ -13,6 +13,7 @@ PET_STATES = ("happy", "normal", "poor_condition", "ill")
 MATERIAL_STATES = PET_STATES + ("any",)
 PHASES = ("loop", "start", "end", "single")
 LAYERS = ("main", "back", "front")
+LAYER_DRAW_ORDER = ("back", "main", "front")
 MAIN_LAYER = "main"
 DEFAULT_PET_STATE = "normal"
 
@@ -142,7 +143,7 @@ class AnimationCatalog:
         except KeyError:
             return False
         if mode_type == "loop":
-            return bool(self._main_variants(state_data, "loop"))
+            return bool(self._playable_variants(state_data, "loop"))
         if mode_type == "phased":
             return bool(self._playable_phased_loop_variants(state_data))
         return False
@@ -153,7 +154,7 @@ class AnimationCatalog:
             _, state_data = self._state_data(action_id, pet_state)
         except KeyError:
             return False
-        return bool(self._main_variants(state_data, "single"))
+        return bool(self._playable_variants(state_data, "single"))
 
     def mode_for(
         self,
@@ -274,10 +275,27 @@ class AnimationCatalog:
     def _state_data(self, action_id: str, pet_state: str) -> tuple[str, PhaseClips]:
         action_data = self._action_data(action_id)
         if pet_state in action_data:
+            if "any" in action_data:
+                return pet_state, self._merge_state_data(action_data["any"], action_data[pet_state])
             return pet_state, action_data[pet_state]
         if "any" in action_data:
             return "any", action_data["any"]
         raise KeyError(f"动作 {action_id} 没有 {pet_state} 状态素材，也没有 any 兜底")
+
+    def _merge_state_data(self, fallback: PhaseClips, exact: PhaseClips) -> PhaseClips:
+        merged: PhaseClips = {
+            phase: {
+                variant: dict(layers)
+                for variant, layers in variants.items()
+            }
+            for phase, variants in fallback.items()
+        }
+        for phase, variants in exact.items():
+            phase_data = merged.setdefault(phase, {})
+            for variant, layers in variants.items():
+                layer_data = phase_data.setdefault(variant, {})
+                layer_data.update(layers)
+        return merged
 
     def _all_phases(self, action_id: str) -> set[str]:
         phases: set[str] = set()
@@ -291,9 +309,9 @@ class AnimationCatalog:
         phase: str,
         requested: str | None,
     ) -> str:
-        variants = self._main_variants(state_data, phase)
+        variants = self._playable_variants(state_data, phase)
         if not variants:
-            raise KeyError(f"阶段 {phase} 没有可播放 main 图层")
+            raise KeyError(f"阶段 {phase} 没有可播放图层")
         if requested is not None:
             if requested not in variants:
                 raise KeyError(f"阶段 {phase} 不存在变体 {requested}")
@@ -317,7 +335,7 @@ class AnimationCatalog:
     def _playable_phased_loop_variants(self, state_data: PhaseClips) -> tuple[str, ...]:
         # phased 必须先确认 start loop end 能凑成一套
         result: list[str] = []
-        for loop_variant in self._main_variants(state_data, "loop"):
+        for loop_variant in self._playable_variants(state_data, "loop"):
             if (
                 self._phase_variant_available(state_data, "start", loop_variant)
                 and self._phase_variant_available(state_data, "end", loop_variant)
@@ -332,19 +350,21 @@ class AnimationCatalog:
         loop_variant: str,
     ) -> bool:
         phase_variants = state_data.get(phase, {})
-        if loop_variant in phase_variants and MAIN_LAYER in phase_variants[loop_variant]:
+        if loop_variant in phase_variants and self._has_playable_layer(phase_variants[loop_variant]):
             return True
-        return "01" in phase_variants and MAIN_LAYER in phase_variants["01"]
+        return "01" in phase_variants and self._has_playable_layer(phase_variants["01"])
 
-    def _main_variants(self, state_data: PhaseClips, phase: str) -> tuple[str, ...]:
-        # 目前只播放 main 图层 所以可播性也只看 main
+    def _playable_variants(self, state_data: PhaseClips, phase: str) -> tuple[str, ...]:
         return tuple(
             sorted(
                 variant
                 for variant, layers in state_data.get(phase, {}).items()
-                if MAIN_LAYER in layers
+                if self._has_playable_layer(layers)
             )
         )
+
+    def _has_playable_layer(self, layers: LayerClips) -> bool:
+        return any(layer in layers for layer in LAYER_DRAW_ORDER)
 
     def _phase_variant_or_default(
         self,
@@ -353,9 +373,9 @@ class AnimationCatalog:
         loop_variant: str,
     ) -> str:
         phase_variants = state_data.get(phase, {})
-        if loop_variant in phase_variants and MAIN_LAYER in phase_variants[loop_variant]:
+        if loop_variant in phase_variants and self._has_playable_layer(phase_variants[loop_variant]):
             return loop_variant
-        if "01" in phase_variants and MAIN_LAYER in phase_variants["01"]:
+        if "01" in phase_variants and self._has_playable_layer(phase_variants["01"]):
             return "01"
         raise KeyError(f"phased 动画缺少 {phase}/{loop_variant}，且没有 {phase}/01 可回退")
 
@@ -369,9 +389,20 @@ class AnimationCatalog:
         source_state: str | None = None,
     ) -> Clip:
         try:
-            clip = state_data[phase][variant][MAIN_LAYER]
+            layers = state_data[phase][variant]
         except KeyError as exc:
-            raise KeyError(f"阶段 {phase}/{variant} 没有可播放 main 图层") from exc
+            raise KeyError(f"阶段 {phase}/{variant} 不存在") from exc
+        playable_layers = tuple(
+            (layer, layers[layer])
+            for layer in LAYER_DRAW_ORDER
+            if layer in layers
+        )
+        if not playable_layers:
+            raise KeyError(f"阶段 {phase}/{variant} 没有可播放图层")
+        if len(playable_layers) == 1:
+            clip = playable_layers[0][1]
+        else:
+            clip = Clip.from_layer_clips(dict(playable_layers), LAYER_DRAW_ORDER)
         if action_id is None or source_state is None:
             return clip
         return clip.with_debug_metadata(
