@@ -158,7 +158,7 @@ def main() -> int:
             single_autoswitch=single_autoswitch,
             single_player=single_player,
             mode_autoswitch_timer=mode_autoswitch,
-            shutdown_hooks=(shutdown_plugins,),
+            shutdown_hooks=(auto_move.shutdown, shutdown_plugins),
             shutdown_ids=config.shutdown,
             animation_catalog=config.animation_catalog,
         )

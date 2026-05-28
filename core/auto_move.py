@@ -91,6 +91,7 @@ class AutoMoveController(QObject):
         self._y = 0.0
         self._target_x = 0.0
         self._target_y = 0.0
+        self._shutting_down = False
 
         if self._enabled:
             self.start()
@@ -112,7 +113,7 @@ class AutoMoveController(QObject):
             self.stop()
 
     def start(self) -> None:
-        if not self._enabled or not self._rules or self._timer.isActive():
+        if self._shutting_down or not self._enabled or not self._rules or self._timer.isActive():
             return
         self._reset_interval()
         self._timer.start()
@@ -127,6 +128,7 @@ class AutoMoveController(QObject):
             self._finish_move(restart_timer=True)
 
     def shutdown(self) -> None:
+        self._shutting_down = True
         self._enabled = False
         self.stop()
 
@@ -277,6 +279,8 @@ class AutoMoveController(QObject):
             return None
 
     def _after_move_end(self, restart_timer: bool) -> None:
+        if self._shutting_down:
+            return
         self._single_autoswitch.start()
         if self._mode_autoswitch is not None:
             self._mode_autoswitch.start()
