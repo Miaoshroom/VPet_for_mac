@@ -157,7 +157,14 @@ class PetAnimationDirector(QObject):
             raise ValueError("必须至少提供一个可切换动作")
         if default_mode not in modes:
             raise ValueError(f"默认动作不存在: {default_mode}")
-        if default_interaction not in interactions and default_interaction not in modes:
+        if (
+            default_interaction not in interactions
+            and default_interaction not in modes
+            and (
+                animation_catalog is None
+                or not animation_catalog.has_action(default_interaction)
+            )
+        ):
             raise ValueError(f"默认互动不存在: {default_interaction}")
         self._modes = modes
         self._animation_catalog = animation_catalog

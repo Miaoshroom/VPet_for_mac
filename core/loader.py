@@ -53,6 +53,7 @@ def load_action_config(pet_state: str = DEFAULT_PET_STATE) -> LoadedActions:
     pet_state = validate_pet_state(pet_state)
     settings = json.loads(config_path("action_settings.json").read_text(encoding="utf-8"))
     action_specs = _load_action_specs()
+    action_spec_map = {spec.id: spec for spec in action_specs}
     catalog = load_animation_catalog(action_specs=action_specs)
     modes = catalog.build_modes(action_specs, pet_state)
     mode_titles = {
@@ -73,18 +74,22 @@ def load_action_config(pet_state: str = DEFAULT_PET_STATE) -> LoadedActions:
     single_insert_interval_min_ms = int(settings.get("single_insert_interval_min_ms", 0))
     single_insert_interval_max_ms = int(settings.get("single_insert_interval_max_ms", 0))
 
+    # 除 default_mode 必须当前状态可播外 其他配置只校验身份和类型
     _require_mode(default_mode, modes, "default_mode")
-    _require_mode(press_mode, modes, "press_mode")
-    if not modes[press_mode].is_phased:
-        raise RuntimeError("press_mode 必须指向 phased 动作")
+    _require_action_type(press_mode, action_spec_map, "press_mode", ("phased",))
     for mode_id in auto_idle_modes:
-        _require_mode(mode_id, modes, "auto_idle_modes")
+        _require_action_type(
+            mode_id,
+            action_spec_map,
+            "auto_idle_modes",
+            ("loop", "phased"),
+        )
     for mode_id in startup:
-        _require_single(mode_id, catalog, pet_state, "startup")
+        _require_action_type(mode_id, action_spec_map, "startup", ("single",))
     for mode_id in shutdown:
-        _require_single(mode_id, catalog, pet_state, "shutdown")
+        _require_action_type(mode_id, action_spec_map, "shutdown", ("single",))
     for mode_id in single_insert_modes:
-        _require_single(mode_id, catalog, pet_state, "single_insert_modes")
+        _require_action_type(mode_id, action_spec_map, "single_insert_modes", ("single",))
 
     return LoadedActions(
         animation_catalog=catalog,
@@ -242,14 +247,20 @@ def _ensure_no_visible_dirs(path: Path) -> None:
 
 def _require_mode(mode_id: str, modes: dict[str, Mode], field: str) -> None:
     if mode_id not in modes:
-        raise RuntimeError(f"{field} 引用了未配置或不可播放的动作: {mode_id}")
+        raise RuntimeError(f"{field} 指向的动作在当前状态不可播放: {mode_id}")
 
 
-def _require_single(
-    mode_id: str,
-    catalog: AnimationCatalog,
-    pet_state: str,
+def _require_action_type(
+    action_id: str,
+    action_specs: dict[str, ActionSpec],
     field: str,
+    allowed_types: tuple[ActionType, ...],
 ) -> None:
-    if not catalog.is_single_available(mode_id, pet_state):
-        raise RuntimeError(f"{field} 引用了未配置或不可播放的 single 动作: {mode_id}")
+    spec = action_specs.get(action_id)
+    if spec is None:
+        raise RuntimeError(f"{field} 引用了 modes.json 未注册的动作: {action_id}")
+    if spec.type not in allowed_types:
+        allowed = "、".join(allowed_types)
+        raise RuntimeError(
+            f"{field} 动作类型不合法: {action_id} 是 {spec.type}，只允许 {allowed}"
+        )
