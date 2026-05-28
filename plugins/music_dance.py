@@ -42,8 +42,10 @@ class MusicDancePlugin(QObject):
         self._dance_active = False
         self._playing_single = False
         self._fallback_mode = self._default_mode
+        self._current_phased_mode_id: str | None = None
         self._phased_player = PhasedSequencePlayer(self)
         self._phased_player.frame_changed.connect(context["window"].set_pixmap)
+        self._director.pet_state_changed.connect(self._on_pet_state_changed)
 
         self._process = QProcess(self)
         self._process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
@@ -175,6 +177,7 @@ class MusicDancePlugin(QObject):
     def _stop_dance(self) -> None:
         was_active = self._dance_active
         self._dance_active = False
+        self._current_phased_mode_id = None
         self._phased_player.stop()
         self._stop_current_single()
         if was_active:
@@ -193,13 +196,46 @@ class MusicDancePlugin(QObject):
         if mode is None:
             self._stop_dance()
             return
+        self._current_phased_mode_id = mode_id
         if not self._phased_player.play(
             mode,
             self._random_phased_loop_count(),
             self._after_phased,
             mode_factory=self._mode_factory(mode_id),
         ):
+            self._current_phased_mode_id = None
             self._stop_dance()
+
+    def _on_pet_state_changed(self, _pet_state: str) -> None:
+        if not self._dance_active:
+            return
+        self._sync_after_pet_state_change()
+
+    def _sync_after_pet_state_change(self) -> None:
+        if not self._dance_active:
+            return
+        if self._director.is_interaction_active():
+            QTimer.singleShot(50, self._sync_after_pet_state_change)
+            return
+        if self._playing_single:
+            self._stop_current_single()
+            self._start_next_phased()
+            return
+        if self._single_player.is_active():
+            QTimer.singleShot(50, self._sync_after_pet_state_change)
+            return
+        mode_id = self._current_phased_mode_id
+        if mode_id is not None:
+            mode = self._mode_for_current_state(mode_id)
+            if mode is not None and self._phased_player.is_active():
+                if self._phased_player.switch_to_loop(
+                    mode,
+                    mode_factory=self._mode_factory(mode_id),
+                ):
+                    return
+        self._phased_player.stop()
+        self._current_phased_mode_id = None
+        self._start_next_phased()
 
     def _after_phased(self) -> None:
         if not self._dance_active:
