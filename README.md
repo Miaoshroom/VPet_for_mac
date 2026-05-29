@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  图标作者：<a href="https://space.bilibili.com/547026500">bilibili @mmdmb</a><br>
+  图标画师：<a href="https://space.bilibili.com/547026500">bilibili @mmdmb</a><br>
   大佬太强力画的太好看了x
 </p>
 
@@ -20,32 +20,23 @@
 
 `uv` 会自动帮你准备 Python 版本、创建虚拟环境、安装依赖，然后启动桌宠。你不用自己鼓捣乱七八糟的东西x。
 
-### 第零步：下载下来，然后点 run
-
-最省事的玩法是直接下载整个项目：
+#### 操作如下⬇️（
 
 1. 点 `Download ZIP`，把项目压缩包下载下来并解压。
-23. 点 `run.command`，等它自己启动桌宠。
 
-### 如果你不嫌麻烦
-
-手动安装 `uv`：
+2. 手动安装 `uv`：
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-安装完成后，执行下面的命令验证：
+3. 安装完成后先重启终端，再执行下面的命令验证：
 
 ```bash
 uv --version
 ```
 
-cd到项目目录里执行这个手动启动：
-
-```bash
-uv run --python 3.12 --with-requirements requirements.txt python main.py
-```
+4. 点 `run.command`
 
 ---
 
@@ -64,7 +55,9 @@ uv run --python 3.12 --with-requirements requirements.txt python main.py
 - [x] 桌宠自动发送表情
 - [x] 吃文件（
 - [x] 互动列表，睡觉，学习，工作等，自带计时器
+- [x] 桌宠切换状态
 - [ ] 桌宠状态更新，保存存档
+- [ ] 更好买
 - [ ] 桌宠对话，自动说话聊天
 - [ ] 桌宠接入大模型实现对话
 
