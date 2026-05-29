@@ -27,9 +27,9 @@
     "sticker_24"
   ],
   "interval_min_ms": 3000,
-  "interval_max_ms": 300000,
+  "interval_max_ms": 400000,
   "display_duration_ms": 2500,
-  "size_px": 60,
-  "offset_right_px": 300,
-  "offset_top_px": 40
+  "size_ratio": 0.17,
+  "position_x": 0.15,
+  "position_y": 0.20
 }

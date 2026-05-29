@@ -80,18 +80,27 @@ class ShowStickerPlugin:
         if pixmap.isNull():
             return
 
-        size = int(self._settings["size_px"])
+        area = self._placement_area()
+        size = max(1, round(min(area.width(), area.height()) * _ratio(self._settings["size_ratio"])))
         self._label.setPixmap(pixmap)
         self._label.resize(size, size)
-        self._place_label()
+        self._place_label(area)
         self._label.raise_()
         self._label.show()
         self._hide_timer.start(int(self._settings["display_duration_ms"]))
 
-    def _place_label(self) -> None:
-        x = self._window.width() - self._label.width() - int(self._settings["offset_right_px"])
-        y = int(self._settings["offset_top_px"])
-        self._label.move(max(0, x), max(0, y))
+    def _placement_area(self):
+        display = getattr(self._window, "_label", self._window)
+        return display.geometry()
+
+    def _place_label(self, area) -> None:
+        x_ratio = _ratio(self._settings["position_x"])
+        y_ratio = _ratio(self._settings["position_y"])
+        max_x = max(0, area.width() - self._label.width())
+        max_y = max(0, area.height() - self._label.height())
+        x = area.x() + round(max_x * x_ratio)
+        y = area.y() + round(max_y * y_ratio)
+        self._label.move(x, y)
 
     def _hide_sticker(self) -> None:
         self._label.hide()
@@ -99,6 +108,10 @@ class ShowStickerPlugin:
 
 def _load_settings() -> dict:
     return json.loads(config_path("plugin_config/show_sticker.json").read_text(encoding="utf-8"))
+
+
+def _ratio(value) -> float:
+    return min(1.0, max(0.0, float(value)))
 
 
 def _find_sticker(name: str) -> Path | None:
