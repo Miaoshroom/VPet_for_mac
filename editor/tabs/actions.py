@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import cast
 
 from PyQt6.QtWidgets import (
     QComboBox,
@@ -18,10 +20,14 @@ from PyQt6.QtWidgets import (
 )
 
 from core.app_paths import config_path
+from core.loader import load_animation_catalog
+from core.playback.catalog import ActionSpec, ActionType, DEFAULT_PET_STATE
 
 MODES_PATH = config_path("modes.json")
+SETTINGS_PATH = config_path("action_settings.json")
 BACKUP_DIR = Path(__file__).resolve().parent.parent.parent / ".vpet_editor_backups"
 ACTION_TYPES = ("loop", "phased", "single")
+ACTION_ID_RE = re.compile(r"^[a-z0-9_]+$")
 
 
 def _backup() -> None:
@@ -29,6 +35,75 @@ def _backup() -> None:
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     dst = BACKUP_DIR / f"modes-{ts}.json"
     shutil.copy2(MODES_PATH, dst)
+
+
+def _validate_actions(actions: list[dict]) -> None:
+    seen: set[str] = set()
+    for action in actions:
+        action_id = str(action["id"])
+        if ACTION_ID_RE.fullmatch(action_id) is None:
+            raise ValueError(
+                f"动作 ID 不合法: {action_id}。只允许小写英文、数字、下划线"
+            )
+        if action_id in seen:
+            raise ValueError(f"动作 ID 重复: {action_id}")
+        seen.add(action_id)
+        if str(action["type"]) not in ACTION_TYPES:
+            raise ValueError(f"动作类型不合法: {action_id} -> {action['type']}")
+    specs = tuple(
+        ActionSpec(
+            id=str(action["id"]),
+            title=str(action["title"]),
+            type=cast(ActionType, str(action["type"])),
+        )
+        for action in actions
+    )
+    catalog = load_animation_catalog(action_specs=specs)
+    _validate_action_settings_refs(specs, catalog)
+
+
+def _validate_action_settings_refs(
+    specs: tuple[ActionSpec, ...],
+    catalog,
+) -> None:
+    settings = json.loads(SETTINGS_PATH.read_text(encoding="utf-8"))
+    spec_map = {spec.id: spec for spec in specs}
+    modes = catalog.build_modes(specs, DEFAULT_PET_STATE)
+
+    default_mode = str(settings.get("default_mode", ""))
+    if default_mode not in modes:
+        raise ValueError(f"default_mode 指向的动作在当前状态不可播放: {default_mode}")
+
+    _require_setting_action(
+        spec_map,
+        str(settings.get("press_mode", "")),
+        "press_mode",
+        ("phased",),
+    )
+    for field, allowed in (
+        ("auto_idle_modes", ("loop", "phased")),
+        ("startup", ("single",)),
+        ("shutdown", ("single",)),
+        ("single_insert_modes", ("single",)),
+    ):
+        for action_id in settings.get(field, []):
+            _require_setting_action(spec_map, str(action_id), field, allowed)
+
+
+def _require_setting_action(
+    specs: dict[str, ActionSpec],
+    action_id: str,
+    field: str,
+    allowed_types: tuple[ActionType, ...],
+) -> None:
+    spec = specs.get(action_id)
+    if spec is None:
+        raise ValueError(f"{field} 引用了未注册动作: {action_id}")
+    if spec.type not in allowed_types:
+        allowed = "、".join(allowed_types)
+        raise ValueError(
+            f"{field} 动作类型不合法: {action_id} 是 {spec.type}，只允许 {allowed}"
+        )
 
 
 class ActionsTab(QWidget):
@@ -131,6 +206,10 @@ class ActionsTab(QWidget):
             action_id = (id_item.text() if id_item else "").strip()
             if not action_id:
                 raise ValueError(f"第 {row + 1} 行动作 ID 不能为空")
+            if ACTION_ID_RE.fullmatch(action_id) is None:
+                raise ValueError(
+                    f"动作 ID 不合法: {action_id}。只允许小写英文、数字、下划线"
+                )
             if action_id in seen:
                 raise ValueError(f"动作 ID 重复: {action_id}")
             seen.add(action_id)
@@ -143,6 +222,7 @@ class ActionsTab(QWidget):
 
     def save(self) -> None:
         actions = self._collect()
+        _validate_actions(actions)
         _backup()
         data = json.loads(MODES_PATH.read_text(encoding="utf-8"))
         data["actions"] = actions

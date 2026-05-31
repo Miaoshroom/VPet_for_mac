@@ -19,9 +19,10 @@ from PyQt6.QtWidgets import (
 )
 
 from core.app_paths import config_path
+from core.loader import _load_action_specs, load_animation_catalog
+from core.playback.catalog import DEFAULT_PET_STATE, ActionSpec
 
 SETTINGS_PATH = config_path("action_settings.json")
-MODES_PATH = config_path("modes.json")
 BACKUP_DIR = Path(__file__).resolve().parent.parent.parent / ".vpet_editor_backups"
 
 
@@ -32,14 +33,44 @@ def _backup() -> None:
     shutil.copy2(SETTINGS_PATH, dst)
 
 
-def _read_mode_ids() -> list[str]:
-    data = json.loads(MODES_PATH.read_text(encoding="utf-8"))
-    return [a["id"] for a in data.get("actions", [])]
+def _mode_ids_by_type(specs: tuple[ActionSpec, ...], *types: str) -> list[str]:
+    return [spec.id for spec in specs if spec.type in types]
 
 
-def _mode_ids_by_type(*types: str) -> list[str]:
-    data = json.loads(MODES_PATH.read_text(encoding="utf-8"))
-    return [a["id"] for a in data.get("actions", []) if a["type"] in types]
+def _playable_mode_ids_for_default(specs: tuple[ActionSpec, ...]) -> list[str]:
+    catalog = load_animation_catalog(action_specs=specs)
+    modes = catalog.build_modes(specs, DEFAULT_PET_STATE)
+    return [
+        spec.id
+        for spec in specs
+        if spec.type in ("phased", "loop") and spec.id in modes
+    ]
+
+
+def _replace_combo_items(
+    combo: QComboBox,
+    items: list[str],
+    current: str,
+    *,
+    invalid_note: str | None = None,
+) -> None:
+    combo.clear()
+    for item in items:
+        combo.addItem(item, item)
+    if current in items:
+        combo.setCurrentText(current)
+        return
+    if current and invalid_note is not None:
+        combo.addItem(f"{current}（{invalid_note}）", current)
+        combo.setCurrentIndex(combo.count() - 1)
+        model_item = combo.model().item(combo.count() - 1)
+        if model_item is not None:
+            model_item.setEnabled(False)
+
+
+def _combo_current_id(combo: QComboBox) -> str:
+    data = combo.currentData()
+    return str(data) if data is not None else combo.currentText()
 
 
 def _collect_checked(w: QListWidget) -> list[str]:
@@ -51,9 +82,15 @@ def _collect_checked(w: QListWidget) -> list[str]:
     return result
 
 
+def _require_interval_order(label: str, min_ms: int, max_ms: int) -> None:
+    if min_ms > max_ms:
+        raise ValueError(f"{label} 的最小间隔不能大于最大间隔")
+
+
 class BehaviorTab(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self._valid_default_modes: set[str] = set()
         layout = QVBoxLayout(self)
 
         # ---- 基础设置 ----
@@ -113,15 +150,20 @@ class BehaviorTab(QWidget):
 
     def _load(self) -> None:
         settings = json.loads(SETTINGS_PATH.read_text(encoding="utf-8"))
-        all_ids = _read_mode_ids()
-        phased_loop_ids = _mode_ids_by_type("phased", "loop")
-        phased_ids = _mode_ids_by_type("phased")
-        single_ids = _mode_ids_by_type("single")
+        specs = _load_action_specs()
+        phased_loop_ids = _mode_ids_by_type(specs, "phased", "loop")
+        phased_ids = _mode_ids_by_type(specs, "phased")
+        single_ids = _mode_ids_by_type(specs, "single")
+        default_ids = _playable_mode_ids_for_default(specs)
+        self._valid_default_modes = set(default_ids)
 
         # default_mode / press_mode
-        self._default_mode.clear()
-        self._default_mode.addItems(phased_loop_ids)
-        self._default_mode.setCurrentText(settings.get("default_mode", ""))
+        _replace_combo_items(
+            self._default_mode,
+            default_ids,
+            settings.get("default_mode", ""),
+            invalid_note=f"{DEFAULT_PET_STATE} 状态不可播放",
+        )
         self._press_mode.clear()
         self._press_mode.addItems(phased_ids)
         self._press_mode.setCurrentText(settings.get("press_mode", ""))
@@ -164,13 +206,25 @@ class BehaviorTab(QWidget):
 
     def save(self) -> None:
         data = json.loads(SETTINGS_PATH.read_text(encoding="utf-8"))
-        data["default_mode"] = self._default_mode.currentText()
+        default_mode = _combo_current_id(self._default_mode)
+        if default_mode not in self._valid_default_modes:
+            raise ValueError(
+                f"default_mode 指向的动作在 {DEFAULT_PET_STATE} 状态不可播放: "
+                f"{default_mode}"
+            )
+        data["default_mode"] = default_mode
         data["press_mode"] = self._press_mode.currentText()
-        data["idle_autoswitch_interval_min_ms"] = self._idle_min.value()
-        data["idle_autoswitch_interval_max_ms"] = self._idle_max.value()
+        idle_min = self._idle_min.value()
+        idle_max = self._idle_max.value()
+        single_min = self._single_min.value()
+        single_max = self._single_max.value()
+        _require_interval_order("空闲自动切换", idle_min, idle_max)
+        _require_interval_order("单次插入", single_min, single_max)
+        data["idle_autoswitch_interval_min_ms"] = idle_min
+        data["idle_autoswitch_interval_max_ms"] = idle_max
         data["auto_idle_modes"] = _collect_checked(self._auto_idle_modes)
-        data["single_insert_interval_min_ms"] = self._single_min.value()
-        data["single_insert_interval_max_ms"] = self._single_max.value()
+        data["single_insert_interval_min_ms"] = single_min
+        data["single_insert_interval_max_ms"] = single_max
         data["single_insert_modes"] = _collect_checked(self._single_modes)
         data["startup"] = _collect_checked(self._startup)
         data["shutdown"] = _collect_checked(self._shutdown)

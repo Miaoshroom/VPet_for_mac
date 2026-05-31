@@ -33,6 +33,8 @@ from core.app_paths import assets_dir
 ANIM_ROOT = assets_dir() / "animations"
 ROLE = Qt.ItemDataRole.UserRole
 FRAME_FILE_RE = re.compile(r"^.*_(\d+)_(\d+)\.png$")
+ACTION_ID_RE = re.compile(r"^[a-z0-9_]+$")
+FILENAME_PREFIX_RE = re.compile(r"^[A-Za-z0-9_\-\u4e00-\u9fff]*$")
 
 NODE_ACTION = 0
 NODE_STATE = 1
@@ -43,6 +45,34 @@ NODE_LAYER = 4
 STATES = ("happy", "normal", "poor_condition", "ill", "any")
 PHASES = ("loop", "start", "end", "single")
 LAYERS = ("main", "back", "front")
+
+
+def _validate_action_id(name: str) -> str:
+    name = name.strip()
+    if ACTION_ID_RE.fullmatch(name) is None:
+        raise ValueError("动作 ID 只允许小写英文、数字、下划线")
+    return name
+
+
+def _validate_filename_prefix(prefix: str) -> str:
+    if FILENAME_PREFIX_RE.fullmatch(prefix) is None:
+        raise ValueError("文件名前缀只允许中英文、数字、下划线和短横线")
+    return prefix
+
+
+def _is_within(path: Path, root: Path) -> bool:
+    try:
+        path.resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return True
+
+
+def _checked_child_path(parent: Path, name: str) -> Path:
+    child = parent / name
+    if not _is_within(child, parent):
+        raise ValueError(f"路径不能越过目标目录: {name}")
+    return child
 
 
 class AssetPrepTab(QWidget):
@@ -284,7 +314,7 @@ class AssetPrepTab(QWidget):
         self._update_button_states(data)
         node_type = data["node"]
         if node_type == NODE_LAYER:
-            self._load_layer(Path(data["path"]))
+            self._load_layer(Path(data["path"]), pending=bool(data.get("pending", False)))
         else:
             self._frame_table.setRowCount(0)
             self._btn_output.setEnabled(False)
@@ -314,8 +344,12 @@ class AssetPrepTab(QWidget):
         name, ok = QInputDialog.getText(self, "新建动作", "输入动作 ID（小写英文/数字/下划线）:")
         if not ok or not name.strip():
             return
-        name = name.strip()
-        path = ANIM_ROOT / name
+        try:
+            name = _validate_action_id(name)
+            path = _checked_child_path(ANIM_ROOT, name)
+        except ValueError as exc:
+            QMessageBox.warning(self, "格式错误", str(exc))
+            return
         if path.exists():
             QMessageBox.warning(self, "已存在", f"动作 \"{name}\" 已存在")
             return
@@ -329,7 +363,7 @@ class AssetPrepTab(QWidget):
         state, ok = QInputDialog.getItem(self, "新建状态", "选择状态:", STATES, 1, False)
         if not ok:
             return
-        path = Path(data["path"]) / state
+        path = _checked_child_path(Path(data["path"]), state)
         if path.exists():
             QMessageBox.warning(self, "已存在", f"状态 \"{state}\" 已存在")
             return
@@ -343,7 +377,7 @@ class AssetPrepTab(QWidget):
         phase, ok = QInputDialog.getItem(self, "新建阶段", "选择阶段:", PHASES, 0, False)
         if not ok:
             return
-        path = Path(data["path"]) / phase
+        path = _checked_child_path(Path(data["path"]), phase)
         if path.exists():
             QMessageBox.warning(self, "已存在", f"阶段 \"{phase}\" 已存在")
             return
@@ -361,7 +395,7 @@ class AssetPrepTab(QWidget):
         if not re.fullmatch(r"\d{2}", variant):
             QMessageBox.warning(self, "格式错误", "变体必须是两位数字，如 01、02")
             return
-        path = Path(data["path"]) / variant
+        path = _checked_child_path(Path(data["path"]), variant)
         if path.exists():
             QMessageBox.warning(self, "已存在", f"变体 \"{variant}\" 已存在")
             return
@@ -375,12 +409,30 @@ class AssetPrepTab(QWidget):
         layer, ok = QInputDialog.getItem(self, "新建图层", "选择图层:", LAYERS, 0, False)
         if not ok:
             return
-        path = Path(data["path"]) / layer
+        path = _checked_child_path(Path(data["path"]), layer)
         if path.exists():
             QMessageBox.warning(self, "已存在", f"图层 \"{layer}\" 已存在")
             return
-        path.mkdir(parents=True)
-        self._refresh_tree()
+        variant_item = self._tree.selectedItems()[0]
+        for i in range(variant_item.childCount()):
+            if variant_item.child(i).text(0) == layer:
+                QMessageBox.warning(self, "已存在", f"图层 \"{layer}\" 已存在")
+                return
+        layer_item = QTreeWidgetItem(variant_item)
+        layer_item.setText(0, layer)
+        layer_item.setText(1, "待输出")
+        layer_item.setData(0, ROLE, {
+            "node": NODE_LAYER,
+            "action": data["action"],
+            "state": data["state"],
+            "phase": data["phase"],
+            "variant": data["variant"],
+            "layer": layer,
+            "path": str(path),
+            "pending": True,
+        })
+        variant_item.setExpanded(True)
+        self._tree.setCurrentItem(layer_item)
 
     def _delete_selected_node(self) -> None:
         data = self._selected_data()
@@ -388,6 +440,14 @@ class AssetPrepTab(QWidget):
             return
         target = Path(data["path"])
         node_name = self._item_path(self._tree.selectedItems()[0])
+        if not target.exists():
+            self._frame_table.setRowCount(0)
+            self._btn_output.setEnabled(False)
+            self._path_label.setText("请在左侧选择或创建图层节点")
+            parent = self._tree.selectedItems()[0].parent()
+            if parent is not None:
+                parent.removeChild(self._tree.selectedItems()[0])
+            return
         reply = QMessageBox.question(
             self, "确认删除",
             f"确定要删除 \"{node_name}\" 及其所有内容吗？\n\n{target}",
@@ -409,10 +469,10 @@ class AssetPrepTab(QWidget):
 
     # ===== 帧列表加载 =====
 
-    def _load_layer(self, layer_path: Path) -> None:
+    def _load_layer(self, layer_path: Path, *, pending: bool = False) -> None:
         self._frame_table.setRowCount(0)
 
-        existing = self._scan_existing(layer_path)
+        existing = [] if pending or not layer_path.exists() else self._scan_existing(layer_path)
         max_idx = max((idx for idx, _, _ in existing), default=-1)
         self._start_index.blockSignals(True)
         self._start_index.setValue(max_idx + 1)
@@ -427,7 +487,8 @@ class AssetPrepTab(QWidget):
             self._add_frame_row(row, str(fpath), delay, existing=True)
 
         rel = layer_path.relative_to(ANIM_ROOT)
-        self._path_label.setText(f"assets/animations/{rel}")
+        suffix = "（待输出，拖入 PNG 后才会创建目录）" if pending else ""
+        self._path_label.setText(f"assets/animations/{rel}{suffix}")
         self._btn_output.setEnabled(True)
 
     @staticmethod
@@ -439,7 +500,7 @@ class AssetPrepTab(QWidget):
             m = FRAME_FILE_RE.fullmatch(f.name)
             if m:
                 result.append((int(m.group(1)), int(m.group(2)), f))
-        return result
+        return sorted(result, key=lambda item: (item[0], item[2].name))
 
     def _add_frame_row(self, row: int, src_key: str, delay: int, *, existing: bool = False) -> None:
         """统一添加一行帧。existing=True 表示已有磁盘文件，灰色底 + 标记。"""
@@ -449,8 +510,12 @@ class AssetPrepTab(QWidget):
         src_name = Path(src_key).name if existing else Path(src_key).name
         src_mark = f" (已有)" if existing else ""
         self._frame_table.setItem(row, 1, QTableWidgetItem(src_name + src_mark))
-        self._frame_table.setItem(row, 2, QTableWidgetItem(""))
+        self._frame_table.setItem(row, 2, QTableWidgetItem(src_name if existing else ""))
         self._frame_table.setItem(row, 3, QTableWidgetItem(str(delay)))
+        if existing:
+            m = FRAME_FILE_RE.fullmatch(src_name)
+            if m:
+                seq_item.setText(m.group(1).zfill(3))
         if existing:
             for col in range(5):
                 item = self._frame_table.item(row, col)
@@ -529,8 +594,12 @@ class AssetPrepTab(QWidget):
     def _update_preview(self) -> None:
         prefix = self._prefix.text()
         start = self._start_index.value()
+        new_count = 0
         for row in range(self._frame_table.rowCount()):
-            seq = start + row
+            if self._is_existing_row(row):
+                continue
+            seq = start + new_count
+            new_count += 1
             delay_item = self._frame_table.item(row, 3)
             try:
                 delay = int(delay_item.text()) if delay_item and delay_item.text() else self._default_delay.value()
@@ -589,6 +658,14 @@ class AssetPrepTab(QWidget):
         if data is None or data["node"] != NODE_LAYER:
             return
         target_dir = Path(data["path"])
+        try:
+            _validate_filename_prefix(self._prefix.text())
+        except ValueError as exc:
+            QMessageBox.warning(self, "格式错误", str(exc))
+            return
+        if not _is_within(target_dir, ANIM_ROOT):
+            QMessageBox.warning(self, "路径错误", f"目标目录不在素材目录内: {target_dir}")
+            return
 
         self._update_preview()
         has_work = False
@@ -597,34 +674,32 @@ class AssetPrepTab(QWidget):
             if src is None:
                 continue
             dst_name = self._frame_table.item(row, 2).text()
-            dst = target_dir / dst_name
+            try:
+                dst = _checked_child_path(target_dir, dst_name)
+            except ValueError as exc:
+                QMessageBox.warning(self, "路径错误", str(exc))
+                return
 
             if self._is_existing_row(row):
+                continue
+            target_dir.mkdir(parents=True, exist_ok=True)
+            if dst.exists():
                 if src.resolve() == dst.resolve():
                     continue
-                if src.is_file() and src.parent == target_dir:
-                    src.rename(dst)
-                else:
-                    if dst.exists():
-                        action = _conflict_dialog(self, dst_name)
-                        if action == "skip":
-                            continue
-                        elif action == "rename":
-                            dst = _find_available_name(target_dir, dst_name)
-                    shutil.copy2(src, dst)
-                has_work = True
-            else:
-                if dst.exists():
-                    if src.resolve() == dst.resolve():
-                        continue
-                    action = _conflict_dialog(self, dst_name)
-                    if action == "skip":
-                        continue
-                    elif action == "rename":
-                        dst = _find_available_name(target_dir, dst_name)
-                shutil.copy2(src, dst)
-                has_work = True
+                action = _conflict_dialog(self, dst_name)
+                if action == "skip":
+                    continue
+                elif action == "rename":
+                    dst = _find_available_name(target_dir, dst_name)
+                    if not _is_within(dst, target_dir):
+                        QMessageBox.warning(self, "路径错误", f"目标文件不在图层目录内: {dst}")
+                        return
+            shutil.copy2(src, dst)
+            has_work = True
 
+        if not target_dir.exists():
+            QMessageBox.warning(self, "没有可输出的帧", "请先拖入至少一张 PNG，再输出到目标目录。")
+            return
         self._refresh_tree()
         self._load_layer(target_dir)
         if has_work:
