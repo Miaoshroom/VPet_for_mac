@@ -24,6 +24,7 @@ class EditorWindow(QMainWindow):
         self._tabs.addTab(AssetsTab(self), "动作素材")
         self._tabs.addTab(ActionsTab(self), "动作注册")
         self._tabs.addTab(BehaviorTab(self), "自动行为")
+        self._tabs.addTab(PluginsTab(self), "插件开关")
 
         save_action = QAction("保存", self)
         save_action.setShortcut("Ctrl+S")

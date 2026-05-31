@@ -202,12 +202,18 @@ class AssetsTab(QWidget):
         self._play_clip(clip)
 
     def _action_loop_clip(self, action_id: str, state: str):
-        """取一个动作的 loop（或 single）clip，兼容 any 兜底状态"""
+        """取一个动作的可预览 clip，兼容 single 和 any 兜底状态"""
+        action_type = self._catalog.action_type(action_id)
         if state != "any":
-            return self._catalog.mode_for(action_id, state).loop
+            if action_type == "single":
+                return self._catalog.single_for(action_id, state)
+            return self._catalog.mode_for(action_id, state, action_type=action_type).loop
         # any 不走公开 API（mode_for 会 reject），直接拿 _state_data
         _, state_data = self._catalog._state_data(action_id, state)
-        phase = "loop" if "loop" in state_data else next(iter(state_data))
+        if action_type == "single" and "single" in state_data:
+            phase = "single"
+        else:
+            phase = "loop" if "loop" in state_data else next(iter(state_data))
         variants = self._catalog._playable_variants(state_data, phase)
         if not variants:
             raise KeyError(f"any 状态下 {phase} 无可播放变体")

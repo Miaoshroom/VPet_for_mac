@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent, QFont
+from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent, QFont, QPixmap
 from PyQt6.QtWidgets import (
     QAbstractItemView,
     QGroupBox,
@@ -32,6 +32,7 @@ from core.app_paths import assets_dir
 
 ANIM_ROOT = assets_dir() / "animations"
 ROLE = Qt.ItemDataRole.UserRole
+ROLE_EXISTING = Qt.ItemDataRole.UserRole + 1
 FRAME_FILE_RE = re.compile(r"^.*_(\d+)_(\d+)\.png$")
 ACTION_ID_RE = re.compile(r"^[a-z0-9_]+$")
 FILENAME_PREFIX_RE = re.compile(r"^[A-Za-z0-9_\-\u4e00-\u9fff]*$")
@@ -159,6 +160,19 @@ class AssetPrepTab(QWidget):
         cfg.addStretch()
         right_layout.addLayout(cfg)
 
+        content_splitter = QSplitter(Qt.Orientation.Vertical, self)
+
+        # 选中帧预览
+        preview_group = QGroupBox("选中图片预览", self)
+        preview_layout = QVBoxLayout(preview_group)
+        self._preview_label = QLabel("未选择图片", self)
+        self._preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._preview_label.setMinimumHeight(180)
+        self._preview_label.setStyleSheet("background: #1a1a1a; border-radius: 4px; color: #888;")
+        preview_layout.addWidget(self._preview_label)
+        content_splitter.addWidget(preview_group)
+        self._preview_pixmap: QPixmap | None = None
+
         # 帧列表
         frame_group = QGroupBox("帧序列", self)
         frame_layout = QVBoxLayout(frame_group)
@@ -175,6 +189,7 @@ class AssetPrepTab(QWidget):
         self._frame_table.setColumnWidth(4, 40)
         self._frame_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._frame_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self._frame_table.itemSelectionChanged.connect(self._update_selected_preview)
         frame_layout.addWidget(self._frame_table)
 
         btn_row = QHBoxLayout()
@@ -189,7 +204,9 @@ class AssetPrepTab(QWidget):
         btn_row.addWidget(btn_del)
         btn_row.addStretch()
         frame_layout.addLayout(btn_row)
-        right_layout.addWidget(frame_group)
+        content_splitter.addWidget(frame_group)
+        content_splitter.setSizes([220, 360])
+        right_layout.addWidget(content_splitter, 1)
 
         # 输出
         self._btn_output = QPushButton("输出到目标目录", self)
@@ -197,7 +214,6 @@ class AssetPrepTab(QWidget):
         self._btn_output.clicked.connect(self._output)
         right_layout.addWidget(self._btn_output)
 
-        right_layout.addStretch()
         splitter.addWidget(right)
         splitter.setSizes([400, 600])
 
@@ -317,6 +333,7 @@ class AssetPrepTab(QWidget):
             self._load_layer(Path(data["path"]), pending=bool(data.get("pending", False)))
         else:
             self._frame_table.setRowCount(0)
+            self._clear_selected_preview()
             self._btn_output.setEnabled(False)
             path_parts = []
             item = items[0]
@@ -442,6 +459,7 @@ class AssetPrepTab(QWidget):
         node_name = self._item_path(self._tree.selectedItems()[0])
         if not target.exists():
             self._frame_table.setRowCount(0)
+            self._clear_selected_preview()
             self._btn_output.setEnabled(False)
             self._path_label.setText("请在左侧选择或创建图层节点")
             parent = self._tree.selectedItems()[0].parent()
@@ -457,6 +475,7 @@ class AssetPrepTab(QWidget):
             return
         shutil.rmtree(target)
         self._frame_table.setRowCount(0)
+        self._clear_selected_preview()
         self._btn_output.setEnabled(False)
         self._path_label.setText("请在左侧选择或创建图层节点")
         self._refresh_tree()
@@ -471,6 +490,7 @@ class AssetPrepTab(QWidget):
 
     def _load_layer(self, layer_path: Path, *, pending: bool = False) -> None:
         self._frame_table.setRowCount(0)
+        self._clear_selected_preview()
 
         existing = [] if pending or not layer_path.exists() else self._scan_existing(layer_path)
         max_idx = max((idx for idx, _, _ in existing), default=-1)
@@ -490,6 +510,8 @@ class AssetPrepTab(QWidget):
         suffix = "（待输出，拖入 PNG 后才会创建目录）" if pending else ""
         self._path_label.setText(f"assets/animations/{rel}{suffix}")
         self._btn_output.setEnabled(True)
+        if self._frame_table.rowCount() > 0:
+            self._frame_table.selectRow(0)
 
     @staticmethod
     def _scan_existing(dir_path: Path) -> list[tuple[int, int, Path]]:
@@ -506,6 +528,7 @@ class AssetPrepTab(QWidget):
         """统一添加一行帧。existing=True 表示已有磁盘文件，灰色底 + 标记。"""
         seq_item = QTableWidgetItem("")
         seq_item.setData(ROLE, src_key)
+        seq_item.setData(ROLE_EXISTING, existing)
         self._frame_table.setItem(row, 0, seq_item)
         src_name = Path(src_key).name if existing else Path(src_key).name
         src_mark = f" (已有)" if existing else ""
@@ -528,14 +551,53 @@ class AssetPrepTab(QWidget):
         self._update_preview()
 
     def _is_existing_row(self, row: int) -> bool:
-        """通过灰色背景判断是否是已有磁盘帧"""
+        """判断是否是已有磁盘帧"""
         item = self._frame_table.item(row, 0)
-        return item is not None and item.background().color() == Qt.GlobalColor.darkGray
+        return item is not None and bool(item.data(ROLE_EXISTING))
 
     def _src_for_row(self, row: int) -> Path | None:
         item = self._frame_table.item(row, 0)
         data = item.data(ROLE) if item is not None else None
         return Path(data) if data else None
+
+    def _selected_frame_row(self) -> int | None:
+        rows = sorted({idx.row() for idx in self._frame_table.selectedIndexes()})
+        return rows[0] if rows else None
+
+    def _update_selected_preview(self) -> None:
+        row = self._selected_frame_row()
+        if row is None:
+            self._clear_selected_preview()
+            return
+        src = self._src_for_row(row)
+        if src is None or not src.is_file():
+            self._clear_selected_preview("图片文件不存在")
+            return
+        pixmap = QPixmap(str(src))
+        if pixmap.isNull():
+            self._clear_selected_preview("无法加载图片")
+            return
+        self._set_preview_pixmap(pixmap)
+
+    def _set_preview_pixmap(self, pixmap: QPixmap) -> None:
+        self._preview_pixmap = pixmap
+        scaled = pixmap.scaled(
+            self._preview_label.size(),
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        self._preview_label.setText("")
+        self._preview_label.setPixmap(scaled)
+
+    def _clear_selected_preview(self, text: str = "未选择图片") -> None:
+        self._preview_pixmap = None
+        self._preview_label.clear()
+        self._preview_label.setText(text)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        if getattr(self, "_preview_pixmap", None) is not None:
+            self._set_preview_pixmap(self._preview_pixmap)
 
     def _row_is_new(self, row: int) -> bool:
         return not self._is_existing_row(row)
@@ -544,22 +606,42 @@ class AssetPrepTab(QWidget):
         btn = self.sender()
         for row in range(self._frame_table.rowCount()):
             if self._frame_table.cellWidget(row, 4) is btn:
-                self._delete_row(row)
+                self._delete_rows([row])
                 return
 
-    def _delete_row(self, row: int) -> None:
-        """删除一行帧。已有帧同时删除磁盘文件。"""
-        if self._is_existing_row(row):
-            src = self._src_for_row(row)
-            if src is not None and src.is_file():
-                src.unlink()
-        self._frame_table.removeRow(row)
+    def _delete_rows(self, rows: list[int]) -> None:
+        """删除帧行；已有磁盘帧至少保留一帧，整层删除请走左侧目录树。"""
+        if not rows:
+            return
+        rows_to_delete = sorted(set(rows), reverse=True)
+        existing_rows = [row for row in range(self._frame_table.rowCount()) if self._is_existing_row(row)]
+        deleting_existing = [row for row in rows_to_delete if self._is_existing_row(row)]
+        if deleting_existing and len(deleting_existing) >= len(existing_rows):
+            QMessageBox.warning(
+                self,
+                "无法删除最后一帧",
+                "图层目录至少需要保留一张 PNG。若要删除整个图层，请在左侧目录树选中图层后删除。",
+            )
+            return
+
+        touched_layers: set[Path] = set()
+        for row in rows_to_delete:
+            if self._is_existing_row(row):
+                src = self._src_for_row(row)
+                if src is not None and src.is_file() and _is_within(src, ANIM_ROOT):
+                    touched_layers.add(src.parent)
+                    src.unlink()
+            self._frame_table.removeRow(row)
         self._update_preview()
+        if touched_layers:
+            self._refresh_tree()
+        if self._frame_table.rowCount() > 0:
+            self._frame_table.selectRow(min(rows_to_delete[-1], self._frame_table.rowCount() - 1))
+        self._update_selected_preview()
 
     def _delete_selected(self) -> None:
         rows = sorted({idx.row() for idx in self._frame_table.selectedIndexes()}, reverse=True)
-        for row in rows:
-            self._delete_row(row)
+        self._delete_rows(rows)
 
     def _move_up(self) -> None:
         rows = sorted({idx.row() for idx in self._frame_table.selectedIndexes()})
@@ -646,6 +728,7 @@ class AssetPrepTab(QWidget):
             row = self._frame_table.rowCount()
             self._frame_table.insertRow(row)
             self._add_frame_row(row, str(p), delay, existing=False)
+            self._frame_table.selectRow(row)
         self._update_preview()
 
     # ===== 输出 =====
