@@ -11,13 +11,17 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 
 from editor.window import EditorWindow
 
+APP_ICON = _ROOT / "resources" / "app_icon.png"
+
 
 def main() -> int:
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(str(APP_ICON)))
     win = EditorWindow()
     win.show()
     return app.exec()

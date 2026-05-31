@@ -1,7 +1,9 @@
 """编辑器壳：QTabWidget 容器 + 保存，不管各 tab 内部逻辑"""
 from __future__ import annotations
 
-from PyQt6.QtGui import QAction
+from pathlib import Path
+
+from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QMainWindow, QTabWidget, QMessageBox
 
 from editor.tabs.actions import ActionsTab
@@ -16,6 +18,7 @@ class EditorWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("桌宠编辑器")
+        self.setWindowIcon(QIcon(str(_app_icon_path())))
         self.resize(960, 680)
 
         self._tabs = QTabWidget(self)
@@ -42,3 +45,7 @@ class EditorWindow(QMainWindow):
             QMessageBox.information(self, "保存", "保存成功。请重启桌宠以生效。")
         except Exception as exc:
             QMessageBox.critical(self, "保存失败", str(exc))
+
+
+def _app_icon_path() -> Path:
+    return Path(__file__).resolve().parent.parent / "resources" / "app_icon.png"

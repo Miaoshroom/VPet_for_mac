@@ -1,12 +1,12 @@
 """桌宠主入口：初始化动画、窗口，元神启动"""
 from __future__ import annotations
 
-import subprocess
 import sys
 sys.dont_write_bytecode = True
 
 from pathlib import Path
 
+from PyQt6.QtCore import QProcess
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
@@ -76,6 +76,12 @@ def main() -> int:
             if auto_move is not None:
                 auto_move.set_enabled(enabled)
 
+        def open_editor() -> None:
+            QProcess.startDetached(
+                sys.executable,
+                [str(ROOT / "editor" / "main.py")],
+            )
+
         win = PetWindow(
             director,
             initial_pixmap,
@@ -86,9 +92,7 @@ def main() -> int:
             auto_move_enabled=is_auto_move_enabled,
             on_toggle_auto_move=set_auto_move_enabled,
             action_blocked=plugin_runtime.action_active,
-            on_open_editor=lambda: subprocess.Popen(
-                [sys.executable, str(ROOT / "editor" / "main.py")],
-            ),
+            on_open_editor=open_editor,
         )
         win.show()
         badge = ClickThroughBadge(
