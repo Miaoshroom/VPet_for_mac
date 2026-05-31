@@ -21,8 +21,9 @@ def show_pet_menu(
     plugin_handlers: dict[str, tuple[bool, Callable[[bool], None]]],
     plugin_menu_builders: list[Callable[[QMenu], None]],
     current_mode_title: str | None,
-    on_set_start_pos: Callable[[], None],  # 设置启动位置回调
     on_quit: Callable[[], None],  # 退出程序
+    on_set_start_pos: Callable[[], None],  # 设置启动位置回调
+    on_open_editor: Callable[[], None] | None = None,  # 打开编辑器
 ) -> None:
     menu = QMenu(parent)
 
@@ -54,6 +55,8 @@ def show_pet_menu(
         action.setChecked(title == current_mode_title)
         action_map[action] = handler
     set_start_pos = menu.addAction("设置启动位置")
+    if on_open_editor is not None:
+        editor_action = menu.addAction("编辑器")
     menu.addSeparator()
     quit_action = menu.addAction("退出")
 
@@ -73,5 +76,7 @@ def show_pet_menu(
         action_map[chosen]()
     elif chosen is set_start_pos:
         on_set_start_pos()
+    elif on_open_editor is not None and chosen is editor_action:
+        on_open_editor()
     elif chosen is quit_action:
         on_quit()

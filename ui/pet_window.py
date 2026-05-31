@@ -62,6 +62,7 @@ class PetWindow(QMainWindow):
         auto_move_enabled: Callable[[], bool] | None = None,
         on_toggle_auto_move: Callable[[bool], None] | None = None,
         action_blocked: Callable[[], bool] | None = None,
+        on_open_editor: Callable[[], None] | None = None,
         *,
         max_side: int | None = None,
     ) -> None:
@@ -88,6 +89,7 @@ class PetWindow(QMainWindow):
         self._single_debug_snapshot: Callable[[], PlaybackDebugSnapshot | None] = lambda: None
         self._single_replay_current: Callable[[], bool] = lambda: False
         self._interrupt_auto_move = lambda: None
+        self._on_open_editor = on_open_editor
         self._dev_mode = _dev_mode_from_json()
         if max_side is None:
             max_side = _max_side_from_json()
@@ -494,8 +496,9 @@ class PetWindow(QMainWindow):
             plugin_handlers=self._plugin_handlers(),
             plugin_menu_builders=self._plugin_menu_builders(),
             current_mode_title=self._mode_titles.get(self._director.current_mode_name()),
-            on_set_start_pos=self._save_start_position,
             on_quit=self._on_quit,
+            on_set_start_pos=self._save_start_position,
+            on_open_editor=self._on_open_editor,
         )
 
 
