@@ -8,6 +8,7 @@ from editor.tabs.actions import ActionsTab
 from editor.tabs.asset_prep import AssetPrepTab
 from editor.tabs.assets import AssetsTab
 from editor.tabs.behavior import BehaviorTab
+from editor.tabs.interactions import InteractionsTab
 from editor.tabs.plugins import PluginsTab
 
 
@@ -23,6 +24,7 @@ class EditorWindow(QMainWindow):
         self._tabs.addTab(AssetPrepTab(self), "素材配制")
         self._tabs.addTab(AssetsTab(self), "动作素材")
         self._tabs.addTab(ActionsTab(self), "动作注册")
+        self._tabs.addTab(InteractionsTab(self), "互动区域")
         self._tabs.addTab(BehaviorTab(self), "自动行为")
         self._tabs.addTab(PluginsTab(self), "插件开关")
 
