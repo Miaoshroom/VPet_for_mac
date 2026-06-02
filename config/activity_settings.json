@@ -1,0 +1,312 @@
+{
+  "activities": [
+    {
+      "id": "work_cleaning",
+      "name": "擦擦屏幕x",
+      "category": "工作",
+      "duration_seconds": 900,
+      "description": "接一份短委托，消耗体力和心情换取金币。",
+      "requirements": {
+        "energy": 30,
+        "mood": 20,
+        "health": 25
+      },
+      "animation_id": "work_clean",
+      "animation_candidates": [
+        "work_clean"
+      ],
+      "costs": {
+        "energy": 16,
+        "mood": 8
+      },
+      "rewards": {
+        "money": 30
+      }
+    },
+    {
+      "id": "work_live",
+      "name": "直播",
+      "category": "工作",
+      "duration_seconds": 900,
+      "description": "认真开播营业，消耗体力和心情换取金币与经验。",
+      "requirements": {
+        "energy": 32,
+        "mood": 24,
+        "health": 25
+      },
+      "animation_id": "work_live",
+      "animation_candidates": [
+        "work_live"
+      ],
+      "costs": {
+        "energy": 18,
+        "mood": 10
+      },
+      "rewards": {
+        "money": 34,
+        "exp": 10
+      }
+    },
+    {
+      "id": "work_penspining",
+      "name": "摸鱼转笔x",
+      "category": "工作",
+      "duration_seconds": 600,
+      "description": "假装思考方案，轻松摸鱼换一点心情和经验。",
+      "requirements": {
+        "energy": 18,
+        "mood": 15,
+        "health": 20
+      },
+      "animation_id": "work_penspining",
+      "animation_candidates": [
+        "work_penspining"
+      ],
+      "costs": {
+        "energy": 8
+      },
+      "rewards": {
+        "mood": 8,
+        "exp": 8
+      }
+    },
+    {
+      "id": "study_notes",
+      "name": "看小红书",
+      "category": "学习",
+      "duration_seconds": 900,
+      "description": "安静整理当天笔记，消耗少量状态换取经验。",
+      "requirements": {
+        "energy": 28,
+        "mood": 18,
+        "health": 25
+      },
+      "animation_id": "study",
+      "animation_candidates": [
+        "study",
+        "study_two",
+        "study_paint"
+      ],
+      "costs": {
+        "energy": 14,
+        "mood": 6
+      },
+      "rewards": {
+        "exp": 26
+      }
+    },
+    {
+      "id": "study_calligraphy",
+      "name": "写书法",
+      "category": "学习",
+      "duration_seconds": 900,
+      "description": "静心临帖练字，消耗体力换取经验和一点心情。",
+      "requirements": {
+        "energy": 24,
+        "mood": 16,
+        "health": 25
+      },
+      "animation_id": "calligraphy",
+      "animation_candidates": [
+        "calligraphy"
+      ],
+      "costs": {
+        "energy": 12,
+        "mood": 4
+      },
+      "rewards": {
+        "exp": 24,
+        "mood": 4
+      }
+    },
+    {
+      "id": "study_death_note",
+      "name": "写死亡笔记x",
+      "category": "学习",
+      "duration_seconds": 900,
+      "description": "认真写下神秘笔记，消耗心情换取经验。",
+      "requirements": {
+        "energy": 24,
+        "mood": 22,
+        "health": 25
+      },
+      "animation_id": "remove_object",
+      "animation_candidates": [
+        "remove_object"
+      ],
+      "costs": {
+        "energy": 10,
+        "mood": 12
+      },
+      "rewards": {
+        "exp": 28
+      }
+    },
+    {
+      "id": "study_reading",
+      "name": "看书",
+      "category": "学习",
+      "duration_seconds": 900,
+      "description": "安静看书积累知识，稳定获得经验。",
+      "requirements": {
+        "energy": 24,
+        "mood": 16,
+        "health": 25
+      },
+      "animation_id": "study",
+      "animation_candidates": [
+        "study",
+        "study_two"
+      ],
+      "costs": {
+        "energy": 12,
+        "mood": 5
+      },
+      "rewards": {
+        "exp": 25
+      }
+    },
+    {
+      "id": "study_painting",
+      "name": "学画画",
+      "category": "学习",
+      "duration_seconds": 900,
+      "description": "练习构图和配色，消耗体力换取经验与心情。",
+      "requirements": {
+        "energy": 26,
+        "mood": 18,
+        "health": 25
+      },
+      "animation_id": "study_paint",
+      "animation_candidates": [
+        "study_paint"
+      ],
+      "costs": {
+        "energy": 13,
+        "mood": 5
+      },
+      "rewards": {
+        "exp": 24,
+        "mood": 5
+      }
+    },
+    {
+      "id": "play_rope",
+      "name": "跳绳",
+      "category": "运动",
+      "duration_seconds": 600,
+      "description": "用跳绳活动身体，消耗体力换取心情。",
+      "requirements": {
+        "energy": 18,
+        "health": 20
+      },
+      "animation_id": "rope_skipping",
+      "costs": {
+        "energy": 10
+      },
+      "rewards": {
+        "mood": 18
+      }
+    },
+    {
+      "id": "play_tennis",
+      "name": "打网球",
+      "category": "运动",
+      "duration_seconds": 900,
+      "description": "打一会儿网球活动筋骨，消耗体力换取心情和健康。",
+      "requirements": {
+        "energy": 28,
+        "health": 25
+      },
+      "animation_id": "tennis",
+      "animation_candidates": [
+        "tennis"
+      ],
+      "costs": {
+        "energy": 16
+      },
+      "rewards": {
+        "mood": 16,
+        "health": 4
+      }
+    },
+    {
+      "id": "rest_nap",
+      "name": "眠眠",
+      "category": "休息",
+      "duration_seconds": 600,
+      "description": "闭眼休息一会儿，完成后小幅恢复体力和心情。",
+      "requirements": {
+        "health": 10
+      },
+      "animation_id": "sleep",
+      "animation_candidates": [
+        "sleep",
+        "yawning",
+        "boring"
+      ],
+      "costs": {},
+      "rewards": {
+        "energy": 16,
+        "mood": 8
+      }
+    },
+    {
+      "id": "rest_play_game",
+      "name": "打游戏",
+      "category": "休息",
+      "duration_seconds": 600,
+      "description": "轻松打会儿游戏，消耗少量体力换取心情。",
+      "requirements": {
+        "energy": 16,
+        "mood": 10,
+        "health": 15
+      },
+      "animation_id": "play_one",
+      "animation_candidates": [
+        "play_one"
+      ],
+      "costs": {
+        "energy": 8
+      },
+      "rewards": {
+        "mood": 16
+      }
+    },
+    {
+      "id": "rest_sprawl",
+      "name": "瘫",
+      "category": "休息",
+      "duration_seconds": 600,
+      "description": "什么也不做地瘫一会儿，恢复体力和心情。",
+      "requirements": {
+        "health": 10
+      },
+      "animation_id": "state_two",
+      "animation_candidates": [
+        "state_two"
+      ],
+      "costs": {},
+      "rewards": {
+        "energy": 12,
+        "mood": 10
+      }
+    },
+    {
+      "id": "daily_head_pat",
+      "name": "摸摸头",
+      "category": "日常互动",
+      "duration_seconds": 120,
+      "description": "短暂互动，增加一点心情和亲密度。",
+      "requirements": {
+        "health": 10
+      },
+      "animation_id": "touch_head",
+      "costs": {},
+      "rewards": {
+        "mood": 5,
+        "affection": 1
+      }
+    }
+  ]
+}

@@ -92,6 +92,18 @@ class TomatoClockPlugin:
     def shutdown(self) -> None:
         self._shutdown_now()
 
+    def is_running(self) -> bool:
+        return self._running
+
+    def is_paused(self) -> bool:
+        return self._paused
+
+    def set_running(self, enabled: bool) -> None:
+        if enabled:
+            self._start()
+        else:
+            self._stop()
+
     def pause_for_interaction(self) -> None:
         if not self._running:
             return

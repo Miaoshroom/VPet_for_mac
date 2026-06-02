@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from PyQt6.QtCore import QObject
+from PyQt6.QtCore import QObject, pyqtSignal
 
 from core.animation import Clip, FlipbookPlayer, PetAnimationDirector
 from core.playback.catalog import AnimationCatalog
@@ -21,6 +21,8 @@ class _SingleRun:
 
 
 class SinglePlayer(QObject):
+    finished = pyqtSignal()
+
     def __init__(
         self,
         parent: QObject,
@@ -130,6 +132,7 @@ class SinglePlayer(QObject):
                 self._director.start_default_mode()
         if current.on_finished is not None:
             current.on_finished()
+        self.finished.emit()
 
     def _begin_visual_override(self) -> None:
         if self._visual_override_active:

@@ -1,0 +1,1639 @@
+{
+  "items": [
+    {
+      "id": "rice_ball",
+      "name": "饭团",
+      "category": "food",
+      "icon": "rice_ball.png",
+      "price": 12,
+      "effects": {
+        "satiety": 24,
+        "mood": 2
+      },
+      "description": "简单又顶饱的食物。"
+    },
+    {
+      "id": "sparkling_water",
+      "name": "气泡水",
+      "category": "drink",
+      "icon": "sparkling_water.png",
+      "price": 10,
+      "effects": {
+        "energy": 6,
+        "mood": 3
+      },
+      "description": "让精神稍微亮一点的饮料。"
+    },
+    {
+      "id": "basic_medicine",
+      "name": "基础药品",
+      "category": "medicine",
+      "icon": "basic_medicine.png",
+      "price": 24,
+      "effects": {
+        "health": 22
+      },
+      "description": "用于恢复健康的基础药品。"
+    },
+    {
+      "id": "cleaning_wipes",
+      "name": "清洁湿巾",
+      "category": "cleaning",
+      "icon": "cleaning_wipes.png",
+      "price": 14,
+      "effects": {
+        "cleanliness": 28,
+        "mood": 1
+      },
+      "description": "快速整理一下。"
+    },
+    {
+      "id": "gift_box",
+      "name": "礼物盒子",
+      "category": "gift",
+      "icon": "礼物盒子.png",
+      "price": 30,
+      "effects": {
+        "mood": 10,
+        "affection": 3
+      },
+      "description": "随时都可以送的小礼物。"
+    },
+    {
+      "id": "三明治",
+      "name": "三明治",
+      "category": "food",
+      "icon": "三明治.png",
+      "price": 24,
+      "effects": {
+        "satiety": 28,
+        "mood": 5
+      },
+      "description": "扎实管饱的食物。"
+    },
+    {
+      "id": "东坡肘子",
+      "name": "东坡肘子",
+      "category": "food",
+      "icon": "东坡肘子.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "为了这碟醋",
+      "name": "为了这碟醋",
+      "category": "food",
+      "icon": "为了这碟醋.png",
+      "price": 20,
+      "effects": {
+        "satiety": 24,
+        "mood": 4
+      },
+      "description": "日常可以吃的食物。"
+    },
+    {
+      "id": "五仁月饼",
+      "name": "五仁月饼",
+      "category": "food",
+      "icon": "五仁月饼.png",
+      "price": 28,
+      "effects": {
+        "satiety": 24,
+        "mood": 9
+      },
+      "description": "带一点节日感的食物。"
+    },
+    {
+      "id": "冰激凌",
+      "name": "冰激凌",
+      "category": "food",
+      "icon": "冰激凌.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "凉粽",
+      "name": "凉粽",
+      "category": "food",
+      "icon": "凉粽.png",
+      "price": 28,
+      "effects": {
+        "satiety": 24,
+        "mood": 9
+      },
+      "description": "带一点节日感的食物。"
+    },
+    {
+      "id": "华夫饼",
+      "name": "华夫饼",
+      "category": "food",
+      "icon": "华夫饼.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "南瓜吐司",
+      "name": "南瓜吐司",
+      "category": "food",
+      "icon": "南瓜吐司.png",
+      "price": 24,
+      "effects": {
+        "satiety": 28,
+        "mood": 5
+      },
+      "description": "扎实管饱的食物。"
+    },
+    {
+      "id": "压缩饼干",
+      "name": "压缩饼干",
+      "category": "food",
+      "icon": "压缩饼干.png",
+      "price": 24,
+      "effects": {
+        "satiety": 28,
+        "mood": 5
+      },
+      "description": "扎实管饱的食物。"
+    },
+    {
+      "id": "咸粽子",
+      "name": "咸粽子",
+      "category": "food",
+      "icon": "咸粽子.png",
+      "price": 28,
+      "effects": {
+        "satiety": 24,
+        "mood": 9
+      },
+      "description": "带一点节日感的食物。"
+    },
+    {
+      "id": "土力架",
+      "name": "土力架",
+      "category": "food",
+      "icon": "土力架.png",
+      "price": 20,
+      "effects": {
+        "satiety": 24,
+        "mood": 4
+      },
+      "description": "日常可以吃的食物。"
+    },
+    {
+      "id": "大肉粽",
+      "name": "大肉粽",
+      "category": "food",
+      "icon": "大肉粽.png",
+      "price": 28,
+      "effects": {
+        "satiety": 24,
+        "mood": 9
+      },
+      "description": "带一点节日感的食物。"
+    },
+    {
+      "id": "娃仔小馒头",
+      "name": "娃仔小馒头",
+      "category": "food",
+      "icon": "娃仔小馒头.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "小布丁",
+      "name": "小布丁",
+      "category": "food",
+      "icon": "小布丁.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "巧克力",
+      "name": "巧克力",
+      "category": "food",
+      "icon": "巧克力.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "巧克力花生月饼",
+      "name": "巧克力花生月饼",
+      "category": "food",
+      "icon": "巧克力花生月饼.png",
+      "price": 28,
+      "effects": {
+        "satiety": 24,
+        "mood": 9
+      },
+      "description": "带一点节日感的食物。"
+    },
+    {
+      "id": "yearmantou",
+      "name": "年味馒头",
+      "category": "food",
+      "icon": "yearmantou.png",
+      "price": 36,
+      "effects": {
+        "satiety": 28,
+        "mood": 10
+      },
+      "description": "节日限定的热闹食物。"
+    },
+    {
+      "id": "yearjiaozi",
+      "name": "年夜饺子",
+      "category": "food",
+      "icon": "yearjiaozi.png",
+      "price": 36,
+      "effects": {
+        "satiety": 28,
+        "mood": 10
+      },
+      "description": "节日限定的热闹食物。"
+    },
+    {
+      "id": "yearfish",
+      "name": "年年有鱼",
+      "category": "food",
+      "icon": "yearfish.png",
+      "price": 36,
+      "effects": {
+        "satiety": 28,
+        "mood": 10
+      },
+      "description": "节日限定的热闹食物。"
+    },
+    {
+      "id": "yearchicken",
+      "name": "年菜鸡",
+      "category": "food",
+      "icon": "yearchicken.png",
+      "price": 36,
+      "effects": {
+        "satiety": 28,
+        "mood": 10
+      },
+      "description": "节日限定的热闹食物。"
+    },
+    {
+      "id": "戒指糖",
+      "name": "戒指糖",
+      "category": "food",
+      "icon": "戒指糖.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "披萨",
+      "name": "披萨",
+      "category": "food",
+      "icon": "披萨.png",
+      "price": 24,
+      "effects": {
+        "satiety": 28,
+        "mood": 5
+      },
+      "description": "扎实管饱的食物。"
+    },
+    {
+      "id": "散射雪糕",
+      "name": "散射雪糕",
+      "category": "food",
+      "icon": "散射雪糕.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "核桃仁",
+      "name": "核桃仁",
+      "category": "food",
+      "icon": "核桃仁.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "梅菜扣肉",
+      "name": "梅菜扣肉",
+      "category": "food",
+      "icon": "梅菜扣肉.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "汉堡",
+      "name": "汉堡",
+      "category": "food",
+      "icon": "汉堡.png",
+      "price": 24,
+      "effects": {
+        "satiety": 28,
+        "mood": 5
+      },
+      "description": "扎实管饱的食物。"
+    },
+    {
+      "id": "沙拉",
+      "name": "沙拉",
+      "category": "food",
+      "icon": "沙拉.png",
+      "price": 18,
+      "effects": {
+        "satiety": 20,
+        "health": 3
+      },
+      "description": "比较清爽健康的食物。"
+    },
+    {
+      "id": "油爆大虾",
+      "name": "油爆大虾",
+      "category": "food",
+      "icon": "油爆大虾.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "泡泡糖",
+      "name": "泡泡糖",
+      "category": "food",
+      "icon": "泡泡糖.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "清蒸鲈鱼",
+      "name": "清蒸鲈鱼",
+      "category": "food",
+      "icon": "清蒸鲈鱼.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "火腿肠",
+      "name": "火腿肠",
+      "category": "food",
+      "icon": "火腿肠.png",
+      "price": 24,
+      "effects": {
+        "satiety": 28,
+        "mood": 5
+      },
+      "description": "扎实管饱的食物。"
+    },
+    {
+      "id": "炸鸡腿",
+      "name": "炸鸡腿",
+      "category": "food",
+      "icon": "炸鸡腿.png",
+      "price": 24,
+      "effects": {
+        "satiety": 28,
+        "mood": 5
+      },
+      "description": "扎实管饱的食物。"
+    },
+    {
+      "id": "烧鹅",
+      "name": "烧鹅",
+      "category": "food",
+      "icon": "烧鹅.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "煎西冷牛排",
+      "name": "煎西冷牛排",
+      "category": "food",
+      "icon": "煎西冷牛排.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "爆米花",
+      "name": "爆米花",
+      "category": "food",
+      "icon": "爆米花.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "牛扎糖",
+      "name": "牛扎糖",
+      "category": "food",
+      "icon": "牛扎糖.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "牛板筋",
+      "name": "牛板筋",
+      "category": "food",
+      "icon": "牛板筋.png",
+      "price": 20,
+      "effects": {
+        "satiety": 24,
+        "mood": 4
+      },
+      "description": "日常可以吃的食物。"
+    },
+    {
+      "id": "猪肉脯",
+      "name": "猪肉脯",
+      "category": "food",
+      "icon": "猪肉脯.png",
+      "price": 20,
+      "effects": {
+        "satiety": 24,
+        "mood": 4
+      },
+      "description": "日常可以吃的食物。"
+    },
+    {
+      "id": "瓜子",
+      "name": "瓜子",
+      "category": "food",
+      "icon": "瓜子.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "甜粽子",
+      "name": "甜粽子",
+      "category": "food",
+      "icon": "甜粽子.png",
+      "price": 28,
+      "effects": {
+        "satiety": 24,
+        "mood": 9
+      },
+      "description": "带一点节日感的食物。"
+    },
+    {
+      "id": "生日蛋糕",
+      "name": "生日蛋糕",
+      "category": "food",
+      "icon": "生日蛋糕.png",
+      "price": 28,
+      "effects": {
+        "satiety": 24,
+        "mood": 9
+      },
+      "description": "带一点节日感的食物。"
+    },
+    {
+      "id": "生日蛋糕2",
+      "name": "生日蛋糕2",
+      "category": "food",
+      "icon": "生日蛋糕2.png",
+      "price": 28,
+      "effects": {
+        "satiety": 24,
+        "mood": 9
+      },
+      "description": "带一点节日感的食物。"
+    },
+    {
+      "id": "番茄意面",
+      "name": "番茄意面",
+      "category": "food",
+      "icon": "番茄意面.png",
+      "price": 24,
+      "effects": {
+        "satiety": 28,
+        "mood": 5
+      },
+      "description": "扎实管饱的食物。"
+    },
+    {
+      "id": "白切鸡",
+      "name": "白切鸡",
+      "category": "food",
+      "icon": "白切鸡.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "盐焗鸡",
+      "name": "盐焗鸡",
+      "category": "food",
+      "icon": "盐焗鸡.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "粽叶糍粑",
+      "name": "粽叶糍粑",
+      "category": "food",
+      "icon": "粽叶糍粑.png",
+      "price": 28,
+      "effects": {
+        "satiety": 24,
+        "mood": 9
+      },
+      "description": "带一点节日感的食物。"
+    },
+    {
+      "id": "糖果棒",
+      "name": "糖果棒",
+      "category": "food",
+      "icon": "糖果棒.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "红烧牛肉",
+      "name": "红烧牛肉",
+      "category": "food",
+      "icon": "红烧牛肉.png",
+      "price": 24,
+      "effects": {
+        "satiety": 28,
+        "mood": 5
+      },
+      "description": "扎实管饱的食物。"
+    },
+    {
+      "id": "红烧狮子头",
+      "name": "红烧狮子头",
+      "category": "food",
+      "icon": "红烧狮子头.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "纸包鸡",
+      "name": "纸包鸡",
+      "category": "food",
+      "icon": "纸包鸡.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "罗宋汤",
+      "name": "罗宋汤",
+      "category": "food",
+      "icon": "罗宋汤.png",
+      "price": 18,
+      "effects": {
+        "satiety": 20,
+        "health": 3
+      },
+      "description": "比较清爽健康的食物。"
+    },
+    {
+      "id": "老冰棍",
+      "name": "老冰棍",
+      "category": "food",
+      "icon": "老冰棍.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "臭豆腐",
+      "name": "臭豆腐",
+      "category": "food",
+      "icon": "臭豆腐.png",
+      "price": 20,
+      "effects": {
+        "satiety": 24,
+        "mood": 4
+      },
+      "description": "日常可以吃的食物。"
+    },
+    {
+      "id": "芋头扣肉",
+      "name": "芋头扣肉",
+      "category": "food",
+      "icon": "芋头扣肉.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "芝士焗虾",
+      "name": "芝士焗虾",
+      "category": "food",
+      "icon": "芝士焗虾.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "花生米",
+      "name": "花生米",
+      "category": "food",
+      "icon": "花生米.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "莲蓉蛋黄月饼",
+      "name": "莲蓉蛋黄月饼",
+      "category": "food",
+      "icon": "莲蓉蛋黄月饼.png",
+      "price": 28,
+      "effects": {
+        "satiety": 24,
+        "mood": 9
+      },
+      "description": "带一点节日感的食物。"
+    },
+    {
+      "id": "萝莉丝姜饼人",
+      "name": "萝莉丝姜饼人",
+      "category": "food",
+      "icon": "萝莉丝姜饼人.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "薯片",
+      "name": "薯片",
+      "category": "food",
+      "icon": "薯片.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "西冷牛排",
+      "name": "西冷牛排",
+      "category": "food",
+      "icon": "西冷牛排.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "软糖",
+      "name": "软糖",
+      "category": "food",
+      "icon": "软糖.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "辣子鸡",
+      "name": "辣子鸡",
+      "category": "food",
+      "icon": "辣子鸡.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "酸菜鱼",
+      "name": "酸菜鱼",
+      "category": "food",
+      "icon": "酸菜鱼.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "酿豆腐",
+      "name": "酿豆腐",
+      "category": "food",
+      "icon": "酿豆腐.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "雪饼",
+      "name": "雪饼",
+      "category": "food",
+      "icon": "雪饼.png",
+      "price": 12,
+      "effects": {
+        "satiety": 10,
+        "mood": 8
+      },
+      "description": "小零食，主要负责开心。"
+    },
+    {
+      "id": "面包",
+      "name": "面包",
+      "category": "food",
+      "icon": "面包.png",
+      "price": 24,
+      "effects": {
+        "satiety": 28,
+        "mood": 5
+      },
+      "description": "扎实管饱的食物。"
+    },
+    {
+      "id": "香煎牛仔骨",
+      "name": "香煎牛仔骨",
+      "category": "food",
+      "icon": "香煎牛仔骨.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "鸡翅",
+      "name": "鸡翅",
+      "category": "food",
+      "icon": "鸡翅.png",
+      "price": 24,
+      "effects": {
+        "satiety": 28,
+        "mood": 5
+      },
+      "description": "扎实管饱的食物。"
+    },
+    {
+      "id": "麻婆豆腐",
+      "name": "麻婆豆腐",
+      "category": "food",
+      "icon": "麻婆豆腐.png",
+      "price": 34,
+      "effects": {
+        "satiety": 34,
+        "mood": 8
+      },
+      "description": "很丰盛的一餐。"
+    },
+    {
+      "id": "1L纯净水",
+      "name": "1L纯净水",
+      "category": "drink",
+      "icon": "1L纯净水.png",
+      "price": 8,
+      "effects": {
+        "energy": 4
+      },
+      "description": "大瓶纯净水，简单补充一点体力。"
+    },
+    {
+      "id": "ab钙奶",
+      "name": "ab钙奶",
+      "category": "drink",
+      "icon": "ab钙奶.png",
+      "price": 14,
+      "effects": {
+        "energy": 8,
+        "health": 3
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "伏特加",
+      "name": "伏特加",
+      "category": "drink",
+      "icon": "伏特加.png",
+      "price": 26,
+      "effects": {
+        "mood": 18,
+        "energy": 2
+      },
+      "description": "烈一点的快乐。"
+    },
+    {
+      "id": "凉茶",
+      "name": "凉茶",
+      "category": "drink",
+      "icon": "凉茶.png",
+      "price": 12,
+      "effects": {
+        "health": 4,
+        "energy": 4
+      },
+      "description": "清清爽爽。"
+    },
+    {
+      "id": "可乐",
+      "name": "可乐",
+      "category": "drink",
+      "icon": "可乐.png",
+      "price": 12,
+      "effects": {
+        "energy": 6,
+        "mood": 5
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "咖啡饮料",
+      "name": "咖啡饮料",
+      "category": "drink",
+      "icon": "咖啡饮料.png",
+      "price": 16,
+      "effects": {
+        "energy": 14,
+        "mood": 1
+      },
+      "description": "带来一点专注感。"
+    },
+    {
+      "id": "啤酒",
+      "name": "啤酒",
+      "category": "drink",
+      "icon": "啤酒.png",
+      "price": 16,
+      "effects": {
+        "mood": 12,
+        "energy": 2
+      },
+      "description": "放松一下。"
+    },
+    {
+      "id": "圣诞草莓奶茶",
+      "name": "圣诞草莓奶茶",
+      "category": "drink",
+      "icon": "圣诞草莓奶茶.png",
+      "price": 18,
+      "effects": {
+        "energy": 6,
+        "mood": 10
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "大鹏特饮",
+      "name": "大鹏特饮",
+      "category": "drink",
+      "icon": "大鹏特饮.png",
+      "price": 20,
+      "effects": {
+        "energy": 18,
+        "mood": 2
+      },
+      "description": "一罐下去精神起来。"
+    },
+    {
+      "id": "奶片",
+      "name": "奶片",
+      "category": "drink",
+      "icon": "奶片.png",
+      "price": 12,
+      "effects": {
+        "energy": 6,
+        "mood": 3
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "奶糖",
+      "name": "奶糖",
+      "category": "drink",
+      "icon": "奶糖.png",
+      "price": 12,
+      "effects": {
+        "energy": 6,
+        "mood": 3
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "奶茶",
+      "name": "奶茶",
+      "category": "drink",
+      "icon": "奶茶.png",
+      "price": 18,
+      "effects": {
+        "energy": 6,
+        "mood": 10
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "威士忌",
+      "name": "威士忌",
+      "category": "drink",
+      "icon": "威士忌.png",
+      "price": 28,
+      "effects": {
+        "mood": 20,
+        "energy": 2
+      },
+      "description": "适合慢慢品的礼貌快乐。"
+    },
+    {
+      "id": "果汁",
+      "name": "果汁",
+      "category": "drink",
+      "icon": "果汁.png",
+      "price": 14,
+      "effects": {
+        "energy": 7,
+        "mood": 4
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "格瓦斯",
+      "name": "格瓦斯",
+      "category": "drink",
+      "icon": "格瓦斯.png",
+      "price": 12,
+      "effects": {
+        "energy": 6,
+        "mood": 5
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "椰汁",
+      "name": "椰汁",
+      "category": "drink",
+      "icon": "椰汁.png",
+      "price": 14,
+      "effects": {
+        "energy": 7,
+        "mood": 4
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "热白开",
+      "name": "热白开",
+      "category": "drink",
+      "icon": "热白开.png",
+      "price": 7,
+      "effects": {
+        "energy": 3,
+        "health": 1
+      },
+      "description": "温温热热，喝了舒服一点。"
+    },
+    {
+      "id": "电解质水",
+      "name": "电解质水",
+      "category": "drink",
+      "icon": "电解质水.png",
+      "price": 14,
+      "effects": {
+        "energy": 10,
+        "health": 2
+      },
+      "description": "适合恢复一点精神。"
+    },
+    {
+      "id": "白酒",
+      "name": "白酒",
+      "category": "drink",
+      "icon": "白酒.png",
+      "price": 22,
+      "effects": {
+        "mood": 16,
+        "energy": 2
+      },
+      "description": "很有劲的饮品。"
+    },
+    {
+      "id": "盐汽水",
+      "name": "盐汽水",
+      "category": "drink",
+      "icon": "盐汽水.png",
+      "price": 12,
+      "effects": {
+        "energy": 6,
+        "mood": 5
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "矿泉水",
+      "name": "矿泉水",
+      "category": "drink",
+      "icon": "矿泉水.png",
+      "price": 8,
+      "effects": {
+        "energy": 4
+      },
+      "description": "清爽的日常饮用水。"
+    },
+    {
+      "id": "纯牛奶",
+      "name": "纯牛奶",
+      "category": "drink",
+      "icon": "纯牛奶.png",
+      "price": 14,
+      "effects": {
+        "energy": 8,
+        "health": 3
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "维他奶",
+      "name": "维他奶",
+      "category": "drink",
+      "icon": "维他奶.png",
+      "price": 14,
+      "effects": {
+        "energy": 8,
+        "health": 3
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "绿色心情",
+      "name": "绿色心情",
+      "category": "drink",
+      "icon": "绿色心情.png",
+      "price": 16,
+      "effects": {
+        "energy": 4,
+        "mood": 12
+      },
+      "description": "让心情变绿一点的饮料。"
+    },
+    {
+      "id": "能量饮料",
+      "name": "能量饮料",
+      "category": "drink",
+      "icon": "能量饮料.png",
+      "price": 18,
+      "effects": {
+        "energy": 16,
+        "mood": 2
+      },
+      "description": "快速提神的饮料。"
+    },
+    {
+      "id": "苏打水",
+      "name": "苏打水",
+      "category": "drink",
+      "icon": "苏打水.png",
+      "price": 12,
+      "effects": {
+        "energy": 6,
+        "mood": 5
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "茶",
+      "name": "茶",
+      "category": "drink",
+      "icon": "茶.png",
+      "price": 10,
+      "effects": {
+        "energy": 5,
+        "mood": 2
+      },
+      "description": "喝完能恢复一点体力和心情。"
+    },
+    {
+      "id": "蒸馏水",
+      "name": "蒸馏水",
+      "category": "drink",
+      "icon": "蒸馏水.png",
+      "price": 6,
+      "effects": {
+        "energy": 2
+      },
+      "description": "非常朴素的水。"
+    },
+    {
+      "id": "雷碧",
+      "name": "雷碧",
+      "category": "drink",
+      "icon": "雷碧.png",
+      "price": 12,
+      "effects": {
+        "energy": 6,
+        "mood": 5
+      },
+      "description": "你跑不过我你信么？"
+    },
+    {
+      "id": "鸡尾酒",
+      "name": "鸡尾酒",
+      "category": "drink",
+      "icon": "鸡尾酒.png",
+      "price": 24,
+      "effects": {
+        "mood": 18,
+        "energy": 3
+      },
+      "description": "颜色好看，心情也好。"
+    },
+    {
+      "id": "666感冒灵颗粒",
+      "name": "666感冒灵颗粒",
+      "category": "medicine",
+      "icon": "666感冒灵颗粒.png",
+      "price": 24,
+      "effects": {
+        "health": 20,
+        "mood": 1
+      },
+      "description": "感冒时来一包。"
+    },
+    {
+      "id": "健胃整肠丸",
+      "name": "健胃整肠丸",
+      "category": "medicine",
+      "icon": "健胃整肠丸.png",
+      "price": 22,
+      "effects": {
+        "health": 18,
+        "satiety": 2
+      },
+      "description": "让肚子舒服一点。"
+    },
+    {
+      "id": "大力丸",
+      "name": "大力丸",
+      "category": "medicine",
+      "icon": "大力丸.png",
+      "price": 32,
+      "effects": {
+        "health": 12,
+        "energy": 18
+      },
+      "description": "听起来就很有劲。"
+    },
+    {
+      "id": "布洛芬缓释胶囊",
+      "name": "布洛芬缓释胶囊",
+      "category": "medicine",
+      "icon": "布洛芬缓释胶囊.png",
+      "price": 26,
+      "effects": {
+        "health": 22
+      },
+      "description": "用于恢复较多健康。"
+    },
+    {
+      "id": "维生素C含片",
+      "name": "维生素C含片",
+      "category": "medicine",
+      "icon": "维生素C含片.png",
+      "price": 18,
+      "effects": {
+        "health": 14
+      },
+      "description": "补充维生素，恢复健康。"
+    },
+    {
+      "id": "脑黑金",
+      "name": "脑黑金",
+      "category": "medicine",
+      "icon": "脑黑金.png",
+      "price": 36,
+      "effects": {
+        "health": 8,
+        "energy": 24
+      },
+      "description": "恢复精神的神秘补剂。"
+    },
+    {
+      "id": "速效救心丸",
+      "name": "速效救心丸",
+      "category": "medicine",
+      "icon": "速效救心丸.png",
+      "price": 34,
+      "effects": {
+        "health": 30
+      },
+      "description": "关键时刻的高级药品。"
+    },
+    {
+      "id": "钙片",
+      "name": "钙片",
+      "category": "medicine",
+      "icon": "钙片.png",
+      "price": 18,
+      "effects": {
+        "health": 13
+      },
+      "description": "朴素但可靠的健康补给。"
+    },
+    {
+      "id": "阿司匹林",
+      "name": "阿司匹林",
+      "category": "medicine",
+      "icon": "阿司匹林.png",
+      "price": 22,
+      "effects": {
+        "health": 18
+      },
+      "description": "常见的基础药品。"
+    },
+    {
+      "id": "APhone 12",
+      "name": "APhone 12",
+      "category": "gift",
+      "icon": "APhone 12.png",
+      "price": 1200,
+      "effects": {
+        "mood": 22,
+        "affection": 11
+      },
+      "description": "很有排面的电子礼物。"
+    },
+    {
+      "id": "APhone 14 Pro",
+      "name": "APhone 14 Pro",
+      "category": "gift",
+      "icon": "APhone 14 Pro.png",
+      "price": 1800,
+      "effects": {
+        "mood": 26,
+        "affection": 14
+      },
+      "description": "很有排面的电子礼物。"
+    },
+    {
+      "id": "APhone X",
+      "name": "APhone X",
+      "category": "gift",
+      "icon": "APhone X.png",
+      "price": 800,
+      "effects": {
+        "mood": 18,
+        "affection": 8
+      },
+      "description": "很有排面的电子礼物。"
+    },
+    {
+      "id": "GTC1660",
+      "name": "GTC1660",
+      "category": "gift",
+      "icon": "GTC1660.png",
+      "price": 900,
+      "effects": {
+        "mood": 21,
+        "affection": 10
+      },
+      "description": "性能味道很浓的硬件礼物。"
+    },
+    {
+      "id": "GTC2070",
+      "name": "GTC2070",
+      "category": "gift",
+      "icon": "GTC2070.png",
+      "price": 1500,
+      "effects": {
+        "mood": 26,
+        "affection": 14
+      },
+      "description": "性能味道很浓的硬件礼物。"
+    },
+    {
+      "id": "GTC4090",
+      "name": "GTC4090",
+      "category": "gift",
+      "icon": "GTC4090.png",
+      "price": 3600,
+      "effects": {
+        "mood": 31,
+        "affection": 18
+      },
+      "description": "性能味道很浓的硬件礼物。"
+    },
+    {
+      "id": "GTC5090",
+      "name": "GTC5090",
+      "category": "gift",
+      "icon": "GTC5090.png",
+      "price": 5200,
+      "effects": {
+        "mood": 36,
+        "affection": 22
+      },
+      "description": "性能味道很浓的硬件礼物。"
+    },
+    {
+      "id": "Inter i5-8400",
+      "name": "Inter i5-8400",
+      "category": "gift",
+      "icon": "Inter i5-8400.png",
+      "price": 700,
+      "effects": {
+        "mood": 17,
+        "affection": 8
+      },
+      "description": "适合送给硬件爱好者。"
+    },
+    {
+      "id": "Inter i7-11700",
+      "name": "Inter i7-11700",
+      "category": "gift",
+      "icon": "Inter i7-11700.png",
+      "price": 1300,
+      "effects": {
+        "mood": 21,
+        "affection": 11
+      },
+      "description": "适合送给硬件爱好者。"
+    },
+    {
+      "id": "Inter i9-14900",
+      "name": "Inter i9-14900",
+      "category": "gift",
+      "icon": "Inter i9-14900.png",
+      "price": 2600,
+      "effects": {
+        "mood": 25,
+        "affection": 14
+      },
+      "description": "适合送给硬件爱好者。"
+    },
+    {
+      "id": "Shiori v1",
+      "name": "Shiori v1",
+      "category": "gift",
+      "icon": "Shiori v1.png",
+      "price": 300,
+      "effects": {
+        "mood": 20,
+        "affection": 11
+      },
+      "description": "带着特别纪念感的礼物。"
+    },
+    {
+      "id": "Shiori v5",
+      "name": "Shiori v5",
+      "category": "gift",
+      "icon": "Shiori v5.png",
+      "price": 900,
+      "effects": {
+        "mood": 24,
+        "affection": 15
+      },
+      "description": "带着特别纪念感的礼物。"
+    },
+    {
+      "id": "Shiori v7",
+      "name": "Shiori v7",
+      "category": "gift",
+      "icon": "Shiori v7.png",
+      "price": 1600,
+      "effects": {
+        "mood": 28,
+        "affection": 19
+      },
+      "description": "带着特别纪念感的礼物。"
+    },
+    {
+      "id": "嗨神话吗喽",
+      "name": "嗨神话吗喽",
+      "category": "gift",
+      "icon": "嗨神话吗喽.png",
+      "price": 120,
+      "effects": {
+        "mood": 12,
+        "affection": 4
+      },
+      "description": "可以随手送出的小礼物。"
+    },
+    {
+      "id": "圣诞帽",
+      "name": "圣诞帽",
+      "category": "gift",
+      "icon": "圣诞帽.png",
+      "price": 120,
+      "effects": {
+        "mood": 12,
+        "affection": 4
+      },
+      "description": "可以随手送出的小礼物。"
+    },
+    {
+      "id": "地球",
+      "name": "地球",
+      "category": "gift",
+      "icon": "地球.png",
+      "price": 3000,
+      "effects": {
+        "mood": 40,
+        "affection": 20
+      },
+      "description": "非常夸张，也非常浪漫。"
+    },
+    {
+      "id": "太阳系",
+      "name": "太阳系",
+      "category": "gift",
+      "icon": "太阳系.png",
+      "price": 12000,
+      "effects": {
+        "mood": 40,
+        "affection": 20
+      },
+      "description": "非常夸张，也非常浪漫。"
+    },
+    {
+      "id": "好的麦克风",
+      "name": "好的麦克风",
+      "category": "gift",
+      "icon": "好的麦克风.png",
+      "price": 220,
+      "effects": {
+        "mood": 14,
+        "affection": 5
+      },
+      "description": "送一支设备感很强的麦克风。"
+    },
+    {
+      "id": "很好的麦克风",
+      "name": "很好的麦克风",
+      "category": "gift",
+      "icon": "很好的麦克风.png",
+      "price": 320,
+      "effects": {
+        "mood": 16,
+        "affection": 6
+      },
+      "description": "送一支设备感很强的麦克风。"
+    },
+    {
+      "id": "普通麦克风",
+      "name": "普通麦克风",
+      "category": "gift",
+      "icon": "普通麦克风.png",
+      "price": 80,
+      "effects": {
+        "mood": 10,
+        "affection": 3
+      },
+      "description": "送一支设备感很强的麦克风。"
+    },
+    {
+      "id": "超级好的麦克风",
+      "name": "超级好的麦克风",
+      "category": "gift",
+      "icon": "超级好的麦克风.png",
+      "price": 680,
+      "effects": {
+        "mood": 20,
+        "affection": 8
+      },
+      "description": "送一支设备感很强的麦克风。"
+    },
+    {
+      "id": "较好的麦克风",
+      "name": "较好的麦克风",
+      "category": "gift",
+      "icon": "较好的麦克风.png",
+      "price": 140,
+      "effects": {
+        "mood": 12,
+        "affection": 4
+      },
+      "description": "送一支设备感很强的麦克风。"
+    },
+    {
+      "id": "非常好的麦克风",
+      "name": "非常好的麦克风",
+      "category": "gift",
+      "icon": "非常好的麦克风.png",
+      "price": 460,
+      "effects": {
+        "mood": 18,
+        "affection": 7
+      },
+      "description": "送一支设备感很强的麦克风。"
+    },
+    {
+      "id": "黄牛",
+      "name": "黄牛",
+      "category": "gift",
+      "icon": "黄牛.png",
+      "price": 120,
+      "effects": {
+        "mood": 12,
+        "affection": 4
+      },
+      "description": "可以随手送出的小礼物。"
+    }
+  ]
+}

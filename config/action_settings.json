@@ -6,14 +6,13 @@
   "auto_idle_modes": [
     "default",
     "amusement",
-    "meowlook",
-    "yawning",
-    "think",
     "aside",
-    "bubbles",
     "boring",
+    "bubbles",
     "sleep",
-    "squat"
+    "squat",
+    "tennis",
+    "think"
   ],
   "startup": [
     "start_up",
@@ -25,7 +24,6 @@
   "single_insert_interval_min_ms": 180000,
   "single_insert_interval_max_ms": 600000,
   "single_insert_modes": [
-    "level_up",
-    "switch_down"
+    "level_up"
   ]
 }

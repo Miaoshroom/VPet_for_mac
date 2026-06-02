@@ -141,6 +141,7 @@ class PetAnimationDirector(QObject):
 
     frame_changed = pyqtSignal(object)
     pet_state_changed = pyqtSignal(str)
+    interaction_finished = pyqtSignal()
 
     def __init__(
         self,
@@ -288,8 +289,8 @@ class PetAnimationDirector(QObject):
             return
         self._start_mode(mode_name)
 
-    def on_mouse_press(self) -> None:
-        self.start_interaction(self._default_interaction)
+    def on_mouse_press(self) -> bool:
+        return self.start_interaction(self._default_interaction) is not None
 
     def on_mouse_release(self) -> None:
         self.end_interaction()
@@ -311,13 +312,27 @@ class PetAnimationDirector(QObject):
         self._active_interaction_name = interaction_name
         self._active_interaction = interaction
         self._active_interaction_mode = self._transient_interaction_mode
-        interaction.start(on_resume=self._resume_current_mode)
+        interaction.start(on_resume=self._finish_interaction)
         return self._active_interaction_mode
 
     def end_interaction(self) -> None:
         if self._active_interaction is None:
             return
         self._active_interaction.end()
+
+    def stop_active_interaction(self, *, resume: bool = True) -> bool:
+        if self._active_interaction is None:
+            return False
+        self._active_interaction.stop()
+        self._active_interaction = None
+        self._active_interaction_name = None
+        self._active_interaction_mode = None
+        self._transient_interaction = None
+        self._transient_interaction_mode = None
+        self._pending_mode = None
+        if resume and not self.is_visual_override_active():
+            self._resume_current_mode()
+        return True
 
     def stop(self) -> None:
         self._stop_mode_player()
@@ -432,6 +447,10 @@ class PetAnimationDirector(QObject):
         self._pending_mode = None
         self._phase = "loop"
         self._play_current_loop(refresh=False)
+
+    def _finish_interaction(self) -> None:
+        self._resume_current_mode()
+        self.interaction_finished.emit()
 
     def _after_mode_start(self) -> None:
         self._mode_player.disconnect_finished()

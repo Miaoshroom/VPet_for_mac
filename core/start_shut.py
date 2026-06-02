@@ -59,11 +59,14 @@ def play_startup(
     single_autoswitch: SingleAutoSwitch,
     single_player: SinglePlayer,
     startup_clip: Clip | None,
+    after_startup=None,
 ) -> None:
     """启动时先播 single，播完后再进入默认 mode。"""
 
     def start_default_mode() -> None:
         director.start_default_mode()
+        if callable(after_startup):
+            after_startup()
         single_autoswitch.start()
 
     if startup_clip is None:

@@ -1,6 +1,20 @@
 {
-  "dev_mode": true,
-  "display_size": 470,
+  "dev_mode": false,
+  "display_size": 290,
   "display_x": 1244,
-  "display_y": 680
+  "display_y": 680,
+  "ui_windows": {
+    "activity": {
+      "x": 524,
+      "y": 371,
+      "width": 440,
+      "height": 466
+    },
+    "shop_inventory": {
+      "x": 366,
+      "y": 283,
+      "width": 680,
+      "height": 460
+    }
+  }
 }

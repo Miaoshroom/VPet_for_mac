@@ -3,6 +3,7 @@
 __pycache__/
 *.py[cod]
 .swift-module-cache/
+saves/
 
 .venv/
 
