@@ -52,6 +52,7 @@ class AutoMoveController(QObject):
         single_autoswitch: SingleSwitch,
         mode_autoswitch: StartStop | None = None,
         single_active: Callable[[], bool] | None = None,
+        schedule_once: Callable[[int, Callable[[], None]], None] | None = None,
     ) -> None:
         super().__init__(parent)
         settings = _load_settings()
@@ -61,6 +62,7 @@ class AutoMoveController(QObject):
         self._single_autoswitch = single_autoswitch
         self._mode_autoswitch = mode_autoswitch
         self._single_active = single_active or (lambda: False)
+        self._schedule_once = schedule_once or QTimer.singleShot
         self._enabled = bool(settings["enabled_default"])
         self._interval_min_ms = int(settings["interval_min_ms"])
         self._interval_max_ms = int(settings["interval_max_ms"])
@@ -92,6 +94,7 @@ class AutoMoveController(QObject):
         self._target_x = 0.0
         self._target_y = 0.0
         self._shutting_down = False
+        self._generation = 0
 
         if self._enabled:
             self.start()
@@ -206,9 +209,13 @@ class AutoMoveController(QObject):
         if self._mode_autoswitch is not None:
             self._mode_autoswitch.stop()
         start_delay = active_mode.start.duration_ms if active_mode.start is not None else 0
-        QTimer.singleShot(start_delay, self._start_move_timer)
+        self._generation += 1
+        generation = self._generation
+        self._schedule_once(start_delay, lambda: self._start_move_timer(generation))
 
-    def _start_move_timer(self) -> None:
+    def _start_move_timer(self, generation: int) -> None:
+        if generation != self._generation:
+            return
         if not self._active or self._current_rule is None:
             return
         if self._single_active():
@@ -259,6 +266,8 @@ class AutoMoveController(QObject):
         return math.hypot(self._vx, self._vy)
 
     def _finish_move(self, restart_timer: bool) -> None:
+        self._generation += 1
+        generation = self._generation
         self._move_timer.stop()
         rule = self._current_rule
         mode = self._current_move_mode
@@ -269,7 +278,7 @@ class AutoMoveController(QObject):
         end_delay = 0
         if rule is not None and mode is not None:
             end_delay = mode.end.duration_ms if mode.end is not None else 0
-        QTimer.singleShot(end_delay, lambda: self._after_move_end(restart_timer))
+        self._schedule_once(end_delay, lambda: self._after_move_end(generation, restart_timer))
 
     def _mode_for_rule(self, rule: MoveRule) -> Mode | None:
         # 移动动作也要按当前状态查素材
@@ -278,8 +287,8 @@ class AutoMoveController(QObject):
         except KeyError:
             return None
 
-    def _after_move_end(self, restart_timer: bool) -> None:
-        if self._shutting_down:
+    def _after_move_end(self, generation: int, restart_timer: bool) -> None:
+        if generation != self._generation or self._shutting_down:
             return
         self._single_autoswitch.start()
         if self._mode_autoswitch is not None:

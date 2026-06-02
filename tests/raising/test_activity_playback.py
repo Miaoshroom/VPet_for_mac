@@ -40,10 +40,11 @@ class FakeCatalog:
             "default": "loop",
             "eat": "single",
             "drink": "single",
+            "gift": "single",
             "sleep": "phased",
             "yawning": "loop",
         }
-        self.single_available = {"eat", "drink"}
+        self.single_available = {"eat", "drink", "gift"}
 
     def has_action(self, action_id: str) -> bool:
         return action_id in self.types
@@ -228,6 +229,22 @@ class ActivityPlaybackBridgeTest(unittest.TestCase):
         self.assertFalse(check.ok)
         self.assertIn("插件", check.message)
 
+    def test_start_animation_direct_call_rejects_existing_blockers(self) -> None:
+        director = FakeDirector()
+        blocked = True
+        bridge = ActivityPlaybackBridge(
+            director,
+            FakeCatalog(),
+            action_blocked=lambda: blocked,
+            single_active=lambda: False,
+        )
+
+        result = bridge.start_activity_animation(_activity())
+
+        self.assertFalse(result.started)
+        self.assertIn("插件", result.message)
+        self.assertEqual(director.started_interactions, [])
+
     def test_rest_activity_uses_sleep_candidate_when_available(self) -> None:
         director = FakeDirector()
         bridge = ActivityPlaybackBridge(
@@ -304,6 +321,44 @@ class CarePlaybackBridgeTest(unittest.TestCase):
         self.assertTrue(bridge.is_active())
         single.finish_last()
         self.assertFalse(bridge.is_active())
+
+    def test_medicine_care_reuses_eat_animation(self) -> None:
+        director = FakeDirector()
+        single = FakeSinglePlayer()
+        bridge = CarePlaybackBridge(
+            director,
+            FakeCatalog(),
+            action_blocked=lambda: False,
+            activity_active=lambda: False,
+            single_active=lambda: False,
+            schedule_once=lambda delay_ms, callback: None,
+        )
+        bridge.set_single_player(single)
+
+        playback = bridge.start_care_animation("medicine")
+
+        self.assertTrue(playback.started)
+        self.assertEqual(playback.action_id, "eat")
+        self.assertEqual([clip.action_id for clip in single.played], ["eat"])
+
+    def test_gift_care_plays_gift_animation(self) -> None:
+        director = FakeDirector()
+        single = FakeSinglePlayer()
+        bridge = CarePlaybackBridge(
+            director,
+            FakeCatalog(),
+            action_blocked=lambda: False,
+            activity_active=lambda: False,
+            single_active=lambda: False,
+            schedule_once=lambda delay_ms, callback: None,
+        )
+        bridge.set_single_player(single)
+
+        playback = bridge.start_care_animation("gift")
+
+        self.assertTrue(playback.started)
+        self.assertEqual(playback.action_id, "gift")
+        self.assertEqual([clip.action_id for clip in single.played], ["gift"])
 
     def test_care_start_check_rejects_plugin_activity_and_current_action(self) -> None:
         cases = (

@@ -88,7 +88,11 @@ CARE_ANIMATION_SPECS: dict[str, CareAnimationSpec] = {
     ),
     "medicine": CareAnimationSpec(
         care_action_id="medicine",
-        action_ids=("medicine", "heal"),
+        action_ids=("eat",),
+    ),
+    "gift": CareAnimationSpec(
+        care_action_id="gift",
+        action_ids=("gift",),
     ),
 }
 
@@ -131,6 +135,13 @@ class ActivityPlaybackBridge:
                 started=False,
                 action_id=self._active_action_id,
                 message="已有活动动画进行中。",
+            )
+        check = self.can_start_activity()
+        if not check.ok:
+            return ActivityPlaybackResult(
+                started=False,
+                action_id=None,
+                message=check.message,
             )
 
         configured_ids = activity.animation_action_ids()

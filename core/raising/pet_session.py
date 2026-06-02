@@ -429,6 +429,9 @@ def resume_loaded_activity_animation(self) -> None:
     activity = self._activity_system.current_activity()
     if activity is None:
         return
+    check = self._activity_playback.can_start_activity()
+    if not check.ok:
+        return
     playback = self._activity_playback.start_activity_animation(activity)
     if playback.message:
         show_activity_notice(self, playback.message)

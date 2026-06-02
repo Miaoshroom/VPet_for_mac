@@ -414,6 +414,23 @@ class PetWindowActivityBoundarySmokeTest(unittest.TestCase):
         self.assertEqual(window._director.started_interactions, ["touch_head"])
         self.assertEqual(window._activity_playback.started, ["work", "work"])
 
+    def test_playback_idle_waits_for_blocker_before_resuming_activity_animation(
+        self,
+    ) -> None:
+        save = SaveGame(pet_state=PetState(energy=80, mood=80, health=80))
+        window = self._window_like(save)
+
+        PetWindow._start_activity(window, "work")
+        window._activity_playback.active = False
+        window._activity_playback.can_start_ok = False
+
+        PetWindow.on_playback_idle(window)
+        self.assertEqual(window._activity_playback.started, ["work"])
+
+        window._activity_playback.can_start_ok = True
+        PetWindow.on_playback_idle(window)
+        self.assertEqual(window._activity_playback.started, ["work", "work"])
+
     def test_playback_idle_refreshes_activity_start_availability(self) -> None:
         save = SaveGame(pet_state=PetState(energy=80, mood=80, health=80))
         window = self._window_like(save)
