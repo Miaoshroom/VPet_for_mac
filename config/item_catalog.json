@@ -13,6 +13,18 @@
       "description": "简单又顶饱的食物。"
     },
     {
+      "id": "Qiaolezi",
+      "name": "巧乐滋",
+      "category": "food",
+      "icon": "巧乐滋.png",
+      "price": 3,
+      "effects": {
+        "satiety": 4,
+        "mood": 3
+      },
+      "description": "我还记得你。"
+    },
+    {
       "id": "sparkling_water",
       "name": "气泡水",
       "category": "drink",

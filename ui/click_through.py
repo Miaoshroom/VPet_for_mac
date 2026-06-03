@@ -5,10 +5,15 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from PyQt6.QtCore import QPoint, Qt
-from PyQt6.QtGui import QColor, QMouseEvent, QPaintEvent, QPainter, QPen
+from PyQt6.QtGui import QMouseEvent, QPaintEvent, QPainter, QPixmap
 from PyQt6.QtWidgets import QWidget
 
-BADGE_SIZE = 26
+from core.app_paths import resource_root
+
+# 调整穿透按键图片的屏幕显示像素。
+BADGE_ICON_WIDTH = 26
+BADGE_ICON_HEIGHT = 26
+BADGE_ICON_PATH = resource_root() / "resources" / "click_through_icon.png"
 DRAG_THRESHOLD = 4
 BADGE_MARGIN = 15
 
@@ -29,6 +34,7 @@ class ClickThroughBadge(QWidget):
         self._drag_offset: QPoint | None = None
         self._press_global: QPoint | None = None
         self._dragged = False
+        self._icon = QPixmap(str(BADGE_ICON_PATH))
 
         self.setWindowFlags(
             Qt.WindowType.Window
@@ -37,7 +43,7 @@ class ClickThroughBadge(QWidget):
             | Qt.WindowType.WindowDoesNotAcceptFocus
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
-        self.setFixedSize(BADGE_SIZE, BADGE_SIZE)
+        self.setFixedSize(BADGE_ICON_WIDTH, BADGE_ICON_HEIGHT)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip("点击切换穿透，拖动可移动位置")
         self.move(initial_pos or self._default_pos())
@@ -46,8 +52,8 @@ class ClickThroughBadge(QWidget):
     def _default_pos(self) -> QPoint:
         geometry = self._target_window.geometry()
         return QPoint(
-            geometry.x() + geometry.width() - BADGE_SIZE - BADGE_MARGIN,
-            geometry.y() + geometry.height() - BADGE_SIZE - BADGE_MARGIN,
+            geometry.x() + geometry.width() - BADGE_ICON_WIDTH - BADGE_MARGIN,
+            geometry.y() + geometry.height() - BADGE_ICON_HEIGHT - BADGE_MARGIN,
         )
 
     def _toggle(self) -> None:
@@ -94,17 +100,6 @@ class ClickThroughBadge(QWidget):
     def paintEvent(self, event: QPaintEvent) -> None:
         del event
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-
-        outer = self.rect().adjusted(2, 2, -2, -2)
-        fill = QColor("#76C9FF") if self._is_enabled() else QColor("#AEE6FF")
-        border = QColor("#2F8FCE")
-        highlight = QColor(255, 255, 255, 150)
-
-        painter.setPen(QPen(border, 1.4))
-        painter.setBrush(fill)
-        painter.drawEllipse(outer)
-
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(highlight)
-        painter.drawEllipse(outer.adjusted(4, 4, -10, -10))
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        painter.setOpacity(1.0 if self._is_enabled() else 0.5)
+        painter.drawPixmap(self.rect(), self._icon, self._icon.rect())
