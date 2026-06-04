@@ -1,0 +1,131 @@
+{
+  "enabled": true,
+  "actions": {
+    "eat": {
+      "happy": {
+        "item_icon_size_ratio": 0.12,
+        "item_icon_center_x_ratio": 0.5,
+        "item_icon_center_y_ratio": 0.45,
+        "item_icon_visible_start_ratio": 0.24,
+        "item_icon_visible_end_ratio": 0.85,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      },
+      "normal": {
+        "item_icon_size_ratio": 0.12,
+        "item_icon_center_x_ratio": 0.5,
+        "item_icon_center_y_ratio": 0.45,
+        "item_icon_visible_start_ratio": 0.25,
+        "item_icon_visible_end_ratio": 0.85,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      },
+      "poor_condition": {
+        "item_icon_size_ratio": 0.12,
+        "item_icon_center_x_ratio": 0.5,
+        "item_icon_center_y_ratio": 0.45,
+        "item_icon_visible_start_ratio": 0.18,
+        "item_icon_visible_end_ratio": 0.85,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      },
+      "ill": {
+        "item_icon_size_ratio": 0.08,
+        "item_icon_center_x_ratio": 0.4,
+        "item_icon_center_y_ratio": 0.62,
+        "item_icon_visible_start_ratio": 0.2,
+        "item_icon_visible_end_ratio": 0.5,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      }
+    },
+    "drink": {
+      "happy": {
+        "item_icon_size_ratio": 0.12,
+        "item_icon_center_x_ratio": 0.45,
+        "item_icon_center_y_ratio": 0.45,
+        "item_icon_visible_start_ratio": 0.44,
+        "item_icon_visible_end_ratio": 0.75,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      },
+      "normal": {
+        "item_icon_size_ratio": 0.12,
+        "item_icon_center_x_ratio": 0.45,
+        "item_icon_center_y_ratio": 0.45,
+        "item_icon_visible_start_ratio": 0.44,
+        "item_icon_visible_end_ratio": 0.75,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      },
+      "poor_condition": {
+        "item_icon_size_ratio": 0.12,
+        "item_icon_center_x_ratio": 0.45,
+        "item_icon_center_y_ratio": 0.45,
+        "item_icon_visible_start_ratio": 0.44,
+        "item_icon_visible_end_ratio": 0.75,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      },
+      "ill": {
+        "item_icon_size_ratio": 0.12,
+        "item_icon_center_x_ratio": 0.4,
+        "item_icon_center_y_ratio": 0.57,
+        "item_icon_visible_start_ratio": 0.2,
+        "item_icon_visible_end_ratio": 0.5,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      }
+    },
+    "gift": {
+      "happy": {
+        "item_icon_size_ratio": 0.19,
+        "item_icon_center_x_ratio": 0.5,
+        "item_icon_center_y_ratio": 0.45,
+        "item_icon_visible_start_ratio": 0.13,
+        "item_icon_visible_end_ratio": 0.48,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      },
+      "normal": {
+        "item_icon_size_ratio": 0.19,
+        "item_icon_center_x_ratio": 0.5,
+        "item_icon_center_y_ratio": 0.45,
+        "item_icon_visible_start_ratio": 0.13,
+        "item_icon_visible_end_ratio": 0.48,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      },
+      "poor_condition": {
+        "item_icon_size_ratio": 0.19,
+        "item_icon_center_x_ratio": 0.5,
+        "item_icon_center_y_ratio": 0.45,
+        "item_icon_visible_start_ratio": 0.2,
+        "item_icon_visible_end_ratio": 0.48,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      },
+      "ill": {
+        "item_icon_size_ratio": 0.12,
+        "item_icon_center_x_ratio": 0.4,
+        "item_icon_center_y_ratio": 0.62,
+        "item_icon_visible_start_ratio": 0.5,
+        "item_icon_visible_end_ratio": 0.65,
+        "item_icon_opacity": 1.0,
+        "item_icon_layer": "behind_front",
+        "item_icon_background_enabled": false
+      }
+    }
+  }
+}

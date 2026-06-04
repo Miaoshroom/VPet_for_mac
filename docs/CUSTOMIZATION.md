@@ -12,6 +12,7 @@
 - 调整桌宠自动移动的动作、速度和边界
 - 配置活动（工作、学习、运动、休息等），调整需求、消耗和奖励
 - 配置商店物品目录，修改价格、效果等
+- 调整使用物品时 PNG 图标的叠层位置和显示参数
 - 开关插件，或修改插件自己的配置
 
 ## 文档入口
@@ -22,13 +23,7 @@
 | 开关插件、修改插件参数、了解插件命名 | [PLUGINS.md](PLUGINS.md) |
 | 桌宠存档文件 | [SAVES.md](PLUGINS.md) |
 | 使用编辑器调整一些难以手动编辑的配置文件 | [EDITOR.md](EDITOR.md) |
-| 调默认动作、自动待机、启动退出动画 | 本文的 `action_settings.json` 说明 |
-| 调活动配置、动画候选 | 本文的 `activity_settings.json` 说明 |
-| 调商店物品、价格、效果 | 本文的 `item_catalog.json` 说明 |
-| 调鼠标互动区域 | 本文的 `interaction_map.json` 说明 |
-| 调自动移动 | 本文的 `move_settings.json` 说明 |
 
-其中 `modes.json` , `action_settings.json` , `plugin_loader.json` ， `interaction_map.json` 可在桌宠编辑器中编辑
 ## 注意事项x
 
 1. JSON 文件不能有注释，逗号也要严格。
@@ -57,9 +52,12 @@ ill
 | `config/window_settings.json` | 开发模式开关，记录桌宠窗口大小、位置、UI 窗口位置 |
 | `config/activity_settings.json` | 活动列表：工作、学习、运动、休息等，含需求、消耗和奖励 |
 | `config/item_catalog.json` | 商店物品目录：食物、饮料、药品、清洁、礼物 |
+| `config/care_overlay.json` | 使用商店物品时叠加物品 PNG 的位置和显示参数 |
 | `config/app_settings.json` | 应用全局设置，目前只有存档位置 |
 | `config/plugin_loader.json` | 启用哪些插件 |
 | `config/plugin_config/*.json` | 插件自己的配置 |
+
+其中 `modes.json` , `action_settings.json` , `plugin_loader.json` ， `interaction_map.json` ， `care_overlay.json` 可在桌宠编辑器中编辑，编辑器文档 [PLUGINS.md](PLUGINS.md)
 
 ## modes.json：动作注册表
 
@@ -297,6 +295,34 @@ press_mode.start
 - `effects` 里只需要写这个物品实际有效的属性，不需要把六个属性都写上。
 - `icon` 图片需要放在对应的素材目录里。
 
+## care_overlay.json：使用物品时的 PNG 叠层
+
+`config/care_overlay.json` 控制从背包使用物品、自动使用物品、自动购买并使用物品时，商品 PNG 如何叠到照顾动画上。
+
+| 字段 | 说明 |
+| --- | --- |
+| `enabled` | 是否启用使用物品时的 PNG 叠层 |
+| `actions` | 按动作 id 和宠物状态写完整叠层配置 |
+
+给 `eat`、`drink`、`gift` 添加叠层
+
+`actions` 里的每个动作都按状态分开配置，比如 `actions.eat.normal` 和 `actions.eat.ill`。每个状态块都要完整写一份参数；没有全局默认值
+
+这里只写真实宠物状态：`happy`、`normal`、`poor_condition`、`ill`。注意 `any` 是素材兜底目录，不是这里的配置状态。
+
+单个状态配置字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `item_icon_size_ratio` | 商品 PNG 的大小 |
+| `item_icon_center_x_ratio` | 商品 PNG 中心点横向位置 |
+| `item_icon_center_y_ratio` | 商品 PNG 中心点纵向位置 |
+| `item_icon_visible_start_ratio` | 动画播放到多少比例时显示商品 PNG |
+| `item_icon_visible_end_ratio` | 动画播放到多少比例时隐藏商品 PNG |
+| `item_icon_opacity` | 商品 PNG 透明度 |
+| `item_icon_layer` | 商品 PNG 叠放位置，`behind_front` 表示画在 `front` 图层后面 |
+| `item_icon_background_enabled` | 是否给商品 PNG 额外画白色底板 |
+
 ## app_settings.json：应用全局设置
 
 `config/app_settings.json` 是应用级别的全局配置。
@@ -321,35 +347,3 @@ press_mode.start
 ~/Library/Application Support/VPet/
 ```
 
-## 新增一个动作的最小流程
-
-**⬆️除非你愿意手改 json 不然我还是建议这一块直接使用编辑器编辑更直观方便**
-
-1. 在 `assets/animations/` 下新建动作目录。
-2. 按 [ASSETS.md](ASSETS.md) 的规则放入图片帧。
-3. 在 `config/modes.json` 里注册这个动作。
-4. 如果希望它自动出现，把动作 id 加到 `config/action_settings.json` 的对应列表里。
-5. 如果希望鼠标触发它，把动作 id 写到 `config/interaction_map.json` 的某个区域里。
-6. 重新启动桌宠。
-
-例：新增一个循环待机动作 `wave_hand`。
-
-首先需要在 `assets` 下的对应位置放置帧素材，例如：
-
-```text
-assets/animations/wave_hand/normal/loop/01/main/_000_125.png
-assets/animations/wave_hand/normal/loop/01/main/_001_125.png
-assets/animations/wave_hand/normal/loop/01/main/_002_125.png
-```
-
-`modes.json` 增加：
-
-```json
-{
-  "id": "wave_hand",
-  "title": "挥手",
-  "type": "loop"
-}
-```
-
-如果想让它空闲时随机出现，再把 `wave_hand` 加到 `auto_idle_modes`。

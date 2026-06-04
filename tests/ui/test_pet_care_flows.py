@@ -449,12 +449,19 @@ class FakeCarePlayback:
         self.check = check
         self.message = message
         self.started: list[str] = []
+        self.started_items: list[str | None] = []
 
     def can_start_care(self) -> PlaybackStartCheck:
         return self.check
 
-    def start_care_animation(self, care_action_id: str) -> CarePlaybackResult:
+    def start_care_animation(
+        self,
+        care_action_id: str,
+        *,
+        item: ItemDefinition | None = None,
+    ) -> CarePlaybackResult:
         self.started.append(care_action_id)
+        self.started_items.append(item.id if item is not None else None)
         return CarePlaybackResult(False, None, self.message)
 
 
@@ -638,6 +645,7 @@ class ItemUseWindowBoundarySmokeTest(unittest.TestCase):
                 self.assertEqual(getattr(save.pet_state, field), expected_value)
                 self.assertEqual(save.inventory, {})
                 self.assertEqual(window._care_playback.started, [care_action_id])
+                self.assertEqual(window._care_playback.started_items, [item_id])
                 self.assertEqual(window._status_ticker.reset_count, 1)
                 self.assertEqual(window.save_game_changed.emit_count, 1)
 
@@ -714,6 +722,7 @@ class AutoRefillWindowSmokeTest(unittest.TestCase):
         self.assertEqual(save.pet_state.satiety, 59)
         self.assertEqual(save.inventory, {"basic_medicine": 1})
         self.assertEqual(window._care_playback.started, ["simple_feed"])
+        self.assertEqual(window._care_playback.started_items, ["rice_ball"])
         self.assertEqual(window._status_ticker.reset_count, 1)
         self.assertEqual(window.save_game_changed.emit_count, 1)
         self.assertIn("自动使用了饭团", window._status_panel.notice)
@@ -733,6 +742,7 @@ class AutoRefillWindowSmokeTest(unittest.TestCase):
         self.assertEqual(save.pet_state.health, 42)
         self.assertEqual(save.inventory, {"rice_ball": 1})
         self.assertEqual(window._care_playback.started, ["medicine"])
+        self.assertEqual(window._care_playback.started_items, ["basic_medicine"])
         self.assertEqual(window.save_game_changed.emit_count, 1)
 
     def test_auto_refill_routes_drink_and_cleaning_categories(self) -> None:
@@ -771,6 +781,7 @@ class AutoRefillWindowSmokeTest(unittest.TestCase):
                 self.assertEqual(getattr(save.pet_state, field), expected_value)
                 self.assertEqual(save.inventory, {})
                 self.assertEqual(window._care_playback.started, [care_action_id])
+                self.assertEqual(len(window._care_playback.started_items), 1)
                 self.assertEqual(window.save_game_changed.emit_count, 1)
 
     def test_auto_refill_disabled_does_not_use_item(self) -> None:
@@ -997,6 +1008,7 @@ class AutoRefillWindowSmokeTest(unittest.TestCase):
         self.assertEqual(save.pet_state.satiety, 59)
         self.assertEqual(save.inventory, {})
         self.assertEqual(window._care_playback.started, ["simple_feed"])
+        self.assertEqual(window._care_playback.started_items, ["rice_ball"])
         self.assertEqual(window.save_game_changed.emit_count, 1)
         self.assertIn("自动购买并使用了饭团", window._status_panel.notice)
 
@@ -1086,6 +1098,7 @@ class AutoRefillWindowSmokeTest(unittest.TestCase):
         self.assertEqual(save.pet_state.money, 76)
         self.assertEqual(save.inventory, {})
         self.assertEqual(window._care_playback.started, ["medicine"])
+        self.assertEqual(window._care_playback.started_items, ["basic_medicine"])
         self.assertEqual(window.save_game_changed.emit_count, 1)
 
     def test_auto_purchase_keeps_item_if_unexpected_use_step_fails(self) -> None:

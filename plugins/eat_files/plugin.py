@@ -9,6 +9,7 @@ from pathlib import Path
 from core.app_paths import config_path
 from core.playback.catalog import AnimationCatalog
 from core.playback.clip import Clip
+from core.raising.care_overlay import config_for_action_state, load_care_overlay_settings
 from plugins.eat_files.icon_overlay import clip_with_file_icon
 
 
@@ -57,16 +58,20 @@ class EatFilesPlugin:
             clip = self._animation_catalog.single_for(animation_id, pet_state)
         except KeyError:
             return None
+        care_settings = load_care_overlay_settings()
+        config = config_for_action_state(care_settings, "eat", pet_state)
+        if config is None:
+            return clip
         return clip_with_file_icon(
             clip,
             _first_existing_path(paths),
-            icon_size_ratio=float(self._settings.get("file_icon_size_ratio", 0.15)),
-            center_x_ratio=float(self._settings.get("file_icon_center_x_ratio", 0.5)),
-            center_y_ratio=float(self._settings.get("file_icon_center_y_ratio", 0.575)),
-            visible_start_ratio=float(self._settings.get("file_icon_visible_start_ratio", 0.0)),
-            visible_end_ratio=float(self._settings.get("file_icon_visible_end_ratio", 1.0)),
-            opacity=float(self._settings.get("file_icon_opacity", 1.0)),
-            layer=str(self._settings.get("file_icon_layer", "behind_front")),
+            icon_size_ratio=config.size_ratio,
+            center_x_ratio=config.center_x_ratio,
+            center_y_ratio=config.center_y_ratio,
+            visible_start_ratio=config.visible_start_ratio,
+            visible_end_ratio=config.visible_end_ratio,
+            opacity=config.opacity,
+            layer=config.layer,
         )
 
     def _move_files(self, paths: list[Path]) -> bool:

@@ -43,7 +43,7 @@ config/plugin_config/
 | 文件 | 插件 | 用来改什么 |
 | --- | --- | --- |
 | `show_sticker.json` | 自动发表情 | 表情列表、出现间隔、显示位置、显示大小 |
-| `eat_files.json` | 吃文件 | 吃文件动画、废纸篓路径、文件图标显示方式 |
+| `eat_files.json` | 吃文件 | 吃文件动画、废纸篓路径 |
 | `music_dance.json` | 随音乐跳舞 | 音量阈值、舞蹈动作、单次动画插入概率 |
 | `tomato_clock.json` | 番茄钟 | 工作/休息时长、计时器位置、动作分组 |
 
@@ -80,15 +80,10 @@ config/plugin_config/eat_files.json
 | `enabled` | 是否启用 |
 | `single_animation` | 吃文件时播放的 `single` 动作 |
 | `trash_path` | 文件最后移动到哪里，默认是 `~/.Trash` |
-| `file_icon_size_ratio` | 被吃文件图标的大小 |
-| `file_icon_center_x_ratio` | 文件图标中心点横向位置 |
-| `file_icon_center_y_ratio` | 文件图标中心点纵向位置 |
-| `file_icon_visible_start_ratio` | 动画播放到多少比例时显示文件图标 |
-| `file_icon_visible_end_ratio` | 动画播放到多少比例时隐藏文件图标 |
-| `file_icon_opacity` | 文件图标透明度 |
-| `file_icon_layer` | 文件图标叠放位置 |
 
 `single_animation` 对应的动作必须在 `config/modes.json` 里注册为 `single`，并且在当前状态下有可播放素材。
+
+文件图标叠在动画上的位置、大小、显示区间等参数直接复用 care_overlay.json 中 "eat" 的配置，不再放在插件配置中。
 
 ## music_dance：随音乐跳舞
 

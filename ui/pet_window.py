@@ -19,6 +19,7 @@ from core.raising.activity_playback import (
     CarePlaybackBridge,
     VisualStateBridge,
 )
+from core.raising.care_overlay import clip_with_care_item_icon
 from core.raising.items import ItemCatalog, load_item_catalog
 from core.raising.notices import (
     auto_refill_missing_notice as _auto_refill_missing_notice,
@@ -243,6 +244,7 @@ class PetWindow(QMainWindow):
             single_active=lambda: self._single_active(),
             schedule_once=lambda delay_ms, callback: QTimer.singleShot(delay_ms, callback),
             on_finished=self._on_care_playback_finished,
+            care_clip_overlay=clip_with_care_item_icon,
         )
         self._visual_state_bridge = VisualStateBridge(
             self._save_game.pet_state,

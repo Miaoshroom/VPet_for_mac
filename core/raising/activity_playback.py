@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from core.raising.activity import ActivityDefinition
+from core.raising.items import ItemDefinition
 from core.raising.pet_state import PetState, VisualPetState
 from core.playback.clip import Clip, Mode
 from core.playback.catalog import AnimationCatalog
@@ -71,6 +72,9 @@ class CarePlaybackResult:
     started: bool
     action_id: str | None
     message: str = ""
+
+
+CareClipOverlay = Callable[[Clip, ItemDefinition, str], Clip]
 
 
 CARE_ANIMATION_SPECS: dict[str, CareAnimationSpec] = {
@@ -252,6 +256,7 @@ class CarePlaybackBridge:
         single_active: Callable[[], bool],
         schedule_once: Callable[[int, Callable[[], None]], None],
         on_finished: Callable[[], None] | None = None,
+        care_clip_overlay: CareClipOverlay | None = None,
     ) -> None:
         self._director = director
         self._animation_catalog = animation_catalog
@@ -260,6 +265,7 @@ class CarePlaybackBridge:
         self._single_active = single_active
         self._schedule_once = schedule_once
         self._on_finished = on_finished or (lambda: None)
+        self._care_clip_overlay = care_clip_overlay
         self._single_player: _SinglePlayer | None = None
         self._active_care_action_id: str | None = None
         self._active_action_id: str | None = None
@@ -293,7 +299,12 @@ class CarePlaybackBridge:
     def is_active(self) -> bool:
         return self._active_action_id is not None
 
-    def start_care_animation(self, care_action_id: str) -> CarePlaybackResult:
+    def start_care_animation(
+        self,
+        care_action_id: str,
+        *,
+        item: ItemDefinition | None = None,
+    ) -> CarePlaybackResult:
         if self.is_active():
             return CarePlaybackResult(
                 started=False,
@@ -320,7 +331,7 @@ class CarePlaybackBridge:
 
         try:
             if action_type == "single":
-                result = self._start_single_action(action_id)
+                result = self._start_single_action(action_id, item)
             elif action_type == "phased":
                 result = self._start_phased_action(action_id, generation)
             else:
@@ -352,14 +363,21 @@ class CarePlaybackBridge:
             return CarePlaybackResult(started=False, action_id=self._active_action_id)
         return self._finish_now()
 
-    def _start_single_action(self, action_id: str) -> CarePlaybackResult:
+    def _start_single_action(
+        self,
+        action_id: str,
+        item: ItemDefinition | None,
+    ) -> CarePlaybackResult:
         if self._single_player is None:
             return CarePlaybackResult(
                 started=False,
                 action_id=action_id,
                 message="照顾成功，但当前没有可用的 single 播放器。",
             )
-        clip = self._animation_catalog.single_for(action_id, self._director.pet_state())
+        pet_state = self._director.pet_state()
+        clip = self._animation_catalog.single_for(action_id, pet_state)
+        if item is not None and self._care_clip_overlay is not None:
+            clip = self._care_clip_overlay(clip, item, pet_state)
         if not self._single_player.play(
             clip,
             on_finished=lambda: self._finish_now(),
@@ -550,6 +568,7 @@ __all__ = [
     "ActivityPlaybackResult",
     "CARE_ANIMATION_SPECS",
     "CareAnimationSpec",
+    "CareClipOverlay",
     "CarePlaybackBridge",
     "CarePlaybackResult",
     "PlaybackStartCheck",

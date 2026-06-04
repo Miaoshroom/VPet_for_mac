@@ -14,6 +14,7 @@ from core.raising.activity_playback import (
     CarePlaybackBridge,
     VisualStateBridge,
 )
+from core.raising.items import ItemDefinition
 from core.raising.pet_state import PetState
 
 
@@ -21,6 +22,7 @@ class FakeClip:
     def __init__(self, action_id: str, duration_ms: int = 10) -> None:
         self.action_id = action_id
         self.duration_ms = duration_ms
+        self.overlay_item_id: str | None = None
 
 
 class FakeMode:
@@ -340,6 +342,45 @@ class CarePlaybackBridgeTest(unittest.TestCase):
         self.assertTrue(playback.started)
         self.assertEqual(playback.action_id, "eat")
         self.assertEqual([clip.action_id for clip in single.played], ["eat"])
+
+    def test_single_care_passes_item_to_overlay_factory(self) -> None:
+        director = FakeDirector()
+        director.pet_state_value = "ill"
+        single = FakeSinglePlayer()
+        item = ItemDefinition(
+            id="rice_ball",
+            name="饭团",
+            category="food",
+            price=12,
+            effects={"satiety": 24},
+            icon="rice_ball.png",
+        )
+
+        def overlay_factory(
+            clip: FakeClip,
+            overlay_item: ItemDefinition,
+            pet_state: str,
+        ) -> FakeClip:
+            wrapped = FakeClip(clip.action_id, clip.duration_ms)
+            wrapped.overlay_item_id = f"{overlay_item.id}:{pet_state}"
+            return wrapped
+
+        bridge = CarePlaybackBridge(
+            director,
+            FakeCatalog(),
+            action_blocked=lambda: False,
+            activity_active=lambda: False,
+            single_active=lambda: False,
+            schedule_once=lambda delay_ms, callback: None,
+            care_clip_overlay=overlay_factory,
+        )
+        bridge.set_single_player(single)
+
+        playback = bridge.start_care_animation("simple_feed", item=item)
+
+        self.assertTrue(playback.started)
+        self.assertEqual(single.played[0].action_id, "eat")
+        self.assertEqual(single.played[0].overlay_item_id, "rice_ball:ill")
 
     def test_gift_care_plays_gift_animation(self) -> None:
         director = FakeDirector()

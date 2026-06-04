@@ -280,7 +280,10 @@ def use_inventory_item_for_care(
 
         self._status_ticker.reset()
         care_action_id = care_action_for_item_category(result.item.category)
-        playback = self._care_playback.start_care_animation(care_action_id)
+        playback = self._care_playback.start_care_animation(
+            care_action_id,
+            item=result.item,
+        )
         self._request_visual_state_update()
         self._sync_status_panel_info()
         self._sync_inventory_panel()
