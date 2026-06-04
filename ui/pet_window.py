@@ -159,6 +159,7 @@ class PetWindow(QMainWindow):
     _resume_activity_animation_if_needed = input_controller.resume_activity_animation_if_needed
     _should_pause_plugins_for_press = input_controller.should_pause_plugins_for_press
     _reset_pointer_state = input_controller.reset_pointer_state
+    _interaction_end_locked = input_controller.interaction_end_locked
     pause_plugins_for_interaction = input_controller.pause_plugins_for_interaction
     resume_plugins_after_interaction = input_controller.resume_plugins_after_interaction
     dragEnterEvent = input_controller.drag_enter_event

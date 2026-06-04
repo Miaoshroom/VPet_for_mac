@@ -95,6 +95,9 @@ ill
 | --- | --- |
 | `default_mode` | 启动后进入的默认循环动作 |
 | `press_mode` | 默认按住桌宠时触发的动作 |
+| `press_warmup_mode` | 默认按住动作进入持续循环前，额外先播放的 `loop` 动作；留空或删除表示不播放 |
+| `press_warmup_loop_min` | `press_warmup_mode` 最少播放次数 |
+| `press_warmup_loop_max` | `press_warmup_mode` 最多播放次数 |
 | `auto_idle_modes` | 空闲时会随机切换的动作列表 |
 | `idle_autoswitch_interval_min_ms` | 自动切换待机动作的最短间隔，单位毫秒 |
 | `idle_autoswitch_interval_max_ms` | 自动切换待机动作的最长间隔，单位毫秒 |
@@ -104,7 +107,27 @@ ill
 | `single_insert_interval_min_ms` | 随机插入单次动画的最短间隔 |
 | `single_insert_interval_max_ms` | 随机插入单次动画的最长间隔 |
 
-注意事项：这里引用的动作必须已经写在 `modes.json` 里。`auto_idle_modes` 只能放 `loop` 或 `phased`，`startup`、`shutdown`、`single_insert_modes` 只能放 `single`。
+注意事项：这里引用的动作必须已经写在 `modes.json` 里。`press_mode` 只能放 `phased`，`press_warmup_mode` 只能放 `loop`，`auto_idle_modes` 只能放 `loop` 或 `phased`，`startup`、`shutdown`、`single_insert_modes` 只能放 `single`。
+
+按住动作的播放顺序：
+
+```text
+press_mode.start
+-> press_warmup_mode.loop 播放 press_warmup_loop_min 到 press_warmup_loop_max 次
+-> press_mode.loop 持续播放
+-> 松手后播放 press_mode.end
+```
+
+当前提起动作的配置示例：
+
+```json
+{
+  "press_mode": "raise_raised_static",
+  "press_warmup_mode": "raise_raised_dynamic",
+  "press_warmup_loop_min": 2,
+  "press_warmup_loop_max": 3
+}
+```
 
 ## interaction_map.json：鼠标互动区域配置
 

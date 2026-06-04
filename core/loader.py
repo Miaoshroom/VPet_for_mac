@@ -42,6 +42,9 @@ class LoadedActions:
     single_insert_modes: tuple[str, ...]
     default_mode: str
     press_mode: str
+    press_warmup_mode: str | None
+    press_warmup_loop_min: int
+    press_warmup_loop_max: int
     idle_autoswitch_interval_min_ms: int
     idle_autoswitch_interval_max_ms: int
     auto_idle_modes: tuple[str, ...]
@@ -68,6 +71,14 @@ def load_action_config(pet_state: str = DEFAULT_PET_STATE) -> LoadedActions:
     single_insert_modes = tuple(str(mode_id) for mode_id in settings.get("single_insert_modes", []))
     default_mode = str(settings["default_mode"])
     press_mode = str(settings["press_mode"])
+    press_warmup_mode = _optional_action_id(settings.get("press_warmup_mode"))
+    warmup_default = 1 if press_warmup_mode else 0
+    press_warmup_loop_min = int(
+        settings.get("press_warmup_loop_min", warmup_default)
+    )
+    press_warmup_loop_max = int(
+        settings.get("press_warmup_loop_max", warmup_default)
+    )
     idle_autoswitch_interval_min_ms = int(settings.get("idle_autoswitch_interval_min_ms", 0))
     idle_autoswitch_interval_max_ms = int(settings.get("idle_autoswitch_interval_max_ms", 0))
     auto_idle_modes = tuple(str(mode_id) for mode_id in settings.get("auto_idle_modes", []))
@@ -77,6 +88,18 @@ def load_action_config(pet_state: str = DEFAULT_PET_STATE) -> LoadedActions:
     # 除 default_mode 必须当前状态可播外 其他配置只校验身份和类型
     _require_mode(default_mode, modes, "default_mode")
     _require_action_type(press_mode, action_spec_map, "press_mode", ("phased",))
+    if press_warmup_mode is not None:
+        _require_action_type(
+            press_warmup_mode,
+            action_spec_map,
+            "press_warmup_mode",
+            ("loop",),
+        )
+        _require_loop_range(
+            press_warmup_loop_min,
+            press_warmup_loop_max,
+            "press_warmup_loop",
+        )
     for mode_id in auto_idle_modes:
         _require_action_type(
             mode_id,
@@ -104,6 +127,9 @@ def load_action_config(pet_state: str = DEFAULT_PET_STATE) -> LoadedActions:
         single_insert_modes=single_insert_modes,
         default_mode=default_mode,
         press_mode=press_mode,
+        press_warmup_mode=press_warmup_mode,
+        press_warmup_loop_min=press_warmup_loop_min,
+        press_warmup_loop_max=press_warmup_loop_max,
         idle_autoswitch_interval_min_ms=idle_autoswitch_interval_min_ms,
         idle_autoswitch_interval_max_ms=idle_autoswitch_interval_max_ms,
         auto_idle_modes=auto_idle_modes,
@@ -250,6 +276,13 @@ def _require_mode(mode_id: str, modes: dict[str, Mode], field: str) -> None:
         raise RuntimeError(f"{field} 指向的动作在当前状态不可播放: {mode_id}")
 
 
+def _optional_action_id(value: object) -> str | None:
+    if value is None:
+        return None
+    action_id = str(value).strip()
+    return action_id or None
+
+
 def _require_action_type(
     action_id: str,
     action_specs: dict[str, ActionSpec],
@@ -264,3 +297,8 @@ def _require_action_type(
         raise RuntimeError(
             f"{field} 动作类型不合法: {action_id} 是 {spec.type}，只允许 {allowed}"
         )
+
+
+def _require_loop_range(min_value: int, max_value: int, field: str) -> None:
+    if min_value < 1 or max_value < min_value:
+        raise RuntimeError(f"{field} 次数范围不合法: {min_value}..{max_value}")

@@ -112,6 +112,15 @@ def reset_pointer_state(self) -> None:
     self._pressed_drag_behavior = InteractionBehavior(type="none")
 
 
+def interaction_end_locked(self) -> bool:
+    is_finishing = getattr(self._director, "is_interaction_finishing", None)
+    return (
+        callable(is_finishing)
+        and is_finishing()
+        and self._press_global is None
+    )
+
+
 def pause_plugins_for_interaction(self) -> None:
     for plugin in self._plugins:
         pause = getattr(plugin, "pause_for_interaction", None)
@@ -127,7 +136,11 @@ def resume_plugins_after_interaction(self) -> None:
 
 
 def drag_enter_event(self, event) -> None:
-    if self._single_active() or self._care_playback.is_active():
+    if (
+        self._single_active()
+        or self._care_playback.is_active()
+        or self._interaction_end_locked()
+    ):
         event.ignore()
         return
     if drop_paths(event):
@@ -138,7 +151,11 @@ def drag_enter_event(self, event) -> None:
 
 
 def drag_move_event(self, event) -> None:
-    if self._single_active() or self._care_playback.is_active():
+    if (
+        self._single_active()
+        or self._care_playback.is_active()
+        or self._interaction_end_locked()
+    ):
         event.ignore()
         return
     if drop_paths(event):
@@ -148,7 +165,11 @@ def drag_move_event(self, event) -> None:
 
 
 def drop_event(self, event) -> None:
-    if self._single_active() or self._care_playback.is_active():
+    if (
+        self._single_active()
+        or self._care_playback.is_active()
+        or self._interaction_end_locked()
+    ):
         event.ignore()
         return
     paths = drop_paths(event)
@@ -162,7 +183,11 @@ def drop_event(self, event) -> None:
 
 
 def mouse_press_event(self, e: QMouseEvent) -> None:
-    if self._single_active() or self._care_playback.is_active():
+    if (
+        self._single_active()
+        or self._care_playback.is_active()
+        or self._interaction_end_locked()
+    ):
         e.accept()
         return
     if e.button() == Qt.MouseButton.LeftButton:
@@ -205,7 +230,11 @@ def mouse_press_event(self, e: QMouseEvent) -> None:
 
 
 def mouse_move_event(self, e: QMouseEvent) -> None:
-    if self._single_active() or self._care_playback.is_active():
+    if (
+        self._single_active()
+        or self._care_playback.is_active()
+        or self._interaction_end_locked()
+    ):
         e.accept()
         return
     if (
@@ -227,7 +256,11 @@ def mouse_move_event(self, e: QMouseEvent) -> None:
 
 
 def mouse_release_event(self, e: QMouseEvent) -> None:
-    if self._single_active() or self._care_playback.is_active():
+    if (
+        self._single_active()
+        or self._care_playback.is_active()
+        or self._interaction_end_locked()
+    ):
         self._reset_pointer_state()
         e.accept()
         return
@@ -244,6 +277,9 @@ def mouse_release_event(self, e: QMouseEvent) -> None:
 
 
 def context_menu_event(self, e) -> None:
+    if self._interaction_end_locked():
+        e.accept()
+        return
     self.toggle_status_panel()
     e.accept()
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,6 +29,13 @@ class PlaybackDebugSnapshot:
     pending_mode: str | None = None
 
 
+@dataclass(frozen=True)
+class InteractionWarmupSpec:
+    action_id: str
+    loop_min: int
+    loop_max: int
+
+
 class PressHoldAnimator(QObject):
     """按住互动动画"""
 
@@ -41,12 +49,19 @@ class PressHoldAnimator(QObject):
         parent: QObject | None = None,
         *,
         mode_factory: Callable[[], Mode] | None = None,
+        warmup_loop: Clip | None = None,
+        warmup_loop_count_factory: Callable[[], int] | None = None,
+        warmup_mode_factory: Callable[[], Mode] | None = None,
     ) -> None:
         super().__init__(parent)
         self._start_c = start
         self._loop_c = loop
         self._end_c = end
         self._mode_factory = mode_factory
+        self._warmup_loop_c = warmup_loop
+        self._warmup_loop_count_factory = warmup_loop_count_factory
+        self._warmup_mode_factory = warmup_mode_factory
+        self._warmup_loop_left = 0
         self._player = FlipbookPlayer(self)
         self._player.frame_changed.connect(self.frame_changed)
         self._on_resume: Callable[[], None] | None = None
@@ -58,6 +73,7 @@ class PressHoldAnimator(QObject):
         self._player.disconnect_finished()
         self._on_resume = on_resume
         self._wants_end = False
+        self._warmup_loop_left = 0
         self._phase = "start"
         self._player.finished.connect(self._after_start)
         self._player.play(self._start_c, loop=False)
@@ -66,7 +82,7 @@ class PressHoldAnimator(QObject):
         if self._phase in ("end", "idle"):
             return
         self._wants_end = True
-        if self._phase == "loop":
+        if self._phase in ("warmup", "loop"):
             self._play_end()
 
     def stop(self) -> None:
@@ -74,6 +90,7 @@ class PressHoldAnimator(QObject):
         self._player.disconnect_finished()
         self._on_resume = None
         self._wants_end = False
+        self._warmup_loop_left = 0
         self._phase = "idle"
 
     def is_active(self) -> bool:
@@ -89,6 +106,19 @@ class PressHoldAnimator(QObject):
         self._player.disconnect_finished()
         if self._wants_end:
             self._play_end()
+            return
+        if self._start_warmup():
+            return
+        self._play_loop(refresh=False)
+
+    def _after_warmup(self) -> None:
+        self._player.disconnect_finished()
+        if self._wants_end:
+            self._play_end()
+            return
+        self._warmup_loop_left -= 1
+        if self._warmup_loop_left > 0:
+            self._play_warmup(refresh=True)
             return
         self._play_loop(refresh=False)
 
@@ -107,6 +137,39 @@ class PressHoldAnimator(QObject):
         self._player.disconnect_finished()
         self._player.finished.connect(self._after_loop)
         self._player.play(self._loop_c, loop=False)
+
+    def _start_warmup(self) -> bool:
+        if self._warmup_loop_c is None:
+            return False
+        loop_count = 1
+        if self._warmup_loop_count_factory is not None:
+            loop_count = self._warmup_loop_count_factory()
+        self._warmup_loop_left = max(0, int(loop_count))
+        if self._warmup_loop_left <= 0:
+            return False
+        self._play_warmup(refresh=False)
+        return True
+
+    def _play_warmup(self, *, refresh: bool) -> None:
+        self._phase = "warmup"
+        if refresh:
+            self._refresh_warmup_mode()
+        if self._warmup_loop_c is None:
+            self._play_loop(refresh=False)
+            return
+        self._player.stop()
+        self._player.disconnect_finished()
+        self._player.finished.connect(self._after_warmup)
+        self._player.play(self._warmup_loop_c, loop=False)
+
+    def _refresh_warmup_mode(self) -> None:
+        if self._warmup_mode_factory is None:
+            return
+        try:
+            mode = self._warmup_mode_factory()
+        except KeyError:
+            return
+        self._warmup_loop_c = mode.loop
 
     def _refresh_loop_mode(self) -> None:
         if self._mode_factory is None:
@@ -153,6 +216,7 @@ class PetAnimationDirector(QObject):
         *,
         animation_catalog: AnimationCatalog | None = None,
         pet_state: str = DEFAULT_PET_STATE,
+        interaction_warmups: dict[str, InteractionWarmupSpec] | None = None,
     ) -> None:
         super().__init__(parent)
         if not modes:
@@ -177,6 +241,7 @@ class PetAnimationDirector(QObject):
         self._pending_mode: str | None = None
         self._phase = "idle"
         self._interactions = interactions
+        self._interaction_warmups = interaction_warmups or {}
         self._default_interaction = default_interaction
         self._active_interaction_name: str | None = None
         self._active_interaction: PressHoldAnimator | None = None
@@ -256,6 +321,12 @@ class PetAnimationDirector(QObject):
 
     def is_interaction_active(self) -> bool:
         return self._active_interaction is not None
+
+    def is_interaction_finishing(self) -> bool:
+        return (
+            self._active_interaction is not None
+            and self._active_interaction.current_phase() == "end"
+        )
 
     def start_default_mode(self) -> None:
         if self.is_visual_override_active():
@@ -412,11 +483,29 @@ class PetAnimationDirector(QObject):
             mode.end,
             self,
             mode_factory=lambda: self._resolve_mode(interaction_name),
+            **self._warmup_kwargs_for(interaction_name),
         )
         interaction.frame_changed.connect(self.frame_changed)
         self._transient_interaction = interaction
         self._transient_interaction_mode = mode
         return interaction
+
+    def _warmup_kwargs_for(self, interaction_name: str) -> dict[str, object]:
+        spec = self._interaction_warmups.get(interaction_name)
+        if spec is None:
+            return {}
+        try:
+            warmup_mode = self._resolve_mode(spec.action_id)
+        except KeyError:
+            return {}
+        return {
+            "warmup_loop": warmup_mode.loop,
+            "warmup_loop_count_factory": lambda: random.randint(
+                spec.loop_min,
+                spec.loop_max,
+            ),
+            "warmup_mode_factory": lambda: self._resolve_mode(spec.action_id),
+        }
 
     def _stop_mode_player(self) -> None:
         self._mode_player.stop()

@@ -145,7 +145,7 @@ class AnimationCatalog:
         if mode_type == "loop":
             return bool(self._playable_variants(state_data, "loop"))
         if mode_type == "phased":
-            return bool(self._playable_phased_loop_variants(state_data))
+            return self._phased_available(state_data)
         return False
 
     def is_single_available(self, action_id: str, pet_state: str) -> bool:
@@ -186,9 +186,9 @@ class AnimationCatalog:
             )
         if mode_type != "phased":
             raise KeyError(f"未知动作类型: {mode_type}")
-        loop_selected = self._pick_phased_loop_variant(state_data, loop_variant)
-        start_selected = self._phase_variant_or_default(state_data, "start", loop_selected)
-        end_selected = self._phase_variant_or_default(state_data, "end", loop_selected)
+        loop_selected = self._pick_variant(state_data, "loop", loop_variant)
+        start_selected = self._pick_variant(state_data, "start", None)
+        end_selected = self._pick_variant(state_data, "end", None)
         return Mode(
             loop=self._clip_for_variant(
                 state_data,
@@ -326,41 +326,11 @@ class AnimationCatalog:
             return requested
         return random.choice(variants)
 
-    def _pick_phased_loop_variant(
-        self,
-        state_data: PhaseClips,
-        requested: str | None,
-    ) -> str:
-        variants = self._playable_phased_loop_variants(state_data)
-        if not variants:
-            raise KeyError("phased 动画没有完整可播放的 start-loop-end")
-        if requested is not None:
-            if requested not in variants:
-                raise KeyError(f"phased 动画变体 {requested} 缺少 start 或 end")
-            return requested
-        return random.choice(variants)
-
-    def _playable_phased_loop_variants(self, state_data: PhaseClips) -> tuple[str, ...]:
-        # phased 必须先确认 start loop end 能凑成一套
-        result: list[str] = []
-        for loop_variant in self._playable_variants(state_data, "loop"):
-            if (
-                self._phase_variant_available(state_data, "start", loop_variant)
-                and self._phase_variant_available(state_data, "end", loop_variant)
-            ):
-                result.append(loop_variant)
-        return tuple(result)
-
-    def _phase_variant_available(
-        self,
-        state_data: PhaseClips,
-        phase: str,
-        loop_variant: str,
-    ) -> bool:
-        phase_variants = state_data.get(phase, {})
-        if loop_variant in phase_variants and self._has_playable_layer(phase_variants[loop_variant]):
-            return True
-        return "01" in phase_variants and self._has_playable_layer(phase_variants["01"])
+    def _phased_available(self, state_data: PhaseClips) -> bool:
+        return all(
+            bool(self._playable_variants(state_data, phase))
+            for phase in ("start", "loop", "end")
+        )
 
     def _playable_variants(self, state_data: PhaseClips, phase: str) -> tuple[str, ...]:
         return tuple(
@@ -373,19 +343,6 @@ class AnimationCatalog:
 
     def _has_playable_layer(self, layers: LayerClips) -> bool:
         return any(layer in layers for layer in LAYER_DRAW_ORDER)
-
-    def _phase_variant_or_default(
-        self,
-        state_data: PhaseClips,
-        phase: str,
-        loop_variant: str,
-    ) -> str:
-        phase_variants = state_data.get(phase, {})
-        if loop_variant in phase_variants and self._has_playable_layer(phase_variants[loop_variant]):
-            return loop_variant
-        if "01" in phase_variants and self._has_playable_layer(phase_variants["01"]):
-            return "01"
-        raise KeyError(f"phased 动画缺少 {phase}/{loop_variant}，且没有 {phase}/01 可回退")
 
     def _clip_for_variant(
         self,

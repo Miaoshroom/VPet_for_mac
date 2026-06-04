@@ -11,7 +11,7 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.raising.activity import load_activity_catalog
-from core.animation import PressHoldAnimator, PetAnimationDirector
+from core.animation import InteractionWarmupSpec, PressHoldAnimator, PetAnimationDirector
 from core.auto_move import AutoMoveController
 from core.interaction_map import load_interaction_map
 from core.raising.items import load_item_catalog
@@ -30,6 +30,18 @@ from ui.shared.theme import apply_app_theme
 ROOT = Path(__file__).resolve().parent
 APP_ICON = ROOT / "resources" / "app_icon.png"
 BAR_ICON = ROOT / "resources" / "bar_icon.png"
+
+
+def _interaction_warmups(config) -> dict[str, InteractionWarmupSpec]:
+    if config.press_warmup_mode is None:
+        return {}
+    return {
+        config.press_mode: InteractionWarmupSpec(
+            action_id=config.press_warmup_mode,
+            loop_min=config.press_warmup_loop_min,
+            loop_max=config.press_warmup_loop_max,
+        )
+    }
 
 
 def main() -> int:
@@ -57,6 +69,7 @@ def main() -> int:
             default_interaction=config.press_mode,
             animation_catalog=config.animation_catalog,
             pet_state=config.pet_state,
+            interaction_warmups=_interaction_warmups(config),
         )
 
         startup_clip, initial_pixmap = pick_startup(
