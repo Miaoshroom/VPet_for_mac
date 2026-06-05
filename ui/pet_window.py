@@ -6,7 +6,7 @@ from collections.abc import Callable
 from pathlib import Path
 from time import monotonic
 
-from PyQt6.QtCore import QPoint, QTimer, Qt, pyqtSignal
+from PyQt6.QtCore import QPoint, QRect, QTimer, Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
@@ -31,8 +31,11 @@ from core.raising.pet_session import AUTO_REFILL_MISSING_NOTICE_SECONDS
 from core.raising.save_game import SaveGame
 from core.raising.status_ticker import DEFAULT_TICK_SECONDS, PetStatusTicker
 from ui.panels.status_panel import PetStatusPanel
+from ui.chat.controller import ChatController
 from ui.pet_display import DevModePanel, PetDisplay
 from ui.pet_window_parts import (
+    chat_context,
+    chat_effects,
     dev_mode_controller,
     display_controller,
     input_controller,
@@ -224,10 +227,15 @@ class PetWindow(QMainWindow):
         self._plugins = []
         self._drop_handlers: list[Callable[[list[Path]], None]] = []
         self._single_active = lambda: False
+        self._single_player = None
         self._single_debug_snapshot: Callable[[], PlaybackDebugSnapshot | None] = lambda: None
         self._single_replay_current: Callable[[], bool] = lambda: False
         self._interrupt_auto_move = lambda: None
+        self._auto_move_active = lambda: False
         self._on_open_editor = on_open_editor
+        self._chat_controller: ChatController | None = None
+        self._chat_effect_executor: chat_effects.ChatActionEffectExecutor | None = None
+        self._chat_context_provider = None
         if animation_catalog is None:
             raise ValueError("PetWindow 需要 animation_catalog 才能桥接活动动画")
         self._activity_playback = ActivityPlaybackBridge(
@@ -253,6 +261,26 @@ class PetWindow(QMainWindow):
             single_active=lambda: self._single_active(),
             activity_animation_active=self._activity_playback.is_active,
             care_animation_active=self._care_playback.is_active,
+        )
+        self._chat_effect_executor = chat_effects.ChatActionEffectExecutor(
+            director=director,
+            animation_catalog=animation_catalog,
+            action_blocked=lambda: self._action_blocked(),
+            single_active=lambda: self._chat_single_active(),
+            automated_action_active=lambda: self.automated_action_active(),
+            auto_move_active=lambda: self._auto_move_active(),
+            schedule_once=lambda delay_ms, callback: QTimer.singleShot(delay_ms, callback),
+        )
+        self._chat_context_provider = chat_context.PetWindowChatContextProvider(
+            save_game=self._save_game,
+            director=director,
+            activity_system=self._activity_system,
+            item_catalog=self._item_catalog,
+            plugin_active=lambda: self._action_blocked(),
+            single_active=lambda: self._chat_single_active(),
+            activity_playback_active=lambda: self._activity_playback.is_active(),
+            care_playback_active=lambda: self._care_playback.is_active(),
+            auto_move_active=lambda: self._auto_move_active(),
         )
         self._dev_mode = dev_mode_from_json()
         self._dev_mode_config_enabled = self._dev_mode
@@ -346,7 +374,10 @@ class PetWindow(QMainWindow):
         self._single_active = callback
 
     def set_single_player(self, single_player) -> None:
+        self._single_player = single_player
         self._care_playback.set_single_player(single_player)
+        if self._chat_effect_executor is not None:
+            self._chat_effect_executor.set_single_player(single_player)
 
     def set_single_debug_callbacks(
         self,
@@ -358,3 +389,44 @@ class PetWindow(QMainWindow):
 
     def set_auto_move_interrupt_callback(self, callback: Callable[[], None]) -> None:
         self._interrupt_auto_move = callback
+
+    def set_auto_move_active_callback(self, callback: Callable[[], bool]) -> None:
+        self._auto_move_active = callback
+
+    def _chat_single_active(self) -> bool:
+        single_player = getattr(self, "_single_player", None)
+        is_active = getattr(single_player, "is_active", None)
+        if callable(is_active) and is_active():
+            return True
+        return self._single_active()
+
+    def ensure_chat_controller(self) -> ChatController:
+        if self._chat_controller is None:
+            self._chat_controller = ChatController(
+                parent=self,
+                rect_provider=self.get_pet_display_global_rect,
+                effect_executor=getattr(self, "_chat_effect_executor", None),
+                pet_context_provider=getattr(self, "_chat_context_provider", None),
+            )
+        return self._chat_controller
+
+    def open_chat_window(self) -> None:
+        controller = self.ensure_chat_controller()
+        controller.show_window()
+
+    def reposition_chat_window(self) -> None:
+        if self._chat_controller is not None:
+            self._chat_controller.reposition_window()
+
+    def get_pet_display_global_rect(self) -> QRect:
+        local_rect = self._label.rect()
+        top_left = self._label.mapToGlobal(local_rect.topLeft())
+        return QRect(top_left, local_rect.size())
+
+    def moveEvent(self, event) -> None:
+        super().moveEvent(event)
+        self.reposition_chat_window()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self.reposition_chat_window()

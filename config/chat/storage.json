@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "history_dir": "chat_data/history",
+  "memory_dir": "chat_data/memory",
+  "pet_stickers_dir": "chat_data/pet_stickers",
+  "user_stickers_dir": "chat_data/user_stickers",
+  "attachments_dir": "chat_data/attachments",
+  "long_term_memory_file": "chat_data/memory/long_term_memory.json",
+  "recent_history_days": 7,
+  "recent_history_limit": 40
+}

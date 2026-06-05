@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "actions": [
+    {
+      "id": "say_self",
+      "label": "自言自语",
+      "allow_in_v1": true
+    },
+    {
+      "id": "say_serious",
+      "label": "严肃说话",
+      "allow_in_v1": true
+    },
+    {
+      "id": "say_shining",
+      "label": "发光说话",
+      "allow_in_v1": true
+    },
+    {
+      "id": "say_shy",
+      "label": "害羞说话",
+      "allow_in_v1": true
+    }
+  ],
+  "allowed_use_item_ids": [
+    "rice_ball",
+    "sparkling_water",
+    "basic_medicine",
+    "cleaning_wipes",
+    "gift_box"
+  ]
+}

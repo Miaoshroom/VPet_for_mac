@@ -14,6 +14,7 @@
 - 配置商店物品目录，修改价格、效果等
 - 调整使用物品时 PNG 图标的叠层位置和显示参数
 - 开关插件，或修改插件自己的配置
+- 配置 AI 聊天（对话、贴纸、动作、长期记忆、人设等）
 
 ## 文档入口
 
@@ -23,6 +24,7 @@
 | 开关插件、修改插件参数、了解插件命名 | [PLUGINS.md](PLUGINS.md) |
 | 桌宠存档文件 | [SAVES.md](PLUGINS.md) |
 | 使用编辑器调整一些难以手动编辑的配置文件 | [EDITOR.md](EDITOR.md) |
+| 配置 AI 聊天、对话风格、贴纸、长期记忆、人设 | [CHAT.md](CHAT.md) |
 
 ## 注意事项x
 
@@ -56,6 +58,13 @@ ill
 | `config/app_settings.json` | 应用全局设置，目前只有存档位置 |
 | `config/plugin_loader.json` | 启用哪些插件 |
 | `config/plugin_config/*.json` | 插件自己的配置 |
+| `config/chat/ai_settings.json` | AI 聊天：提供方、模型、API Key、超时、温度等 |
+| `config/chat/pet_persona.json` | AI 聊天：桌宠人设、性格、语气 |
+| `config/chat/user_profile.json` | AI 聊天：用户偏好、称呼、边界 |
+| `config/chat/prompt_rules.json` | AI 聊天：对话规则和风格约束 |
+| `config/chat/ai_actions.json` | AI 聊天：可用动画动作和物品 |
+| `config/chat/pet_stickers.json` | AI 聊天：桌宠贴纸注册 |
+| `config/chat/storage.json` | AI 聊天：历史、记忆、贴纸等存储路径 |
 
 其中 `modes.json` , `action_settings.json` , `plugin_loader.json` ， `interaction_map.json` ， `care_overlay.json` 可在桌宠编辑器中编辑，编辑器文档 [PLUGINS.md](PLUGINS.md)
 

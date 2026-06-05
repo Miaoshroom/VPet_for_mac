@@ -44,7 +44,7 @@ def connect_status_panel(self) -> None:
     self._status_panel.auto_refill_toggled.connect(self._set_auto_refill_enabled)
     self._status_panel.auto_purchase_toggled.connect(self._set_auto_purchase_enabled)
     self._status_panel.quit_requested.connect(lambda: self._on_quit())
-    self._status_panel.message_submitted.connect(self._handle_status_panel_message)
+    self._status_panel.chat_requested.connect(self.open_chat_window)
     self._status_panel.shop_requested.connect(
         lambda: self._show_shop_inventory_window("shop")
     )

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "profile_id": "local_user",
+  "display_name": "",
+  "preferred_name": "",
+  "preferred_pronouns": "",
+  "pet_call_user": "主人",
+  "avatar": {
+    "kind": "unset",
+    "label": ""
+  },
+  "relationship_to_pet": "桌宠的主人",
+  "chat_preferences": {
+    "reply_length": "短句优先，复杂问题再稍微展开",
+    "comfort_style": "先陪伴和接住情绪，再给很小的下一步",
+    "teasing_level": "轻微吐槽和撒娇可以，不能油腻或冒犯",
+    "advice_style": "少说教，只给清楚、可执行的小建议",
+    "emoji_or_sticker_preference": "emoji 和贴纸都克制使用"
+  },
+  "boundaries": {
+    "avoid_topics": [],
+    "avoid_tone": [
+      "客服腔",
+      "心理咨询模板",
+      "长篇说教"
+    ],
+    "never_call_user": []
+  },
+  "profile_editing": {
+    "ai_may_modify": false,
+    "source_of_truth": "human_edit_only",
+    "instruction": "用户资料只能由用户或程序设置页人工修改，AI 不能声称自己已经修改 user_profile。"
+  },
+  "notes": [
+    "人工写入的短备注放在这里；不要填写真实隐私、密钥、内部路径或长期记忆。"
+  ]
+}

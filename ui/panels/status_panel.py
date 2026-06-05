@@ -9,7 +9,6 @@ from PyQt6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QPushButton,
     QProgressBar,
     QSizePolicy,
@@ -36,7 +35,7 @@ class PetStatusPanel(QFrame):
     auto_refill_toggled = pyqtSignal(bool)
     auto_purchase_toggled = pyqtSignal(bool)
     quit_requested = pyqtSignal()
-    message_submitted = pyqtSignal(str)
+    chat_requested = pyqtSignal()
     shop_requested = pyqtSignal()
     inventory_requested = pyqtSignal()
     activity_requested = pyqtSignal(str)
@@ -351,13 +350,6 @@ class PetStatusPanel(QFrame):
         if self._inventory_count_label is not None:
             self._inventory_count_label.setText(f"{max(0, int(total_items))}")
 
-    def _submit_message(self) -> None:
-        text = self._chat_input.text().strip()
-        if not text:
-            return
-        self.message_submitted.emit(text)
-        self._chat_input.clear()
-
     def _build_shell(self) -> QWidget:
         shell = QFrame()
         shell.setObjectName("statusPanelShell")
@@ -378,19 +370,14 @@ class PetStatusPanel(QFrame):
         frame.setObjectName("chatRow")
         self._chat_row = frame
 
-        self._chat_input = QLineEdit()
-        self._chat_input.setPlaceholderText("和桌宠说")
-        self._chat_input.returnPressed.connect(self._submit_message)
-
-        send_button = QPushButton("发送")
-        send_button.setObjectName("sendButton")
-        send_button.clicked.connect(self._submit_message)
+        chat_button = QPushButton("和萝莉斯说话")
+        chat_button.setObjectName("chatButton")
+        chat_button.clicked.connect(self.chat_requested.emit)
 
         row = QHBoxLayout()
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(7)
-        row.addWidget(self._chat_input, 1)
-        row.addWidget(send_button, 0)
+        row.addWidget(chat_button, 1)
         frame.setLayout(row)
         return frame
 
@@ -847,14 +834,6 @@ QStackedWidget#pageStack > QWidget,
 QWidget#statusPanelPage {{
     background: transparent;
 }}
-QLineEdit {{
-    background: {field_bg};
-    border: 1px solid {border};
-    border-radius: 9px;
-    padding: 7px 9px;
-    color: {text};
-    selection-background-color: {accent};
-}}
 QPushButton {{
     background: {button_bg};
     border: 1px solid {border};
@@ -862,8 +841,8 @@ QPushButton {{
     padding: 6px 9px;
     color: {text};
 }}
-QPushButton#sendButton {{
-    min-width: 50px;
+QPushButton#chatButton {{
+    min-height: 30px;
 }}
 QPushButton#navButton {{
     background: transparent;

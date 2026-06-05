@@ -166,6 +166,7 @@ def main() -> int:
             mode_autoswitch=mode_autoswitch,
             single_active=single_player.is_active,
         )
+        win.set_auto_move_active_callback(auto_move.is_active)
         app.aboutToQuit.connect(auto_move.shutdown)
 
         save_dirty = False

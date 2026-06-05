@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "stickers": [
+    {
+      "id": "坏笑",
+      "label": "坏笑",
+      "metadata": {
+        "path": "chat_data/pet_stickers/坏笑.png",
+        "tags": [
+          "teasing",
+          "playful"
+        ],
+        "scenarios": [
+          "轻微吐槽",
+          "调皮回应"
+        ]
+      }
+    }
+  ]
+}

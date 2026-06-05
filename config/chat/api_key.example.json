@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "deepseek_api_key": "",
+  "_note": "复制为 config/chat/api_key.local.json 后填写真实 DeepSeek API key；api_key.local.json 会被 .gitignore 忽略。"
+}

@@ -1501,6 +1501,22 @@ class StatusPanelSmokeTest(unittest.TestCase):
 
         self.assertEqual(opened, ["shop", "inventory"])
 
+    def test_status_panel_chat_button_emits_chat_request(self) -> None:
+        from PyQt6.QtWidgets import QApplication, QPushButton
+
+        from ui.panels.status_panel import PetStatusPanel
+
+        app = QApplication.instance() or QApplication([])
+        panel = PetStatusPanel()
+        requested: list[str] = []
+
+        panel.chat_requested.connect(lambda: requested.append("chat"))
+
+        buttons = {button.text(): button for button in panel.findChildren(QPushButton)}
+        buttons["和萝莉斯说话"].click()
+
+        self.assertEqual(requested, ["chat"])
+
     def test_status_panel_auto_use_and_purchase_switch_labels(self) -> None:
         from PyQt6.QtWidgets import QApplication
 
@@ -1878,6 +1894,158 @@ class PetWindowPluginControlsSmokeTest(unittest.TestCase):
             window._status_panel.tomato_states[-1],
             {"available": True, "running": True, "paused": False},
         )
+
+
+class PetWindowChatEntrySmokeTest(unittest.TestCase):
+    def test_open_chat_window_lazily_creates_controller_and_uses_display_rect(self) -> None:
+        from unittest.mock import patch
+
+        from PyQt6.QtWidgets import QApplication, QLabel, QWidget
+
+        app = QApplication.instance() or QApplication([])
+        host = QWidget()
+        host.move(120, 90)
+        label = QLabel(host)
+        label.setGeometry(8, 12, 96, 80)
+        host.show()
+        app.processEvents()
+
+        created: list[object] = []
+
+        class FakeChatController:
+            def __init__(
+                self,
+                *,
+                parent,
+                rect_provider,
+                effect_executor=None,
+                pet_context_provider=None,
+            ):
+                self.parent = parent
+                self.rect_provider = rect_provider
+                self.effect_executor = effect_executor
+                self.pet_context_provider = pet_context_provider
+                self.show_count = 0
+                self.reposition_count = 0
+                created.append(self)
+
+            def show_window(self) -> None:
+                self.show_count += 1
+
+            def reposition_window(self) -> bool:
+                self.reposition_count += 1
+                return True
+
+        window = type("WindowLike", (), {})()
+        window._label = label
+        window._chat_controller = None
+        window._chat_effect_executor = object()
+        window._chat_context_provider = object()
+        window.get_pet_display_global_rect = (
+            lambda: PetWindow.get_pet_display_global_rect(window)
+        )
+        window.ensure_chat_controller = lambda: PetWindow.ensure_chat_controller(window)
+
+        with patch("ui.pet_window.ChatController", FakeChatController):
+            PetWindow.open_chat_window(window)
+            PetWindow.open_chat_window(window)
+            PetWindow.reposition_chat_window(window)
+            rect = created[0].rect_provider()
+
+        self.assertEqual(len(created), 1)
+        self.assertEqual(created[0].parent, window)
+        self.assertIs(created[0].effect_executor, window._chat_effect_executor)
+        self.assertIs(created[0].pet_context_provider, window._chat_context_provider)
+        self.assertEqual(created[0].show_count, 2)
+        self.assertEqual(created[0].reposition_count, 1)
+        self.assertEqual(rect, PetWindow.get_pet_display_global_rect(window))
+        self.assertEqual(rect.size(), label.rect().size())
+        host.hide()
+
+    def test_context_menu_closes_visible_chat_before_showing_status_panel(self) -> None:
+        class FakeEvent:
+            def __init__(self) -> None:
+                self.accepted = False
+
+            def accept(self) -> None:
+                self.accepted = True
+
+        class FakeChatWindow:
+            def __init__(self) -> None:
+                self.visible = True
+
+            def isVisible(self) -> bool:
+                return self.visible
+
+        class FakeChatController:
+            def __init__(self) -> None:
+                self.window = FakeChatWindow()
+                self.hide_count = 0
+
+            def hide_window(self) -> None:
+                self.hide_count += 1
+                self.window.visible = False
+
+        toggles: list[str] = []
+        controller = FakeChatController()
+        window = type("WindowLike", (), {})()
+        window._chat_controller = controller
+        window._interaction_end_locked = lambda: False
+        window.toggle_status_panel = lambda: toggles.append("status")
+
+        first_event = FakeEvent()
+        PetWindow.contextMenuEvent(window, first_event)
+        second_event = FakeEvent()
+        PetWindow.contextMenuEvent(window, second_event)
+
+        self.assertTrue(first_event.accepted)
+        self.assertEqual(controller.hide_count, 1)
+        self.assertEqual(toggles, ["status"])
+        self.assertTrue(second_event.accepted)
+
+    def test_context_menu_after_outside_closed_chat_shows_status_panel(self) -> None:
+        class FakeEvent:
+            def __init__(self) -> None:
+                self.accepted = False
+
+            def accept(self) -> None:
+                self.accepted = True
+
+        class FakeChatWindow:
+            def __init__(self) -> None:
+                self.visible = True
+                self.closed_by_outside = True
+
+            def isVisible(self) -> bool:
+                return self.visible
+
+            def take_closed_by_outside(self) -> bool:
+                was_closed = self.closed_by_outside
+                self.closed_by_outside = False
+                return was_closed
+
+        class FakeChatController:
+            def __init__(self) -> None:
+                self.window = FakeChatWindow()
+                self.hide_count = 0
+
+            def hide_window(self) -> None:
+                self.hide_count += 1
+                self.window.visible = False
+
+        toggles: list[str] = []
+        controller = FakeChatController()
+        window = type("WindowLike", (), {})()
+        window._chat_controller = controller
+        window._interaction_end_locked = lambda: False
+        window.toggle_status_panel = lambda: toggles.append("status")
+
+        event = FakeEvent()
+        PetWindow.contextMenuEvent(window, event)
+
+        self.assertTrue(event.accepted)
+        self.assertEqual(controller.hide_count, 1)
+        self.assertEqual(toggles, ["status"])
 
 
 class PetWindowShopInventorySyncSmokeTest(unittest.TestCase):

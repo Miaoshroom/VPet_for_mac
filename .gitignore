@@ -4,6 +4,18 @@ __pycache__/
 *.py[cod]
 .swift-module-cache/
 saves/
+chat_data/history/*
+chat_data/memory/*
+chat_data/attachments/*
+chat_data/pet_stickers/*
+chat_data/user_stickers/*
+!chat_data/history/.gitkeep
+!chat_data/memory/.gitkeep
+!chat_data/attachments/.gitkeep
+!chat_data/pet_stickers/.gitkeep
+!chat_data/user_stickers/.gitkeep
+config/chat/api_key.local.json
+config/chat/api_key.json
 
 .venv/
 

@@ -280,8 +280,27 @@ def context_menu_event(self, e) -> None:
     if self._interaction_end_locked():
         e.accept()
         return
+    if _dismiss_visible_chat_window(self):
+        e.accept()
+        return
     self.toggle_status_panel()
     e.accept()
+
+
+def _dismiss_visible_chat_window(self) -> bool:
+    controller = getattr(self, "_chat_controller", None)
+    window = getattr(controller, "window", None)
+    if window is None:
+        return False
+    take_closed_by_outside = getattr(window, "take_closed_by_outside", None)
+    if callable(take_closed_by_outside) and take_closed_by_outside():
+        if window.isVisible():
+            controller.hide_window()
+        return False
+    if not window.isVisible():
+        return False
+    controller.hide_window()
+    return True
 
 
 def drop_paths(event) -> list[Path]:
